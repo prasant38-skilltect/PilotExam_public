@@ -331,15 +331,14 @@ export default function Landing() {
           <p className="text-xl text-gray-300 mb-8">
             Join thousands of pilots who have earned their wings with precision training.
           </p>
-          <Link href="/question-bank">
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-blue-800 via-blue-700 to-cyan-600 text-white hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border border-cyan-400/20 shadow-lg shadow-cyan-400/20"
-              data-testid="button-start-journey"
-            >
-              ✈️ Begin Flight Training
-            </Button>
-          </Link>
+          <Button 
+            size="lg" 
+            className="bg-gradient-to-r from-blue-800 via-blue-700 to-cyan-600 text-white hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border border-cyan-400/20 shadow-lg shadow-cyan-400/20"
+            data-testid="button-start-journey"
+            onClick={() => setCurrentView('subjects')}
+          >
+            ✈️ Begin Flight Training
+          </Button>
         </div>
       </section>
 
