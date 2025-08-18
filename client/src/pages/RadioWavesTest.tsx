@@ -501,19 +501,18 @@ export default function RadioWavesTest() {
                     return (
                       <button
                         key={question.id}
-                        onClick={() => !showResults && setCurrentQuestionIndex(index)}
-                        disabled={showResults}
-                        className={`w-12 h-12 text-sm font-semibold rounded transition-all ${
+                        onClick={() => setCurrentQuestionIndex(index)}
+                        className={`w-12 h-12 text-sm font-semibold rounded transition-all cursor-pointer ${
                           isCurrent
                             ? 'bg-blue-600 text-white ring-2 ring-blue-300'
                             : isCorrect
-                            ? 'bg-green-500 text-white'
+                            ? 'bg-green-500 text-white hover:bg-green-600'
                             : isIncorrect
-                            ? 'bg-red-500 text-white'
+                            ? 'bg-red-500 text-white hover:bg-red-600'
                             : isAnswered
-                            ? 'bg-orange-400 text-white'
+                            ? 'bg-orange-400 text-white hover:bg-orange-500'
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500'
-                        } ${showResults ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                        }`}
                         data-testid={`nav-question-${index + 1}`}
                       >
                         {index + 1}

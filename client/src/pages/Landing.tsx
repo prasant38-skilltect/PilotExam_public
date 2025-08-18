@@ -341,8 +341,6 @@ export default function Landing() {
           </Button>
         </div>
       </section>
-
-
     </div>
   );
 }

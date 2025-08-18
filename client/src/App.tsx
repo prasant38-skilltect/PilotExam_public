@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Header } from "@/components/Header";
+import { WhatsAppChat } from "@/components/WhatsAppChat";
 import { useAuth } from "@/hooks/useAuth";
 
 // Pages
@@ -64,6 +65,9 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </main>
+      
+      {/* WhatsApp Chat Component - Available on all pages */}
+      <WhatsAppChat />
     </div>
   );
 }
