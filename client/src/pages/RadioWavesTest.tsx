@@ -11,7 +11,9 @@ export default function RadioWavesTest() {
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
   const [showResults, setShowResults] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes in seconds
+  const [elapsedTime, setElapsedTime] = useState(0); // Time elapsed in seconds
+  const [testStartTime, setTestStartTime] = useState<number | null>(null);
+  const [isTestActive, setIsTestActive] = useState(false);
   const [reportIssue, setReportIssue] = useState<{ questionId: number | null; description: string }>({
     questionId: null,
     description: ''
@@ -73,24 +75,29 @@ export default function RadioWavesTest() {
     }
   ];
 
-  // Timer countdown
+  // Start test timer when component mounts
   useEffect(() => {
-    if (timeLeft <= 0 || showResults) return;
+    if (!testStartTime) {
+      const startTime = Date.now();
+      setTestStartTime(startTime);
+      setIsTestActive(true);
+    }
+  }, []);
+
+  // Timer for elapsed time
+  useEffect(() => {
+    if (!isTestActive || showResults) return;
     
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          handleFinish();
-          return 0;
-        }
-        return prev - 1;
-      });
+      if (testStartTime) {
+        setElapsedTime(Math.floor((Date.now() - testStartTime) / 1000));
+      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, showResults]);
+  }, [isTestActive, showResults, testStartTime]);
 
-  const formatTime = (seconds: number) => {
+  const formatElapsedTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
@@ -121,6 +128,8 @@ export default function RadioWavesTest() {
       return;
     }
     
+    // Stop the timer
+    setIsTestActive(false);
     setShowResults(true);
     
     // Calculate score
@@ -132,7 +141,7 @@ export default function RadioWavesTest() {
     
     toast({
       title: "Test Completed!",
-      description: `You scored ${correctCount} out of ${questions.length} (${score}%)`,
+      description: `You scored ${correctCount} out of ${questions.length} (${score}%) in ${formatElapsedTime(elapsedTime)}`,
       variant: score >= 70 ? "default" : "destructive",
     });
   };
@@ -184,14 +193,13 @@ export default function RadioWavesTest() {
           </h1>
           
           <div className="flex items-center space-x-6">
-            {/* Timer */}
+            {/* Elapsed Timer */}
             <div className="flex items-center space-x-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-lg shadow-md">
               <Clock className="h-5 w-5 text-blue-600" />
-              <span className={`font-mono text-lg font-semibold ${
-                timeLeft < 300 ? 'text-red-600' : 'text-gray-800 dark:text-white'
-              }`}>
-                {formatTime(timeLeft)}
+              <span className="font-mono text-lg font-semibold text-gray-800 dark:text-white">
+                {formatElapsedTime(elapsedTime)}
               </span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">elapsed</span>
             </div>
             
             {/* Cancel Test Button */}
@@ -223,7 +231,10 @@ export default function RadioWavesTest() {
                       <p className="text-lg text-gray-600 dark:text-gray-300">
                         You scored {score.correct} out of {score.total} ({score.percentage}%)
                       </p>
-                      <p className={`text-sm mt-1 ${score.percentage >= 70 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                        Time taken: {formatElapsedTime(elapsedTime)}
+                      </p>
+                      <p className={`text-sm ${score.percentage >= 70 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                         {score.percentage >= 70 ? 'Congratulations! You passed!' : 'Keep studying and try again!'}
                       </p>
                     </div>
@@ -441,7 +452,9 @@ export default function RadioWavesTest() {
                     setAnsweredQuestions(new Set());
                     setShowResults(false);
                     setCurrentQuestionIndex(0);
-                    setTimeLeft(30 * 60);
+                    setElapsedTime(0);
+                    setTestStartTime(Date.now());
+                    setIsTestActive(true);
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
                   data-testid="button-retake"
