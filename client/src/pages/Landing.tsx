@@ -200,9 +200,14 @@ export default function Landing() {
                 variant="outline"
                 className="w-full h-16 text-lg font-medium bg-slate-700/80 border-slate-600 text-white hover:bg-slate-600/80 transition-all duration-300 rounded-full"
                 onClick={() => {
-                  // Open test in new tab - for now all chapters go to Radio Waves test
-                  const testUrl = `/test?subject=radio-navigation&chapter=${encodeURIComponent(chapter.toLowerCase())}`;
-                  window.open(testUrl, '_blank');
+                  // For Radio Waves chapter, open the dedicated test page
+                  if (chapter === 'RADIO WAVES') {
+                    window.open('/test', '_blank');
+                  } else {
+                    // For other chapters, use the existing URL pattern
+                    const testUrl = `/test?subject=radio-navigation&chapter=${encodeURIComponent(chapter.toLowerCase())}`;
+                    window.open(testUrl, '_blank');
+                  }
                 }}
                 data-testid={`chapter-${chapter.toLowerCase().replace(/\s+/g, '-')}`}
               >
