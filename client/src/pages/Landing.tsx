@@ -88,7 +88,7 @@ export default function Landing() {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="border-white/30 text-white hover:bg-white/10 transition-all duration-300"
+                className="border-gray-800 text-gray-800 hover:bg-gray-800/10 dark:border-white/30 dark:text-white dark:hover:bg-white/10 transition-all duration-300"
                 data-testid="button-browse-questions"
               >
                 Browse Question Bank
