@@ -184,29 +184,29 @@ export default function RadioWavesTest() {
   const score = calculateScore();
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-slate-900 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-8">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header with Timer */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white font-serif italic">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white font-serif italic">
             RADIO WAVES
           </h1>
           
           <div className="flex items-center space-x-6">
             {/* Elapsed Timer */}
-            <div className="flex items-center space-x-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-lg shadow-md">
+            <div className="flex items-center space-x-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-lg shadow-sm border border-gray-200">
               <Clock className="h-5 w-5 text-blue-600" />
-              <span className="font-mono text-lg font-semibold text-gray-800 dark:text-white">
+              <span className="font-mono text-lg font-semibold text-gray-900 dark:text-white">
                 {formatElapsedTime(elapsedTime)}
               </span>
-              <span className="text-sm text-gray-500 dark:text-gray-400">elapsed</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">elapsed</span>
             </div>
             
             {/* Cancel Test Button */}
             <Button
               variant="outline"
               onClick={() => window.close()}
-              className="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+              className="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 border-gray-300"
               data-testid="button-cancel-test"
             >
               Cancel test
@@ -246,10 +246,10 @@ export default function RadioWavesTest() {
             {/* Current Question Display */}
             {!showResults ? (
               // Single question view
-              <Card className="bg-white dark:bg-slate-800 shadow-lg">
+              <Card className="bg-white dark:bg-slate-800 shadow-sm border border-gray-200">
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start mb-6">
-                    <h2 className="text-lg font-semibold text-gray-800 dark:text-white flex-1">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex-1">
                       #{currentQuestionIndex + 1}. {questions[currentQuestionIndex].question}
                     </h2>
                     <Button
@@ -302,7 +302,7 @@ export default function RadioWavesTest() {
                           }`}
                           data-testid={`option-${questions[currentQuestionIndex].id}-${optionIndex}`}
                         >
-                          <span className="text-gray-800 dark:text-gray-200">
+                          <span className="text-gray-900 dark:text-gray-200">
                             {option}
                           </span>
                           {showValidation && isCorrectOption && (
@@ -318,8 +318,8 @@ export default function RadioWavesTest() {
 
                   {/* Explanation - shown immediately after answering */}
                   {answeredQuestions.has(questions[currentQuestionIndex].id) && (
-                    <div className="mt-6 p-4 bg-gray-50 dark:bg-slate-700 rounded-lg border-l-4 border-blue-500">
-                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                    <div className="mt-6 p-4 bg-blue-50 dark:bg-slate-700 rounded-lg border-l-4 border-blue-500">
+                      <p className="text-sm text-gray-800 dark:text-gray-300">
                         <strong>Explanation:</strong> {questions[currentQuestionIndex].explanation}
                       </p>
                     </div>
@@ -476,10 +476,10 @@ export default function RadioWavesTest() {
 
           {/* Question Navigator - Right Side */}
           <div className="w-80 space-y-4">
-            <Card className="bg-white dark:bg-slate-800 shadow-md sticky top-4">
+            <Card className="bg-white dark:bg-slate-800 shadow-sm border border-gray-200 sticky top-4">
               <CardContent className="p-4">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Question Navigator
                   </h3>
                   <Button
@@ -496,12 +496,13 @@ export default function RadioWavesTest() {
                     const isAnswered = answeredQuestions.has(question.id);
                     const isCorrect = isAnswered && selectedAnswers[question.id] === question.correctAnswer;
                     const isIncorrect = isAnswered && selectedAnswers[question.id] !== question.correctAnswer;
-                    const isCurrent = index === currentQuestionIndex;
+                    const isCurrent = index === currentQuestionIndex && !showResults;
                     
                     return (
                       <button
                         key={question.id}
-                        onClick={() => setCurrentQuestionIndex(index)}
+                        onClick={() => !showResults && setCurrentQuestionIndex(index)}
+                        disabled={showResults}
                         className={`w-12 h-12 text-sm font-semibold rounded transition-all ${
                           isCurrent
                             ? 'bg-blue-600 text-white ring-2 ring-blue-300'
@@ -512,7 +513,7 @@ export default function RadioWavesTest() {
                             : isAnswered
                             ? 'bg-orange-400 text-white'
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500'
-                        }`}
+                        } ${showResults ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                         data-testid={`nav-question-${index + 1}`}
                       >
                         {index + 1}
