@@ -48,47 +48,47 @@ export default function Landing() {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Space Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900/20 to-purple-900/30"></div>
+        {/* Aviation Background - Cockpit/Runway theme */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800"></div>
         <div 
-          className="absolute inset-0 bg-cover bg-center opacity-30"
+          className="absolute inset-0 bg-cover bg-center opacity-40"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080')"
+            backgroundImage: "url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080')"
           }}
         ></div>
         
-        {/* Animated Stars */}
+        {/* Runway Lights Animation */}
         <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white rounded-full animate-pulse"></div>
-          <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-white rounded-full animate-ping"></div>
-          <div className="absolute bottom-1/3 left-1/6 w-1.5 h-1.5 bg-purple-300 rounded-full animate-pulse"></div>
+          <div className="absolute top-1/4 left-1/4 w-3 h-3 bg-cyan-400 rounded-full animate-pulse shadow-lg shadow-cyan-400/50"></div>
+          <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-orange-400 rounded-full animate-ping shadow-lg shadow-orange-400/50"></div>
+          <div className="absolute bottom-1/3 left-1/6 w-2.5 h-2.5 bg-cyan-300 rounded-full animate-pulse shadow-lg shadow-cyan-300/50"></div>
+          <div className="absolute top-1/2 right-1/4 w-2 h-2 bg-orange-300 rounded-full animate-ping shadow-lg shadow-orange-300/50"></div>
+          <div className="absolute bottom-1/4 right-1/6 w-3 h-3 bg-cyan-500 rounded-full animate-pulse shadow-lg shadow-cyan-500/50"></div>
         </div>
 
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
-            Your Flight Prep Galaxy
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-cyan-200 to-orange-200 bg-clip-text text-transparent">
+            Clear Skies Ahead: Master Your Pilot Exam Journey
           </h1>
           <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Enter the space of elite pilot preparation. Elevate your career with ATPL question banks, 
-            smart analytics, and galaxy-class performance tracking.
+            From take-off to landing, practice every maneuver of your exam with precision tools.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link href="/question-bank">
               <Button 
                 size="lg" 
-                className="bg-gradient-to-r from-purple-600 to-blue-700 text-white hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                className="bg-gradient-to-r from-blue-800 via-blue-700 to-cyan-600 text-white hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border border-cyan-400/20"
                 data-testid="button-launch-practice"
               >
-                <Rocket className="mr-2" size={20} />
-                Launch Practice Mode
+                ✈️ Start Your Flight Prep
               </Button>
             </Link>
             <Link href="/question-bank">
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="border-gray-800 text-gray-800 hover:bg-gray-800/10 dark:border-white/30 dark:text-white dark:hover:bg-white/10 transition-all duration-300"
+                className="border-cyan-400/40 text-cyan-200 hover:bg-cyan-400/10 dark:border-cyan-400/40 dark:text-cyan-200 dark:hover:bg-cyan-400/10 transition-all duration-300 shadow-lg shadow-cyan-400/20"
                 data-testid="button-browse-questions"
               >
                 Browse Question Bank
@@ -97,26 +97,26 @@ export default function Landing() {
           </div>
 
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <div className="text-2xl font-bold text-purple-300" data-testid="text-stat-questions">
+            <div className="bg-slate-800/60 backdrop-blur-sm rounded-xl p-4 border border-cyan-400/20 shadow-lg shadow-cyan-400/10">
+              <div className="text-2xl font-bold text-cyan-300" data-testid="text-stat-questions">
                 {stats.totalQuestions}
               </div>
               <div className="text-sm text-gray-300">ATPL Questions</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <div className="text-2xl font-bold text-blue-300" data-testid="text-stat-subjects">
+            <div className="bg-slate-800/60 backdrop-blur-sm rounded-xl p-4 border border-orange-400/20 shadow-lg shadow-orange-400/10">
+              <div className="text-2xl font-bold text-orange-300" data-testid="text-stat-subjects">
                 {stats.subjects}
               </div>
               <div className="text-sm text-gray-300">EASA Subjects</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <div className="text-2xl font-bold text-purple-300" data-testid="text-stat-passrate">
+            <div className="bg-slate-800/60 backdrop-blur-sm rounded-xl p-4 border border-cyan-400/20 shadow-lg shadow-cyan-400/10">
+              <div className="text-2xl font-bold text-cyan-300" data-testid="text-stat-passrate">
                 {stats.passRate}
               </div>
               <div className="text-sm text-gray-300">Success Rate</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <div className="text-2xl font-bold text-blue-300" data-testid="text-stat-students">
+            <div className="bg-slate-800/60 backdrop-blur-sm rounded-xl p-4 border border-orange-400/20 shadow-lg shadow-orange-400/10">
+              <div className="text-2xl font-bold text-orange-300" data-testid="text-stat-students">
                 {stats.students}
               </div>
               <div className="text-sm text-gray-300">Students</div>
@@ -126,14 +126,14 @@ export default function Landing() {
       </section>
 
       {/* Features Section */}
-      <section className="py-16 bg-gray-50 dark:bg-slate-800">
+      <section className="py-20 bg-gradient-to-b from-slate-50 to-gray-100 dark:from-slate-800 dark:to-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
-              Why Choose Eatpl.in?
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-800 to-cyan-600 bg-clip-text text-transparent dark:from-cyan-400 dark:to-orange-400 mb-4">
+              Your Flight Deck Advantage
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Advanced features designed specifically for airline pilot exam success
+            <p className="text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
+              Professional-grade training tools engineered for precision and built by aviation experts.
             </p>
           </div>
 
@@ -141,13 +141,13 @@ export default function Landing() {
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <Card key={index} className="hover:shadow-xl transition-all duration-300">
+                <Card key={index} className="hover:shadow-xl transition-all duration-300 border border-cyan-400/20 dark:border-cyan-400/30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
                   <CardContent className="p-6">
-                    <div className="bg-gradient-to-r from-purple-600 to-blue-700 w-16 h-16 rounded-xl flex items-center justify-center mb-4">
+                    <div className="bg-gradient-to-r from-blue-800 to-cyan-600 w-16 h-16 rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-cyan-400/20">
                       <Icon className="text-white" size={24} />
                     </div>
-                    <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-                    <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
+                    <h3 className="text-xl font-semibold mb-3 text-slate-800 dark:text-cyan-100">{feature.title}</h3>
+                    <p className="text-gray-700 dark:text-gray-300">{feature.description}</p>
                   </CardContent>
                 </Card>
               );
@@ -157,19 +157,26 @@ export default function Landing() {
       </section>
 
       {/* Call to Action */}
-      <section className="py-16 bg-white dark:bg-slate-900">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold mb-4">Ready to Start Your Journey?</h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-            Join thousands of pilots who have successfully passed their ATPL exams with our platform.
+      <section className="py-16 bg-gradient-to-r from-blue-900 via-slate-900 to-blue-900 relative overflow-hidden">
+        {/* Subtle runway lights pattern */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-1/4 left-1/6 w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+          <div className="absolute top-3/4 right-1/6 w-2 h-2 bg-orange-400 rounded-full animate-ping"></div>
+          <div className="absolute bottom-1/3 left-1/3 w-1.5 h-1.5 bg-cyan-300 rounded-full animate-pulse"></div>
+        </div>
+        
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8 relative z-10">
+          <h2 className="text-3xl font-bold mb-4 text-white">Ready for Takeoff?</h2>
+          <p className="text-xl text-gray-300 mb-8">
+            Join thousands of pilots who have earned their wings with precision training.
           </p>
           <Link href="/question-bank">
             <Button 
               size="lg" 
-              className="bg-gradient-to-r from-purple-600 to-blue-700 text-white hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+              className="bg-gradient-to-r from-blue-800 via-blue-700 to-cyan-600 text-white hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border border-cyan-400/20 shadow-lg shadow-cyan-400/20"
               data-testid="button-start-journey"
             >
-              Start Practice Now
+              ✈️ Begin Flight Training
             </Button>
           </Link>
         </div>
