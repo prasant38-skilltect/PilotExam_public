@@ -44,7 +44,7 @@ export function Header() {
           </Link>
 
           {/* Navigation Menu - Always visible */}
-          <nav className="flex space-x-3 xl:space-x-6 overflow-x-auto">
+          <nav className="flex space-x-1 xl:space-x-3">
             {navigationItems.map((item) => (
               <Link key={item.href} href={item.href}>
                 <span

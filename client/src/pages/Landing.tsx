@@ -1,9 +1,13 @@
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Rocket, Database, BarChart3, Clock, Smartphone, GraduationCap, UserCheck } from 'lucide-react';
+import { useState } from 'react';
 
 export default function Landing() {
+  const [showPracticeModal, setShowPracticeModal] = useState(false);
+
   const stats = {
     totalQuestions: '10,000+',
     subjects: '14',
@@ -74,26 +78,15 @@ export default function Landing() {
             From take-off to landing, practice every maneuver of your exam with precision tools.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/question-bank">
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-blue-800 via-blue-700 to-cyan-600 text-white hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border border-cyan-400/20"
-                data-testid="button-launch-practice"
-              >
-                ✈️ Start Your Flight Prep
-              </Button>
-            </Link>
-            <Link href="/question-bank">
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="border-cyan-400/40 text-cyan-200 hover:bg-cyan-400/10 dark:border-cyan-400/40 dark:text-cyan-200 dark:hover:bg-cyan-400/10 transition-all duration-300 shadow-lg shadow-cyan-400/20"
-                data-testid="button-browse-questions"
-              >
-                Browse Question Bank
-              </Button>
-            </Link>
+          <div className="flex justify-center items-center">
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-blue-800 via-blue-700 to-cyan-600 text-white hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border border-cyan-400/20"
+              data-testid="button-launch-practice"
+              onClick={() => setShowPracticeModal(true)}
+            >
+              ✈️ Start Your Flight Prep
+            </Button>
           </div>
 
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
@@ -181,6 +174,49 @@ export default function Landing() {
           </Link>
         </div>
       </section>
+
+      {/* Practice Options Modal */}
+      <Dialog open={showPracticeModal} onOpenChange={setShowPracticeModal}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-slate-900 border border-cyan-400/30">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-white text-center mb-6">
+              Choose Your Flight Training Module
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+            {[
+              'INSTRUMENTS',
+              'RADIO NAVIGATION', 
+              'PERFORMANCE',
+              'METEOROLOGY',
+              'TECHNICAL',
+              'NAVIGATION',
+              'ATPL QUESTION BANK',
+              'INDIGO QUESTION BANK (6000) JAA QB',
+              'KEITH WILLIAMS',
+              'OX*O*D ALL SUBJECTS',
+              'REGULATIONS',
+              'AIRCRAFT SPECIFIC',
+              'MASS AND BALANCE',
+              'PREVIOUS ATTEMPT DGCA PAPERS',
+              'AIRLINE WRITTEN EXAM PREVIOUS ATTEMPT',
+              'AIRBUS 320'
+            ].map((subject, index) => (
+              <Link key={index} href="/test">
+                <Button
+                  variant="outline"
+                  className="w-full h-16 text-sm font-medium bg-slate-800/60 border-cyan-400/30 text-cyan-100 hover:bg-cyan-400/10 hover:border-cyan-400/50 transition-all duration-300 whitespace-normal text-center p-3"
+                  onClick={() => setShowPracticeModal(false)}
+                  data-testid={`subject-${subject.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`}
+                >
+                  {subject}
+                </Button>
+              </Link>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
