@@ -193,17 +193,21 @@ export default function Landing() {
             </Button>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-6">
             {chapterwiseOptions.map((chapter, index) => (
-              <Link key={index} href="/test">
-                <Button
-                  variant="outline"
-                  className="w-full h-16 text-lg font-medium bg-slate-700/80 border-slate-600 text-white hover:bg-slate-600/80 transition-all duration-300 rounded-full"
-                  data-testid={`chapter-${chapter.toLowerCase().replace(/\s+/g, '-')}`}
-                >
-                  {chapter}
-                </Button>
-              </Link>
+              <Button
+                key={index}
+                variant="outline"
+                className="w-full h-16 text-lg font-medium bg-slate-700/80 border-slate-600 text-white hover:bg-slate-600/80 transition-all duration-300 rounded-full"
+                onClick={() => {
+                  // Open test in new tab - for now all chapters go to Radio Waves test
+                  const testUrl = `/test?subject=radio-navigation&chapter=${encodeURIComponent(chapter.toLowerCase())}`;
+                  window.open(testUrl, '_blank');
+                }}
+                data-testid={`chapter-${chapter.toLowerCase().replace(/\s+/g, '-')}`}
+              >
+                {chapter}
+              </Button>
             ))}
           </div>
         </div>

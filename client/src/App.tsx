@@ -20,6 +20,7 @@ import AptitudeTest from "@/pages/AptitudeTest";
 import Airbus320 from "@/pages/Airbus320";
 import Syllabus from "@/pages/Syllabus";
 import PilotResume from "@/pages/PilotResume";
+import RadioWavesTest from "@/pages/RadioWavesTest";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -57,6 +58,7 @@ function Router() {
           <Route path="/airbus-320" component={Airbus320} />
           <Route path="/syllabus" component={Syllabus} />
           <Route path="/pilot-resume" component={PilotResume} />
+          <Route path="/test" component={RadioWavesTest} />
 
           {/* 404 fallback */}
           <Route component={NotFound} />
