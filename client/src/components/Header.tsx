@@ -31,25 +31,25 @@ export function Header() {
 
   return (
     <header className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center flex-shrink-0">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
-                <Plane className="inline-block mr-2 text-blue-700" size={24} />
+              <h1 className="text-xl xl:text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
+                <Plane className="inline-block mr-1 xl:mr-2 text-blue-700" size={20} />
                 Eatpl.in
               </h1>
             </div>
           </Link>
 
-          {/* Navigation Menu - Hidden on mobile, shown on desktop */}
-          <nav className="hidden lg:flex space-x-6">
+          {/* Navigation Menu - Always visible */}
+          <nav className="flex space-x-3 xl:space-x-6 overflow-x-auto">
             {navigationItems.map((item) => (
               <Link key={item.href} href={item.href}>
                 <span
                   className={cn(
-                    "text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors px-3 py-2 rounded-md text-sm font-medium",
+                    "text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors px-2 xl:px-3 py-2 rounded-md text-xs xl:text-sm font-medium whitespace-nowrap",
                     location === item.href && "text-purple-600 dark:text-purple-400"
                   )}
                   data-testid={`nav-${item.href.slice(1)}`}
@@ -61,7 +61,7 @@ export function Header() {
           </nav>
 
           {/* Theme Toggle and Auth */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 xl:space-x-4 ml-2">
             <Button
               variant="outline"
               size="icon"
