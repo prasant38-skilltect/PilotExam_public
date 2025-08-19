@@ -267,16 +267,15 @@ export default function Landing() {
 
         {/* Start Your Flight Prep Button */}
         <div className="text-center mb-8">
-          <Link href="/test">
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-blue-800 via-blue-700 to-cyan-600 text-white hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border border-cyan-400/20 shadow-lg shadow-cyan-400/20"
-              data-testid="button-start-flight-prep"
-            >
-              <Plane className="mr-2 h-5 w-5" />
-              Start Your Flight Prep
-            </Button>
-          </Link>
+          <Button 
+            size="lg" 
+            className="bg-gradient-to-r from-blue-800 via-blue-700 to-cyan-600 text-white hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border border-cyan-400/20 shadow-lg shadow-cyan-400/20"
+            data-testid="button-start-flight-prep"
+            onClick={() => setCurrentView('subjects')}
+          >
+            <Plane className="mr-2 h-5 w-5" />
+            Start Your Flight Prep
+          </Button>
         </div>
 
         {/* Search */}
