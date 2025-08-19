@@ -153,7 +153,23 @@ export default function RadioWavesTest() {
     }));
     
     // Mark question as answered for immediate validation and show explanation
-    setAnsweredQuestions(prev => new Set(prev).add(questionId));
+    setAnsweredQuestions(prev => {
+      const newAnswered = new Set(prev).add(questionId);
+      
+      // Auto-switch to explanation tab after answering
+      setTimeout(() => {
+        setActiveTab('explanation');
+      }, 100);
+      
+      // Check if all questions are answered and auto-finish
+      if (newAnswered.size === questions.length) {
+        setTimeout(() => {
+          handleFinish();
+        }, 2000); // Give user time to see the explanation
+      }
+      
+      return newAnswered;
+    });
   };
 
   const handleFinish = () => {
@@ -353,18 +369,11 @@ export default function RadioWavesTest() {
                       </TabsTrigger>
                       <TabsTrigger 
                         value="explanation" 
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent"
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                         data-testid="tab-explanation"
+                        disabled={!answeredQuestions.has(questions[currentQuestionIndex].id)}
                       >
                         EXPLANATION
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="statistics" 
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent"
-                        data-testid="tab-statistics"
-                      >
-                        <BarChart3 className="mr-2" size={16} />
-                        STATISTICS
                       </TabsTrigger>
                       <TabsTrigger 
                         value="comments" 
@@ -439,30 +448,30 @@ export default function RadioWavesTest() {
 
                     {/* Explanation Tab Content */}
                     <TabsContent value="explanation" className="p-6">
-                      {questions[currentQuestionIndex].explanation ? (
-                        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                          <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Explanation:</h4>
-                          <p className="text-blue-800 dark:text-blue-200">
-                            {questions[currentQuestionIndex].explanation}
-                          </p>
-                          <p className="text-sm text-blue-700 dark:text-blue-300 mt-2">
-                            Correct Answer: <span className="font-semibold">{questions[currentQuestionIndex].correctAnswer}</span>
-                          </p>
-                        </div>
+                      {answeredQuestions.has(questions[currentQuestionIndex].id) ? (
+                        questions[currentQuestionIndex].explanation ? (
+                          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Explanation:</h4>
+                            <p className="text-blue-800 dark:text-blue-200">
+                              {questions[currentQuestionIndex].explanation}
+                            </p>
+                            <p className="text-sm text-blue-700 dark:text-blue-300 mt-2">
+                              Correct Answer: <span className="font-semibold">{questions[currentQuestionIndex].correctAnswer}</span>
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                            No explanation available for this question.
+                          </div>
+                        )
                       ) : (
                         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                          No explanation available for this question.
+                          Please answer the question first to see the explanation.
                         </div>
                       )}
                     </TabsContent>
 
-                    {/* Statistics Tab Content */}
-                    <TabsContent value="statistics" className="p-6">
-                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        <BarChart3 className="mx-auto mb-4" size={48} />
-                        <p>Question statistics not available in practice mode.</p>
-                      </div>
-                    </TabsContent>
+
 
                     {/* Comments Tab Content */}
                     <TabsContent value="comments" className="p-6">
