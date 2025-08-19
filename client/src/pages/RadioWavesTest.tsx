@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, XCircle, Flag, Trophy, Clock } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { CheckCircle, XCircle, Flag, Trophy, Clock, MessageSquare, BarChart3, FileText, ThumbsUp, ThumbsDown, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function RadioWavesTest() {
@@ -18,6 +20,42 @@ export default function RadioWavesTest() {
     questionId: null,
     description: ''
   });
+  const [activeTab, setActiveTab] = useState('question');
+  const [newComment, setNewComment] = useState('');
+  const [comments, setComments] = useState([
+    {
+      id: 1,
+      username: 'Handith99',
+      comment: 'It appears on easa exam in thai but reworded',
+      likes: 1,
+      dislikes: 0,
+      createdAt: '28 Feb 25 | 12:16'
+    },
+    {
+      id: 2,
+      username: 'Svindy',
+      comment: 'Guys on the ground singing to the guy in the air.. "Everybooody... Yeeeeeah... Rock your boooooody... Yeeeeeah"',
+      likes: 2,
+      dislikes: 0,
+      createdAt: '13 Jul 24 | 17:24'
+    },
+    {
+      id: 3,
+      username: 'User account deleted',
+      comment: 'YCS seams as cc',
+      likes: 0,
+      dislikes: 0,
+      createdAt: '03 Feb 23 | 21:32'
+    },
+    {
+      id: 4,
+      username: 'kamal350',
+      comment: 'I thought rocking wings for radar failures??',
+      likes: 0,
+      dislikes: 0,
+      createdAt: '24 Jun 22 | 18:13'
+    }
+  ]);
   const { toast } = useToast();
 
   const questions = [
@@ -150,6 +188,40 @@ export default function RadioWavesTest() {
     setReportIssue({ questionId, description: '' });
   };
 
+  const handleCommentSubmit = () => {
+    if (newComment.trim()) {
+      const comment = {
+        id: comments.length + 1,
+        username: 'Anonymous User',
+        comment: newComment.trim(),
+        likes: 0,
+        dislikes: 0,
+        createdAt: new Date().toLocaleDateString('en-GB', { 
+          day: '2-digit', 
+          month: 'short', 
+          year: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }).replace(',', ' |')
+      };
+      setComments([comment, ...comments]);
+      setNewComment('');
+    }
+  };
+
+  const handleVote = (commentId: number, voteType: 'like' | 'dislike') => {
+    setComments(comments.map(comment => {
+      if (comment.id === commentId) {
+        if (voteType === 'like') {
+          return { ...comment, likes: comment.likes + 1 };
+        } else {
+          return { ...comment, dislikes: comment.dislikes + 1 };
+        }
+      }
+      return comment;
+    }));
+  };
+
   const submitIssueReport = () => {
     if (!reportIssue.description.trim()) {
       toast({
@@ -245,85 +317,230 @@ export default function RadioWavesTest() {
 
             {/* Current Question Display */}
             {!showResults ? (
-              // Single question view
+              // Single question view with tabs
               <Card className="bg-white dark:bg-slate-800 shadow-sm border border-gray-200">
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start mb-6">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex-1">
-                      #{currentQuestionIndex + 1}. {questions[currentQuestionIndex].question}
-                    </h2>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleReportIssue(questions[currentQuestionIndex].id)}
-                      className="text-gray-500 hover:text-red-500 ml-4 flex items-center space-x-1"
-                      data-testid={`report-issue-${questions[currentQuestionIndex].id}`}
-                    >
-                      <Flag className="h-4 w-4" />
-                      <span className="text-sm">Report Issue</span>
-                    </Button>
+                <CardContent className="p-0">
+                  {/* Top Header */}
+                  <div className="bg-gray-50 dark:bg-gray-800 p-4 border-b">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center space-x-4">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">Q {currentQuestionIndex + 1} / {questions.length}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-300">N° {questions[currentQuestionIndex].id}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleReportIssue(questions[currentQuestionIndex].id)}
+                        className="text-gray-500 hover:text-red-500 flex items-center space-x-1"
+                        data-testid={`report-issue-${questions[currentQuestionIndex].id}`}
+                      >
+                        <Flag className="h-4 w-4" />
+                        <span className="text-sm">Report Issue</span>
+                      </Button>
+                    </div>
                   </div>
 
-                  {/* Question Image */}
-                  {questions[currentQuestionIndex].image && (
-                    <div className="mb-6">
-                      <img
-                        src={questions[currentQuestionIndex].image}
-                        alt={`Diagram for question ${currentQuestionIndex + 1}`}
-                        className="max-w-full h-auto rounded-lg border border-gray-200 dark:border-gray-600"
-                        data-testid={`question-image-${questions[currentQuestionIndex].id}`}
-                      />
-                    </div>
-                  )}
+                  {/* Tabs */}
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <TabsList className="w-full justify-start border-b rounded-none h-auto bg-transparent p-0">
+                      <TabsTrigger 
+                        value="question" 
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent"
+                        data-testid="tab-question"
+                      >
+                        <FileText className="mr-2" size={16} />
+                        QUESTION
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="explanation" 
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent"
+                        data-testid="tab-explanation"
+                      >
+                        EXPLANATION
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="statistics" 
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent"
+                        data-testid="tab-statistics"
+                      >
+                        <BarChart3 className="mr-2" size={16} />
+                        STATISTICS
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="comments" 
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent"
+                        data-testid="tab-comments"
+                      >
+                        <MessageSquare className="mr-2" size={16} />
+                        COMMENTS
+                      </TabsTrigger>
+                    </TabsList>
 
-                  <div className="space-y-3">
-                    {questions[currentQuestionIndex].options.map((option, optionIndex) => {
-                      const isSelected = selectedAnswers[questions[currentQuestionIndex].id] === option;
-                      const isCorrectOption = option === questions[currentQuestionIndex].correctAnswer;
-                      const isAnswered = answeredQuestions.has(questions[currentQuestionIndex].id);
-                      const showValidation = isAnswered;
-                      const isIncorrect = showValidation && isSelected && !isCorrectOption;
-                      
-                      return (
-                        <button
-                          key={optionIndex}
-                          onClick={() => handleAnswerSelect(questions[currentQuestionIndex].id, option)}
-                          disabled={isAnswered}
-                          className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-300 flex items-center justify-between ${
-                            showValidation
-                              ? isCorrectOption
-                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                : isIncorrect
-                                ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                                : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-slate-700'
-                              : isSelected
-                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                              : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-slate-700 hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10'
-                          }`}
-                          data-testid={`option-${questions[currentQuestionIndex].id}-${optionIndex}`}
-                        >
-                          <span className="text-gray-900 dark:text-gray-200">
-                            {option}
-                          </span>
-                          {showValidation && isCorrectOption && (
-                            <CheckCircle className="h-5 w-5 text-green-500" />
-                          )}
-                          {showValidation && isIncorrect && (
-                            <XCircle className="h-5 w-5 text-red-500" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+                    {/* Question Tab Content */}
+                    <TabsContent value="question" className="p-6">
+                      <div className="mb-6">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                          #{currentQuestionIndex + 1}. {questions[currentQuestionIndex].question}
+                        </h2>
 
-                  {/* Explanation - shown immediately after answering */}
-                  {answeredQuestions.has(questions[currentQuestionIndex].id) && (
-                    <div className="mt-6 p-4 bg-blue-50 dark:bg-slate-700 rounded-lg border-l-4 border-blue-500">
-                      <p className="text-sm text-gray-800 dark:text-gray-300">
-                        <strong>Explanation:</strong> {questions[currentQuestionIndex].explanation}
-                      </p>
-                    </div>
-                  )}
+                        {/* Question Image */}
+                        {questions[currentQuestionIndex].image && (
+                          <div className="mb-6">
+                            <img
+                              src={questions[currentQuestionIndex].image}
+                              alt={`Diagram for question ${currentQuestionIndex + 1}`}
+                              className="max-w-full h-auto rounded-lg border border-gray-200 dark:border-gray-600"
+                              data-testid={`question-image-${questions[currentQuestionIndex].id}`}
+                            />
+                          </div>
+                        )}
+
+                        <div className="space-y-3">
+                          {questions[currentQuestionIndex].options.map((option, optionIndex) => {
+                            const isSelected = selectedAnswers[questions[currentQuestionIndex].id] === option;
+                            const isCorrectOption = option === questions[currentQuestionIndex].correctAnswer;
+                            const isAnswered = answeredQuestions.has(questions[currentQuestionIndex].id);
+                            const showValidation = isAnswered;
+                            const isIncorrect = showValidation && isSelected && !isCorrectOption;
+                            
+                            return (
+                              <button
+                                key={optionIndex}
+                                onClick={() => handleAnswerSelect(questions[currentQuestionIndex].id, option)}
+                                disabled={isAnswered}
+                                className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-300 flex items-center justify-between ${
+                                  showValidation
+                                    ? isCorrectOption
+                                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                                      : isIncorrect
+                                      ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                                      : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-slate-700'
+                                    : isSelected
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                    : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-slate-700 hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10'
+                                }`}
+                                data-testid={`option-${questions[currentQuestionIndex].id}-${optionIndex}`}
+                              >
+                                <span className="text-gray-900 dark:text-gray-200">
+                                  {option}
+                                </span>
+                                {showValidation && isCorrectOption && (
+                                  <CheckCircle className="h-5 w-5 text-green-500" />
+                                )}
+                                {showValidation && isIncorrect && (
+                                  <XCircle className="h-5 w-5 text-red-500" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    {/* Explanation Tab Content */}
+                    <TabsContent value="explanation" className="p-6">
+                      {questions[currentQuestionIndex].explanation ? (
+                        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                          <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Explanation:</h4>
+                          <p className="text-blue-800 dark:text-blue-200">
+                            {questions[currentQuestionIndex].explanation}
+                          </p>
+                          <p className="text-sm text-blue-700 dark:text-blue-300 mt-2">
+                            Correct Answer: <span className="font-semibold">{questions[currentQuestionIndex].correctAnswer}</span>
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                          No explanation available for this question.
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    {/* Statistics Tab Content */}
+                    <TabsContent value="statistics" className="p-6">
+                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <BarChart3 className="mx-auto mb-4" size={48} />
+                        <p>Question statistics not available in practice mode.</p>
+                      </div>
+                    </TabsContent>
+
+                    {/* Comments Tab Content */}
+                    <TabsContent value="comments" className="p-6">
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold mb-4">User comments</h3>
+                        
+                        {/* Add Comment Form */}
+                        <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
+                          <Textarea
+                            placeholder="Add your comment..."
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            className="mb-3"
+                            data-testid="textarea-new-comment"
+                          />
+                          <Button 
+                            onClick={handleCommentSubmit}
+                            className="bg-blue-600 hover:bg-blue-700"
+                            disabled={!newComment.trim()}
+                            data-testid="button-submit-comment"
+                          >
+                            <Send className="mr-2" size={16} />
+                            Post Comment
+                          </Button>
+                        </div>
+
+                        {/* Comments List */}
+                        <div className="space-y-4">
+                          {comments.map((comment) => (
+                            <div key={comment.id} className="border rounded-lg p-4" data-testid={`comment-${comment.id}`}>
+                              <div className="flex items-start space-x-3">
+                                <Avatar className="w-8 h-8">
+                                  <AvatarFallback className="text-xs">
+                                    {comment.username.charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                  <div className="flex items-center space-x-2 mb-1">
+                                    <span className="font-medium text-sm" data-testid={`username-${comment.id}`}>
+                                      {comment.username}
+                                    </span>
+                                    <span className="text-xs text-gray-500" data-testid={`timestamp-${comment.id}`}>
+                                      {comment.createdAt}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-3" data-testid={`comment-text-${comment.id}`}>
+                                    {comment.comment}
+                                  </p>
+                                  <div className="flex items-center space-x-4">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleVote(comment.id, 'like')}
+                                      className="text-xs"
+                                      data-testid={`button-like-${comment.id}`}
+                                    >
+                                      <ThumbsUp className="mr-1" size={12} />
+                                      {comment.likes}
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleVote(comment.id, 'dislike')}
+                                      className="text-xs"
+                                      data-testid={`button-dislike-${comment.id}`}
+                                    >
+                                      <ThumbsDown className="mr-1" size={12} />
+                                      {comment.dislikes}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             ) : (
