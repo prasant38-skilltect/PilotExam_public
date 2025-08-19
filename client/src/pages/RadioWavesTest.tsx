@@ -156,10 +156,7 @@ export default function RadioWavesTest() {
     setAnsweredQuestions(prev => {
       const newAnswered = new Set(prev).add(questionId);
       
-      // Auto-switch to explanation tab after answering
-      setTimeout(() => {
-        setActiveTab('explanation');
-      }, 100);
+      // Keep user on question tab to see explanation below
       
       // Check if all questions are answered and auto-finish
       if (newAnswered.size === questions.length) {
@@ -367,14 +364,7 @@ export default function RadioWavesTest() {
                         <FileText className="mr-2" size={16} />
                         QUESTION
                       </TabsTrigger>
-                      <TabsTrigger 
-                        value="explanation" 
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-                        data-testid="tab-explanation"
-                        disabled={!answeredQuestions.has(questions[currentQuestionIndex].id)}
-                      >
-                        EXPLANATION
-                      </TabsTrigger>
+
                       <TabsTrigger 
                         value="comments" 
                         className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent"
@@ -443,32 +433,16 @@ export default function RadioWavesTest() {
                             );
                           })}
                         </div>
-                      </div>
-                    </TabsContent>
 
-                    {/* Explanation Tab Content */}
-                    <TabsContent value="explanation" className="p-6">
-                      {answeredQuestions.has(questions[currentQuestionIndex].id) ? (
-                        questions[currentQuestionIndex].explanation ? (
-                          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                            <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Explanation:</h4>
-                            <p className="text-blue-800 dark:text-blue-200">
-                              {questions[currentQuestionIndex].explanation}
-                            </p>
-                            <p className="text-sm text-blue-700 dark:text-blue-300 mt-2">
-                              Correct Answer: <span className="font-semibold">{questions[currentQuestionIndex].correctAnswer}</span>
+                        {/* Explanation - shown immediately after answering */}
+                        {answeredQuestions.has(questions[currentQuestionIndex].id) && questions[currentQuestionIndex].explanation && (
+                          <div className="mt-6 p-4 bg-blue-50 dark:bg-slate-700 rounded-lg border-l-4 border-blue-500">
+                            <p className="text-sm text-gray-800 dark:text-gray-300">
+                              <strong>Explanation:</strong> {questions[currentQuestionIndex].explanation}
                             </p>
                           </div>
-                        ) : (
-                          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                            No explanation available for this question.
-                          </div>
-                        )
-                      ) : (
-                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                          Please answer the question first to see the explanation.
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </TabsContent>
 
 
