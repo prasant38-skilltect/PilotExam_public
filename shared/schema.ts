@@ -73,6 +73,27 @@ export const testSessions = pgTable("test_sessions", {
   correctAnswers: integer("correct_answers").default(0),
 });
 
+// Question Comments
+export const questionComments = pgTable("question_comments", {
+  id: serial("id").primaryKey(),
+  questionId: integer("question_id").references(() => questions.id).notNull(),
+  userId: varchar("user_id").references(() => users.id),
+  username: varchar("username", { length: 100 }).notNull(),
+  comment: text("comment").notNull(),
+  likes: integer("likes").default(0),
+  dislikes: integer("dislikes").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Comment Votes
+export const commentVotes = pgTable("comment_votes", {
+  id: serial("id").primaryKey(),
+  commentId: integer("comment_id").references(() => questionComments.id).notNull(),
+  userId: varchar("user_id").references(() => users.id),
+  voteType: varchar("vote_type", { length: 10 }).notNull(), // 'like' or 'dislike'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // User Answers
 export const userAnswers = pgTable("user_answers", {
   id: serial("id").primaryKey(),
@@ -121,6 +142,18 @@ export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
   id: true,
 });
 
+export const insertQuestionCommentSchema = createInsertSchema(questionComments).omit({
+  id: true,
+  likes: true,
+  dislikes: true,
+  createdAt: true,
+});
+
+export const insertCommentVoteSchema = createInsertSchema(commentVotes).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -134,3 +167,7 @@ export type UserAnswer = typeof userAnswers.$inferSelect;
 export type InsertUserAnswer = z.infer<typeof insertUserAnswerSchema>;
 export type UserProgress = typeof userProgress.$inferSelect;
 export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
+export type QuestionComment = typeof questionComments.$inferSelect;
+export type InsertQuestionComment = z.infer<typeof insertQuestionCommentSchema>;
+export type CommentVote = typeof commentVotes.$inferSelect;
+export type InsertCommentVote = z.infer<typeof insertCommentVoteSchema>;
