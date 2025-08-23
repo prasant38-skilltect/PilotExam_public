@@ -10,7 +10,7 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { isUnauthorizedError } from '@/lib/authUtils';
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from '@/components/Icons';
 
 export default function Test() {
   const [, params] = useRoute('/test/:subjectId');

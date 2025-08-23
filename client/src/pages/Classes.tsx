@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Users, Video, BookOpen, Star } from "lucide-react";
+import { Calendar, Clock, Users, Video, BookOpen, Star } from "@/components/Icons";
 
 export default function Classes() {
   const classes = [

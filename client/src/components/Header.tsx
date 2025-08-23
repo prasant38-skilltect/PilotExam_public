@@ -2,7 +2,7 @@ import { Link, useLocation } from 'wouter';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Moon, Sun, Plane } from 'lucide-react';
+import { Moon, Sun, Plane } from '@/components/Icons';
 import { cn } from '@/lib/utils';
 
 const navigationItems = [

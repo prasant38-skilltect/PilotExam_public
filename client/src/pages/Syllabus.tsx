@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { BookOpen, Clock, FileText, CheckCircle, Circle } from "lucide-react";
+import { BookOpen, Clock, FileText, CheckCircle, Circle } from "@/components/Icons";
 
 export default function Syllabus() {
   const subjects = [

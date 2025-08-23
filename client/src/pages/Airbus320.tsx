@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Plane, Monitor, Settings, Zap, Clock, Users, BookOpen, Award } from "lucide-react";
+import { Plane, Monitor, Settings, Zap, Clock, Users, BookOpen, Award } from "@/components/Icons";
 
 export default function Airbus320() {
   const modules = [

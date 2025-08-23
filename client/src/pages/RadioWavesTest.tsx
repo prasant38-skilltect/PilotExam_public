@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { CheckCircle, XCircle, Flag, Trophy, Clock, MessageSquare, BarChart3, FileText, ThumbsUp, ThumbsDown, Send } from 'lucide-react';
+import { CheckCircle, XCircle, Flag, Trophy, Clock, MessageSquare, BarChart3, FileText, ThumbsUp, ThumbsDown, Send } from '@/components/Icons';
 import { useToast } from '@/hooks/use-toast';
 
 export default function RadioWavesTest() {

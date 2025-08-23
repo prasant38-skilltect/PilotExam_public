@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plane, Users, Monitor, BookOpen, CheckCircle, Star } from 'lucide-react';
+import { Plane, Users, Monitor, BookOpen, CheckCircle, Star } from '@/components/Icons';
 
 export default function AirlineInterviews() {
   const interviewTopics = [

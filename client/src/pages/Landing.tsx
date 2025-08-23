@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 
-import { Rocket, Database, BarChart3, Clock, Smartphone, GraduationCap, UserCheck, Search, Play, Plane } from 'lucide-react';
+import { Rocket, Database, BarChart3, Clock, Smartphone, GraduationCap, UserCheck, Search, Play, Plane } from '@/components/Icons';
 import { useState } from 'react';
 
 export default function Landing() {

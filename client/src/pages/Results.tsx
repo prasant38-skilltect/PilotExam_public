@@ -3,7 +3,7 @@ import { useRoute, Link } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Trophy, Clock, Target, BarChart3, CheckCircle, XCircle, Flag, RotateCcw } from 'lucide-react';
+import { Trophy, Clock, Target, BarChart3, CheckCircle, XCircle, Flag, RotateCcw } from '@/components/Icons';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Results() {

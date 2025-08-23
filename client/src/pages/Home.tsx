@@ -4,7 +4,7 @@ import { Link } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Clock, Search, Play, Plane } from 'lucide-react';
+import { Clock, Search, Play, Plane } from '@/components/Icons';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {

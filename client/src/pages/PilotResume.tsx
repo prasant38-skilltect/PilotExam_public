@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, Download, Eye, Edit, CheckCircle, AlertCircle } from "lucide-react";
+import { FileText, Download, Eye, Edit, CheckCircle, AlertCircle } from "@/components/Icons";
 
 export default function PilotResume() {
   const resumeTemplates = [

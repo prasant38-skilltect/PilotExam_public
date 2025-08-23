@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageCircle, X } from 'lucide-react';
+import { MessageCircle, X } from '@/components/Icons';
 import { Button } from '@/components/ui/button';
 
 export function WhatsAppChat() {

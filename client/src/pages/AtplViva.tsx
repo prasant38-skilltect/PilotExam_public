@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Users, BookOpen, Award } from "lucide-react";
+import { Clock, Users, BookOpen, Award } from "@/components/Icons";
 
 export default function AtplViva() {
   return (

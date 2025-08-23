@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Clock, Flag, MessageSquare, BarChart3, FileText, ThumbsUp, ThumbsDown, Send } from 'lucide-react';
+import { Clock, Flag, MessageSquare, BarChart3, FileText, ThumbsUp, ThumbsDown, Send } from '@/components/Icons';
 import { cn } from '@/lib/utils';
 
 interface TestQuestionProps {
