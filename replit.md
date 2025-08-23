@@ -34,7 +34,9 @@ Preferred communication style: Simple, everyday language.
 
 ## Data Models
 - **Users**: Profile information and preferences
-- **ATPL Subjects**: 14 standardized aviation subjects with metadata
+- **Subjects**: 16 ATPL subjects with sequence ordering for consistent display
+- **Chapters**: Subject subdivisions (e.g., O#F#RD, K#ITH WI##I#M, EASA) with sequence ordering
+- **Sections**: Chapter subdivisions with unique URLs and sequence ordering for question sets
 - **Questions**: Question bank with multiple choice options and explanations
 - **Test Sessions**: Timed practice tests with progress tracking
 - **User Answers**: Individual question responses with correctness tracking
@@ -78,3 +80,15 @@ Preferred communication style: Simple, everyday language.
 - **React**: Frontend framework
 - **TanStack Query**: Data fetching and state management
 - **Wouter**: Client-side routing
+
+# Recent Changes
+
+**January 23, 2025:**
+- Implemented hierarchical database structure: subjects → chapters → sections
+- Added sequence fields to all tables for consistent question ordering
+- Inserted complete Instruments subject data with 3 chapters and 30 sections
+- Radio Navigation data with 3 chapters and 6 Oxford sections
+- Updated frontend components to fetch live data from database instead of hardcoded arrays
+- Added loading states and skeleton components for better UX
+- Fixed Landing component error for smooth navigation
+- API routes for chapters and sections with proper ordering by sequence
