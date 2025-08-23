@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { Header } from "@/components/Header";
 import { WhatsAppChat } from "@/components/WhatsAppChat";
 import { useAuth } from "@/hooks/useAuth";
+import { SEOHead, StructuredData } from "@/components/SEOHead";
 
 // Pages
 import Landing from "@/pages/Landing";
@@ -32,6 +33,8 @@ function Router() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEOHead />
+      <StructuredData />
       <Header />
       <main className="flex-1">
         <Switch>

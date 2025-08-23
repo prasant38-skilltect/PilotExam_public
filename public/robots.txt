@@ -1,0 +1,25 @@
+User-agent: *
+Allow: /
+
+# Block development and private areas
+Disallow: /api/
+Disallow: /*.json
+Disallow: /src/
+Disallow: /node_modules/
+
+# Allow important static assets
+Allow: /assets/
+Allow: /*.css
+Allow: /*.js
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.gif
+Allow: /*.svg
+Allow: /*.ico
+
+# Sitemap location
+Sitemap: https://eatpl.in/sitemap.xml
+
+# Crawl delay for respectful crawling
+Crawl-delay: 1
