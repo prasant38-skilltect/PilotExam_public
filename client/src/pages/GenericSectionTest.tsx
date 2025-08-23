@@ -327,21 +327,38 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-5 gap-2">
-                  {sortedQuestions.map((q, index) => (
-                    <Button
-                      key={q.id}
-                      variant={currentQuestionIndex === index ? "default" : "outline"}
-                      size="sm"
-                      className={cn(
-                        "h-8 w-8 p-0 text-xs",
-                        answeredQuestions.has(q.id) ? "bg-green-100 border-green-500" : "",
-                        currentQuestionIndex === index ? "bg-blue-600 text-white" : ""
-                      )}
-                      onClick={() => setCurrentQuestionIndex(index)}
-                    >
-                      {q.sequence}
-                    </Button>
-                  ))}
+                  {sortedQuestions.map((q, index) => {
+                    const isAnswered = answeredQuestions.has(q.id);
+                    const isCorrect = isAnswered && selectedAnswers[q.id] === q.correct_answer;
+                    const isWrong = isAnswered && selectedAnswers[q.id] !== q.correct_answer;
+                    const isCurrent = currentQuestionIndex === index;
+                    
+                    let buttonClass = "";
+                    if (isCurrent) {
+                      buttonClass = "bg-blue-600 text-white border-blue-600";
+                    } else if (isCorrect) {
+                      buttonClass = "bg-green-500 text-white border-green-500";
+                    } else if (isWrong) {
+                      buttonClass = "bg-red-500 text-white border-red-500";
+                    } else {
+                      buttonClass = "bg-white text-black border-gray-300";
+                    }
+                    
+                    return (
+                      <Button
+                        key={q.id}
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "h-8 w-8 p-0 text-xs",
+                          buttonClass
+                        )}
+                        onClick={() => setCurrentQuestionIndex(index)}
+                      >
+                        {q.sequence}
+                      </Button>
+                    );
+                  })}
                 </div>
                 <div className="mt-4 pt-4 border-t">
                   <Button
@@ -444,10 +461,10 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
                           Previous
                         </Button>
                         <Button
-                          onClick={handleNext}
-                          disabled={currentQuestionIndex === sortedQuestions.length - 1}
+                          onClick={currentQuestionIndex === sortedQuestions.length - 1 ? handleFinishTest : handleNext}
+                          disabled={false}
                         >
-                          Next
+                          {currentQuestionIndex === sortedQuestions.length - 1 ? "Finish" : "Next"}
                         </Button>
                       </div>
                     </div>
