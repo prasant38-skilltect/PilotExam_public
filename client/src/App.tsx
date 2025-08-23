@@ -9,24 +9,39 @@ import { WhatsAppChat } from "@/components/WhatsAppChat";
 import { useAuth } from "@/hooks/useAuth";
 import { SEOHead, StructuredData } from "@/components/SEOHead";
 
-// Pages
+// Pages - Lazy loaded for optimal performance
+import { lazy, Suspense } from 'react';
+
+// Critical pages loaded immediately
 import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
-import QuestionBank from "@/pages/QuestionBank";
-import Test from "@/pages/Test";
-import Results from "@/pages/Results";
-import AirlineInterviews from "@/pages/AirlineInterviews";
-import AtplViva from "@/pages/AtplViva";
-import Classes from "@/pages/Classes";
-import AptitudeTest from "@/pages/AptitudeTest";
-import Airbus320 from "@/pages/Airbus320";
-import Syllabus from "@/pages/Syllabus";
-import PilotResume from "@/pages/PilotResume";
-import RadioWavesTest from "@/pages/RadioWavesTest";
-import Subjects from "@/pages/Subjects";
-import RadioNavigation from "@/pages/RadioNavigation";
-import ChapterwiseQuestions from "@/pages/ChapterwiseQuestions";
-import NotFound from "@/pages/not-found";
+
+// All other pages lazy loaded
+const QuestionBank = lazy(() => import("@/pages/QuestionBank"));
+const Test = lazy(() => import("@/pages/Test"));
+const Results = lazy(() => import("@/pages/Results"));
+const AirlineInterviews = lazy(() => import("@/pages/AirlineInterviews"));
+const AtplViva = lazy(() => import("@/pages/AtplViva"));
+const Classes = lazy(() => import("@/pages/Classes"));
+const AptitudeTest = lazy(() => import("@/pages/AptitudeTest"));
+const Airbus320 = lazy(() => import("@/pages/Airbus320"));
+const Syllabus = lazy(() => import("@/pages/Syllabus"));
+const PilotResume = lazy(() => import("@/pages/PilotResume"));
+const RadioWavesTest = lazy(() => import("@/pages/RadioWavesTest"));
+const Subjects = lazy(() => import("@/pages/Subjects"));
+const RadioNavigation = lazy(() => import("@/pages/RadioNavigation"));
+const ChapterwiseQuestions = lazy(() => import("@/pages/ChapterwiseQuestions"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+
+// Loading component for lazy loaded pages
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+      <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+    </div>
+  </div>
+);
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -55,56 +70,208 @@ function Router() {
           </Route>
 
           {/* Navigation Flow Routes - SEO-friendly URLs */}
-          <Route path="/subjects/" component={Subjects} />
-          <Route path="/radio-navigation/" component={RadioNavigation} />
-          <Route path="/chapterwise-questions-oxford/" component={ChapterwiseQuestions} />
+          <Route path="/subjects/">
+            <Suspense fallback={<PageLoader />}>
+              <Subjects />
+            </Suspense>
+          </Route>
+          <Route path="/radio-navigation/">
+            <Suspense fallback={<PageLoader />}>
+              <RadioNavigation />
+            </Suspense>
+          </Route>
+          <Route path="/chapterwise-questions-oxford/">
+            <Suspense fallback={<PageLoader />}>
+              <ChapterwiseQuestions />
+            </Suspense>
+          </Route>
           
           {/* Chapter Routes - Direct MCQ pages */}
-          <Route path="/radio-waves/" component={RadioWavesTest} />
-          <Route path="/propagation/" component={NotFound} />
-          <Route path="/modulation/" component={NotFound} />
-          <Route path="/antennae/" component={NotFound} />
-          <Route path="/doppler/" component={NotFound} />
-          <Route path="/vdf/" component={NotFound} />
+          <Route path="/radio-waves/">
+            <Suspense fallback={<PageLoader />}>
+              <RadioWavesTest />
+            </Suspense>
+          </Route>
+          <Route path="/propagation/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/modulation/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/antennae/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/doppler/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/vdf/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
 
           {/* Radio Navigation Options */}
-          <Route path="/keith-radio-qb/" component={NotFound} />
-          <Route path="/indigo-radio-nav/" component={NotFound} />
+          <Route path="/keith-radio-qb/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/indigo-radio-nav/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
 
           {/* Subject Routes - for all ATPL subjects */}
-          <Route path="/instruments/" component={NotFound} />
-          <Route path="/performance/" component={NotFound} />
-          <Route path="/meteorology/" component={NotFound} />
-          <Route path="/technical/" component={NotFound} />
-          <Route path="/navigation/" component={NotFound} />
-          <Route path="/atpl-question-bank/" component={NotFound} />
-          <Route path="/indigo-question-bank/" component={NotFound} />
-          <Route path="/keith-williams/" component={NotFound} />
-          <Route path="/oxford-all-subjects/" component={NotFound} />
-          <Route path="/regulations/" component={NotFound} />
-          <Route path="/aircraft-specific/" component={NotFound} />
-          <Route path="/mass-and-balance/" component={NotFound} />
-          <Route path="/dgca-papers/" component={NotFound} />
-          <Route path="/airline-exam-papers/" component={NotFound} />
-          <Route path="/airbus-320/" component={NotFound} />
+          <Route path="/instruments/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/performance/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/meteorology/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/technical/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/navigation/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/atpl-question-bank/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/indigo-question-bank/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/keith-williams/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/oxford-all-subjects/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/regulations/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/aircraft-specific/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/mass-and-balance/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/dgca-papers/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/airline-exam-papers/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+          <Route path="/airbus-320/">
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
 
           {/* Public pages - accessible to all users */}
-          <Route path="/question-bank" component={QuestionBank} />
-          <Route path="/test/:subjectId" component={Test} />
-          <Route path="/results/:sessionId" component={Results} />
-          <Route path="/airline-interviews" component={AirlineInterviews} />
-          <Route path="/atpl-viva" component={AtplViva} />
-          <Route path="/classes" component={Classes} />
-          <Route path="/aptitude-test" component={AptitudeTest} />
-          <Route path="/airbus-320" component={Airbus320} />
-          <Route path="/syllabus" component={Syllabus} />
-          <Route path="/pilot-resume" component={PilotResume} />
+          <Route path="/question-bank">
+            <Suspense fallback={<PageLoader />}>
+              <QuestionBank />
+            </Suspense>
+          </Route>
+          <Route path="/test/:subjectId">
+            <Suspense fallback={<PageLoader />}>
+              <Test />
+            </Suspense>
+          </Route>
+          <Route path="/results/:sessionId">
+            <Suspense fallback={<PageLoader />}>
+              <Results />
+            </Suspense>
+          </Route>
+          <Route path="/airline-interviews">
+            <Suspense fallback={<PageLoader />}>
+              <AirlineInterviews />
+            </Suspense>
+          </Route>
+          <Route path="/atpl-viva">
+            <Suspense fallback={<PageLoader />}>
+              <AtplViva />
+            </Suspense>
+          </Route>
+          <Route path="/classes">
+            <Suspense fallback={<PageLoader />}>
+              <Classes />
+            </Suspense>
+          </Route>
+          <Route path="/aptitude-test">
+            <Suspense fallback={<PageLoader />}>
+              <AptitudeTest />
+            </Suspense>
+          </Route>
+          <Route path="/airbus-320">
+            <Suspense fallback={<PageLoader />}>
+              <Airbus320 />
+            </Suspense>
+          </Route>
+          <Route path="/syllabus">
+            <Suspense fallback={<PageLoader />}>
+              <Syllabus />
+            </Suspense>
+          </Route>
+          <Route path="/pilot-resume">
+            <Suspense fallback={<PageLoader />}>
+              <PilotResume />
+            </Suspense>
+          </Route>
           
           {/* Legacy route for backward compatibility */}
-          <Route path="/test" component={RadioWavesTest} />
+          <Route path="/test">
+            <Suspense fallback={<PageLoader />}>
+              <RadioWavesTest />
+            </Suspense>
+          </Route>
 
           {/* 404 fallback */}
-          <Route component={NotFound} />
+          <Route>
+            <Suspense fallback={<PageLoader />}>
+              <NotFound />
+            </Suspense>
+          </Route>
         </Switch>
       </main>
       
