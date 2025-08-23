@@ -99,7 +99,7 @@ export class DatabaseStorage implements IStorage {
 
   // Subject operations
   async getAllSubjects(): Promise<Subject[]> {
-    return await db.select().from(subjects).orderBy(subjects.name);
+    return await db.select().from(subjects).orderBy(subjects.sequence, subjects.name);
   }
 
   async getSubject(id: number): Promise<Subject | undefined> {
@@ -114,7 +114,7 @@ export class DatabaseStorage implements IStorage {
 
   // Chapter operations
   async getChaptersBySubject(subjectId: number): Promise<Chapter[]> {
-    return await db.select().from(chapters).where(eq(chapters.subjectId, subjectId)).orderBy(chapters.name);
+    return await db.select().from(chapters).where(eq(chapters.subjectId, subjectId)).orderBy(chapters.sequence, chapters.name);
   }
 
   async getChapter(id: number): Promise<Chapter | undefined> {
@@ -129,7 +129,7 @@ export class DatabaseStorage implements IStorage {
 
   // Section operations
   async getSectionsByChapter(chapterId: number): Promise<Section[]> {
-    return await db.select().from(sections).where(eq(sections.chapterId, chapterId)).orderBy(sections.name);
+    return await db.select().from(sections).where(eq(sections.chapterId, chapterId)).orderBy(sections.sequence, sections.name);
   }
 
   async getSection(id: number): Promise<Section | undefined> {

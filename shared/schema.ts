@@ -41,6 +41,7 @@ export const subjects = pgTable("subjects", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
+  sequence: integer("sequence").default(0),
 });
 
 // Chapters
@@ -49,6 +50,7 @@ export const chapters = pgTable("chapters", {
   subjectId: integer("subject_id").references(() => subjects.id, { onDelete: 'cascade' }).notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
+  sequence: integer("sequence").default(0),
 });
 
 // Sections
@@ -57,6 +59,7 @@ export const sections = pgTable("sections", {
   chapterId: integer("chapter_id").references(() => chapters.id, { onDelete: 'cascade' }).notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
+  sequence: integer("sequence").default(0),
 });
 
 // Questions (updated structure)
