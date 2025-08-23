@@ -17,15 +17,11 @@ export default function OxfordInstruments() {
   });
 
   const handleSectionClick = (section: Section) => {
-    // For PRESSURE HEADS, open external URL in new tab AND navigate to our test page
+    // For PRESSURE HEADS, open our MCQ test page in new tab
     if (section.name === 'PRESSURE HEADS') {
-      if (section.description) {
-        window.open(section.description, '_blank');
-      }
-      // Navigate to our test page
-      window.location.href = '/pressure-heads/';
+      window.open('/pressure-heads/', '_blank');
     } else {
-      // For other sections, just open external URL
+      // For other sections, open external URL in new tab
       if (section.description) {
         window.open(section.description, '_blank');
       }

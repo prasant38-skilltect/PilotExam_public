@@ -174,8 +174,8 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(questions)
-      .innerJoin(questionSections, eq(questions.id, questionSections.questionId))
-      .where(eq(questionSections.sectionId, sectionId))
+      .innerJoin(questionSections, eq(questions.id, questionSections.question_id))
+      .where(eq(questionSections.section_id, sectionId))
       .orderBy(questionSections.sequence)
       .then(rows => rows.map(row => row.questions));
   }

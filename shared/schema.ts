@@ -62,16 +62,21 @@ export const sections = pgTable("sections", {
   sequence: integer("sequence").default(0),
 });
 
-// Questions (updated structure)
+// Questions (updated structure to match actual database)
 export const questions = pgTable("questions", {
   id: serial("id").primaryKey(),
-  quizId: integer("quiz_id"), // optional quiz reference
-  sectionId: integer("section_id").references(() => sections.id, { onDelete: 'set null' }),
-  questionText: text("question_text").notNull(),
-  type: varchar("type", { length: 20 }).default('mcq'), // 'mcq', 'truefalse', 'fillblank'
-  featuredImage: text("featured_image"),
+  subject_id: integer("subject_id"),
+  question_text: text("question_text").notNull(),
+  option_a: text("option_a"),
+  option_b: text("option_b"),
+  option_c: text("option_c"),
+  option_d: text("option_d"),
+  correct_answer: varchar("correct_answer", { length: 1 }),
   explanation: text("explanation"),
-  createdAt: timestamp("created_at").defaultNow(),
+  difficulty: varchar("difficulty", { length: 20 }),
+  sequence: integer("sequence").default(0),
+  explanation_text: text("explanation_text"),
+  explanation_image: varchar("explanation_image"),
 });
 
 // Answers (new table for flexible answer options)
@@ -138,11 +143,11 @@ export const userProgress = pgTable("user_progress", {
   lastTestDate: timestamp("last_test_date"),
 });
 
-// Question-Section Mapping Table
+// Question-Section Mapping Table (matches actual database)
 export const questionSections = pgTable("question_sections", {
   id: serial("id").primaryKey(),
-  questionId: integer("question_id").references(() => questions.id, { onDelete: 'cascade' }).notNull(),
-  sectionId: integer("section_id").references(() => sections.id, { onDelete: 'cascade' }).notNull(),
+  question_id: integer("question_id").references(() => questions.id, { onDelete: 'cascade' }).notNull(),
+  section_id: integer("section_id").references(() => sections.id, { onDelete: 'cascade' }).notNull(),
   sequence: integer("sequence").default(0),
 });
 
