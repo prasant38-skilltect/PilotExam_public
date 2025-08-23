@@ -90,7 +90,7 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
 
   const handleAnswerSelect = (questionId: number, answer: string) => {
     setSelectedAnswers(prev => ({ ...prev, [questionId]: answer }));
-    setAnsweredQuestions(prev => new Set([...prev, questionId]));
+    setAnsweredQuestions(prev => new Set(Array.from(prev).concat([questionId])));
   };
 
   const handleNext = () => {

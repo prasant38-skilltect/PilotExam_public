@@ -163,7 +163,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const insertSubjectSchema = createInsertSchema(subjects);
 export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true });
 export const insertSectionSchema = createInsertSchema(sections).omit({ id: true });
-export const insertQuestionSchema = createInsertSchema(questions).omit({ id: true, createdAt: true });
+export const insertQuestionSchema = createInsertSchema(questions).omit({ id: true });
 export const insertAnswerSchema = createInsertSchema(answers).omit({ id: true });
 
 export const insertTestSessionSchema = createInsertSchema(testSessions).omit({

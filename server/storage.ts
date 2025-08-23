@@ -145,22 +145,15 @@ export class DatabaseStorage implements IStorage {
 
   // Question operations
   async getQuestionsBySubject(subjectId: number): Promise<Question[]> {
-    // Get questions by joining through sections and chapters
+    // Get questions by joining through sections and chapters via questionSections mapping
     return await db
-      .select({ 
-        id: questions.id,
-        quizId: questions.quizId,
-        sectionId: questions.sectionId,
-        questionText: questions.questionText,
-        type: questions.type,
-        featuredImage: questions.featuredImage,
-        explanation: questions.explanation,
-        createdAt: questions.createdAt
-      })
+      .select()
       .from(questions)
-      .innerJoin(sections, eq(questions.sectionId, sections.id))
+      .innerJoin(questionSections, eq(questions.id, questionSections.question_id))
+      .innerJoin(sections, eq(questionSections.section_id, sections.id))
       .innerJoin(chapters, eq(sections.chapterId, chapters.id))
-      .where(eq(chapters.subjectId, subjectId));
+      .where(eq(chapters.subjectId, subjectId))
+      .then(rows => rows.map(row => row.questions));
   }
 
   async getRandomQuestions(subjectId: number, count: number): Promise<Question[]> {
