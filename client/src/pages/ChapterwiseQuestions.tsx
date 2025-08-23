@@ -1,5 +1,6 @@
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
+import { getChapterUrl } from '@shared/urlMapping';
 
 export default function ChapterwiseQuestions() {
   const chapterwiseOptions = [
@@ -10,14 +11,6 @@ export default function ChapterwiseQuestions() {
     'DOPPLER',
     'VDF'
   ];
-
-  const getChapterUrl = (chapter: string) => {
-    if (chapter === 'RADIO WAVES') {
-      return '/radio-navigation/radio-waves/';
-    }
-    // For other chapters, create SEO-friendly URLs
-    return `/radio-navigation/${chapter.toLowerCase().replace(/\s+/g, '-')}/`;
-  };
 
   const handleChapterClick = (chapter: string) => {
     const url = getChapterUrl(chapter);

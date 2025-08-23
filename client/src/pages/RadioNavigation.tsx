@@ -1,5 +1,6 @@
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
+import { getRadioNavOptionUrl } from '@shared/urlMapping';
 
 export default function RadioNavigation() {
   const radioNavOptions = [
@@ -7,14 +8,6 @@ export default function RadioNavigation() {
     'KIETH RADIO QB',
     'INDIGO RADIO NAV'
   ];
-
-  const getOptionUrl = (option: string) => {
-    if (option === 'CHAPTERWISE QUESTIONS O#F#RD') {
-      return '/radio-navigation/chapters/';
-    }
-    // For other options, create SEO-friendly URLs under radio-navigation
-    return `/radio-navigation/${option.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}/`;
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
@@ -36,7 +29,7 @@ export default function RadioNavigation() {
         
         <div className="space-y-4">
           {radioNavOptions.map((option, index) => (
-            <Link key={index} href={getOptionUrl(option)}>
+            <Link key={index} href={getRadioNavOptionUrl(option)}>
               <Button
                 variant="outline"
                 className="w-full h-16 text-lg font-medium bg-slate-700/80 border-slate-600 text-white hover:bg-slate-600/80 transition-all duration-300 rounded-full"

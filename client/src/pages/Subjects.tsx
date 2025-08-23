@@ -1,6 +1,6 @@
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { getSubjectUrl } from '@shared/urlMapping';
 
 export default function Subjects() {
   const subjectsList = [
@@ -21,14 +21,6 @@ export default function Subjects() {
     'AIRLINE WRITTEN EXAM PREVIOUS ATTEMPT',
     'AIRBUS 320'
   ];
-
-  const getSubjectUrl = (subject: string) => {
-    if (subject === 'RADIO NAVIGATION') {
-      return '/radio-navigation/';
-    }
-    // For other subjects, create SEO-friendly URLs
-    return `/${subject.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}/`;
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
