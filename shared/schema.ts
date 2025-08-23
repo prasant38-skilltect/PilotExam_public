@@ -138,6 +138,14 @@ export const userProgress = pgTable("user_progress", {
   lastTestDate: timestamp("last_test_date"),
 });
 
+// Question-Section Mapping Table
+export const questionSections = pgTable("question_sections", {
+  id: serial("id").primaryKey(),
+  questionId: integer("question_id").references(() => questions.id, { onDelete: 'cascade' }).notNull(),
+  sectionId: integer("section_id").references(() => sections.id, { onDelete: 'cascade' }).notNull(),
+  sequence: integer("sequence").default(0),
+});
+
 // Insert Schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,

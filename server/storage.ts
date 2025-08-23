@@ -4,6 +4,7 @@ import {
   chapters,
   sections,
   questions,
+  questionSections,
   answers,
   testSessions,
   userAnswers,
@@ -169,7 +170,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getQuestionsBySection(sectionId: number): Promise<Question[]> {
-    return await db.select().from(questions).where(eq(questions.sectionId, sectionId));
+    // Get questions mapped to this section through question_sections table
+    return await db
+      .select()
+      .from(questions)
+      .innerJoin(questionSections, eq(questions.id, questionSections.questionId))
+      .where(eq(questionSections.sectionId, sectionId))
+      .orderBy(questionSections.sequence)
+      .then(rows => rows.map(row => row.questions));
   }
 
   // Answer operations

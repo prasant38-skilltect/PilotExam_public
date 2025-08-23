@@ -33,6 +33,7 @@ const RadioNavigation = lazy(() => import("@/pages/RadioNavigation"));
 const ChapterwiseQuestions = lazy(() => import("@/pages/ChapterwiseQuestions"));
 const Instruments = lazy(() => import("@/pages/Instruments"));
 const OxfordInstruments = lazy(() => import("@/pages/OxfordInstruments"));
+const PressureHeadsTest = lazy(() => import("@/pages/PressureHeadsTest"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Loading component for lazy loaded pages
@@ -90,6 +91,11 @@ function Router() {
           <Route path="/oxford-instruments-questions/">
             <Suspense fallback={<PageLoader />}>
               <OxfordInstruments />
+            </Suspense>
+          </Route>
+          <Route path="/pressure-heads/">
+            <Suspense fallback={<PageLoader />}>
+              <PressureHeadsTest />
             </Suspense>
           </Route>
           

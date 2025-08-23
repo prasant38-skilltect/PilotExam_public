@@ -17,9 +17,18 @@ export default function OxfordInstruments() {
   });
 
   const handleSectionClick = (section: Section) => {
-    // Open the URL stored in description field
-    if (section.description) {
-      window.open(section.description, '_blank');
+    // For PRESSURE HEADS, open external URL in new tab AND navigate to our test page
+    if (section.name === 'PRESSURE HEADS') {
+      if (section.description) {
+        window.open(section.description, '_blank');
+      }
+      // Navigate to our test page
+      window.location.href = '/pressure-heads/';
+    } else {
+      // For other sections, just open external URL
+      if (section.description) {
+        window.open(section.description, '_blank');
+      }
     }
   };
 

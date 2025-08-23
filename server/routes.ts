@@ -125,6 +125,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Section questions routes (public)
+  app.get('/api/sections/:sectionId/questions', async (req, res) => {
+    try {
+      const sectionId = parseInt(req.params.sectionId);
+      const questions = await storage.getQuestionsBySection(sectionId);
+      res.json(questions);
+    } catch (error) {
+      console.error("Error fetching section questions:", error);
+      res.status(500).json({ message: "Failed to fetch section questions" });
+    }
+  });
+
   // Question routes (public)
   app.get('/api/subjects/:subjectId/questions', async (req, res) => {
     try {
