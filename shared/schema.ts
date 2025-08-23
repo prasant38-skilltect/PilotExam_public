@@ -36,35 +36,55 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// ATPL Subjects
-export const atplSubjects = pgTable("atpl_subjects", {
+// Subjects (renamed from atplSubjects for consistency)
+export const subjects = pgTable("subjects", {
   id: serial("id").primaryKey(),
-  code: varchar("code", { length: 10 }).notNull().unique(),
-  title: varchar("title", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
-  duration: integer("duration").notNull(), // in minutes
-  questionCount: integer("question_count").notNull(),
 });
 
-// Questions
+// Chapters
+export const chapters = pgTable("chapters", {
+  id: serial("id").primaryKey(),
+  subjectId: integer("subject_id").references(() => subjects.id, { onDelete: 'cascade' }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+});
+
+// Sections
+export const sections = pgTable("sections", {
+  id: serial("id").primaryKey(),
+  chapterId: integer("chapter_id").references(() => chapters.id, { onDelete: 'cascade' }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+});
+
+// Questions (updated structure)
 export const questions = pgTable("questions", {
   id: serial("id").primaryKey(),
-  subjectId: integer("subject_id").references(() => atplSubjects.id).notNull(),
+  quizId: integer("quiz_id"), // optional quiz reference
+  sectionId: integer("section_id").references(() => sections.id, { onDelete: 'set null' }),
   questionText: text("question_text").notNull(),
-  optionA: text("option_a").notNull(),
-  optionB: text("option_b").notNull(),
-  optionC: text("option_c").notNull(),
-  optionD: text("option_d").notNull(),
-  correctAnswer: varchar("correct_answer", { length: 1 }).notNull(),
+  type: varchar("type", { length: 20 }).default('mcq'), // 'mcq', 'truefalse', 'fillblank'
+  featuredImage: text("featured_image"),
   explanation: text("explanation"),
-  difficulty: varchar("difficulty", { length: 20 }).default('medium'),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Answers (new table for flexible answer options)
+export const answers = pgTable("answers", {
+  id: serial("id").primaryKey(),
+  questionId: integer("question_id").references(() => questions.id, { onDelete: 'cascade' }).notNull(),
+  answerText: text("answer_text"),
+  answerImage: text("answer_image"),
+  isCorrect: boolean("is_correct").default(false),
 });
 
 // Test Sessions
 export const testSessions = pgTable("test_sessions", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").references(() => users.id),
-  subjectId: integer("subject_id").references(() => atplSubjects.id).notNull(),
+  subjectId: integer("subject_id").references(() => subjects.id).notNull(),
   startTime: timestamp("start_time").defaultNow(),
   endTime: timestamp("end_time"),
   isCompleted: boolean("is_completed").default(false),
@@ -108,7 +128,7 @@ export const userAnswers = pgTable("user_answers", {
 export const userProgress = pgTable("user_progress", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").references(() => users.id).notNull(),
-  subjectId: integer("subject_id").references(() => atplSubjects.id).notNull(),
+  subjectId: integer("subject_id").references(() => subjects.id).notNull(),
   totalTests: integer("total_tests").default(0),
   averageScore: integer("average_score").default(0),
   bestScore: integer("best_score").default(0),
@@ -124,9 +144,11 @@ export const insertUserSchema = createInsertSchema(users).pick({
   themePreference: true,
 });
 
-export const insertAtplSubjectSchema = createInsertSchema(atplSubjects);
-
-export const insertQuestionSchema = createInsertSchema(questions);
+export const insertSubjectSchema = createInsertSchema(subjects);
+export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true });
+export const insertSectionSchema = createInsertSchema(sections).omit({ id: true });
+export const insertQuestionSchema = createInsertSchema(questions).omit({ id: true, createdAt: true });
+export const insertAnswerSchema = createInsertSchema(answers).omit({ id: true });
 
 export const insertTestSessionSchema = createInsertSchema(testSessions).omit({
   id: true,
@@ -157,10 +179,16 @@ export const insertCommentVoteSchema = createInsertSchema(commentVotes).omit({
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
-export type AtplSubject = typeof atplSubjects.$inferSelect;
-export type InsertAtplSubject = z.infer<typeof insertAtplSubjectSchema>;
+export type Subject = typeof subjects.$inferSelect;
+export type InsertSubject = z.infer<typeof insertSubjectSchema>;
+export type Chapter = typeof chapters.$inferSelect;
+export type InsertChapter = z.infer<typeof insertChapterSchema>;
+export type Section = typeof sections.$inferSelect;
+export type InsertSection = z.infer<typeof insertSectionSchema>;
 export type Question = typeof questions.$inferSelect;
 export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
+export type Answer = typeof answers.$inferSelect;
+export type InsertAnswer = z.infer<typeof insertAnswerSchema>;
 export type TestSession = typeof testSessions.$inferSelect;
 export type InsertTestSession = z.infer<typeof insertTestSessionSchema>;
 export type UserAnswer = typeof userAnswers.$inferSelect;

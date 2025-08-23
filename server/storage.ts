@@ -1,16 +1,25 @@
 import {
   users,
-  atplSubjects,
+  subjects,
+  chapters,
+  sections,
   questions,
+  answers,
   testSessions,
   userAnswers,
   userProgress,
   type User,
   type UpsertUser,
-  type AtplSubject,
-  type InsertAtplSubject,
+  type Subject,
+  type InsertSubject,
+  type Chapter,
+  type InsertChapter,
+  type Section,
+  type InsertSection,
   type Question,
   type InsertQuestion,
+  type Answer,
+  type InsertAnswer,
   type TestSession,
   type InsertTestSession,
   type UserAnswer,
@@ -27,8 +36,23 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   
   // Subject operations
-  getAllSubjects(): Promise<AtplSubject[]>;
-  getSubject(id: number): Promise<AtplSubject | undefined>;
+  getAllSubjects(): Promise<Subject[]>;
+  getSubject(id: number): Promise<Subject | undefined>;
+  createSubject(subject: InsertSubject): Promise<Subject>;
+  
+  // Chapter operations
+  getChaptersBySubject(subjectId: number): Promise<Chapter[]>;
+  getChapter(id: number): Promise<Chapter | undefined>;
+  createChapter(chapter: InsertChapter): Promise<Chapter>;
+  
+  // Section operations
+  getSectionsByChapter(chapterId: number): Promise<Section[]>;
+  getSection(id: number): Promise<Section | undefined>;
+  createSection(section: InsertSection): Promise<Section>;
+  
+  // Answer operations
+  getAnswersByQuestion(questionId: number): Promise<Answer[]>;
+  createAnswer(answer: InsertAnswer): Promise<Answer>;
   
   // Question operations
   getQuestionsBySubject(subjectId: number): Promise<Question[]>;
@@ -74,25 +98,88 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Subject operations
-  async getAllSubjects(): Promise<AtplSubject[]> {
-    return await db.select().from(atplSubjects).orderBy(atplSubjects.code);
+  async getAllSubjects(): Promise<Subject[]> {
+    return await db.select().from(subjects).orderBy(subjects.name);
   }
 
-  async getSubject(id: number): Promise<AtplSubject | undefined> {
-    const [subject] = await db.select().from(atplSubjects).where(eq(atplSubjects.id, id));
+  async getSubject(id: number): Promise<Subject | undefined> {
+    const [subject] = await db.select().from(subjects).where(eq(subjects.id, id));
     return subject;
+  }
+
+  async createSubject(subject: InsertSubject): Promise<Subject> {
+    const [created] = await db.insert(subjects).values(subject).returning();
+    return created;
+  }
+
+  // Chapter operations
+  async getChaptersBySubject(subjectId: number): Promise<Chapter[]> {
+    return await db.select().from(chapters).where(eq(chapters.subjectId, subjectId)).orderBy(chapters.name);
+  }
+
+  async getChapter(id: number): Promise<Chapter | undefined> {
+    const [chapter] = await db.select().from(chapters).where(eq(chapters.id, id));
+    return chapter;
+  }
+
+  async createChapter(chapter: InsertChapter): Promise<Chapter> {
+    const [created] = await db.insert(chapters).values(chapter).returning();
+    return created;
+  }
+
+  // Section operations
+  async getSectionsByChapter(chapterId: number): Promise<Section[]> {
+    return await db.select().from(sections).where(eq(sections.chapterId, chapterId)).orderBy(sections.name);
+  }
+
+  async getSection(id: number): Promise<Section | undefined> {
+    const [section] = await db.select().from(sections).where(eq(sections.id, id));
+    return section;
+  }
+
+  async createSection(section: InsertSection): Promise<Section> {
+    const [created] = await db.insert(sections).values(section).returning();
+    return created;
   }
 
   // Question operations
   async getQuestionsBySubject(subjectId: number): Promise<Question[]> {
-    return await db.select().from(questions).where(eq(questions.subjectId, subjectId));
+    // Get questions by joining through sections and chapters
+    return await db
+      .select({ 
+        id: questions.id,
+        quizId: questions.quizId,
+        sectionId: questions.sectionId,
+        questionText: questions.questionText,
+        type: questions.type,
+        featuredImage: questions.featuredImage,
+        explanation: questions.explanation,
+        createdAt: questions.createdAt
+      })
+      .from(questions)
+      .innerJoin(sections, eq(questions.sectionId, sections.id))
+      .innerJoin(chapters, eq(sections.chapterId, chapters.id))
+      .where(eq(chapters.subjectId, subjectId));
   }
 
   async getRandomQuestions(subjectId: number, count: number): Promise<Question[]> {
-    // In a production system, you might want to use a more sophisticated random selection
-    const allQuestions = await db.select().from(questions).where(eq(questions.subjectId, subjectId));
+    const allQuestions = await this.getQuestionsBySubject(subjectId);
     const shuffled = allQuestions.sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
+  }
+
+  async getQuestionsBySection(sectionId: number): Promise<Question[]> {
+    return await db.select().from(questions).where(eq(questions.sectionId, sectionId));
+  }
+
+  // Answer operations
+  async getAnswersByQuestion(questionId: number): Promise<Answer[]> {
+    return await db.select().from(answers).where(eq(answers.questionId, questionId));
+  }
+
+  async createAnswer(answer: InsertAnswer): Promise<Answer> {
+    const [created] = await db.insert(answers).values(answer).returning();
+    return created;
   }
 
   async getQuestion(id: number): Promise<Question | undefined> {
