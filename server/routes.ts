@@ -25,7 +25,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { theme } = req.body;
-      
+
       if (!theme || !['light', 'dark'].includes(theme)) {
         return res.status(400).json({ message: "Invalid theme preference" });
       }
@@ -57,11 +57,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const subject = await storage.getSubject(id);
-      
+
       if (!subject) {
         return res.status(404).json({ message: "Subject not found" });
       }
-      
+
       res.json(subject);
     } catch (error) {
       console.error("Error fetching subject:", error);
@@ -74,7 +74,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const subjectId = parseInt(req.params.subjectId);
       const { count } = req.query;
-      
+
       let questions;
       if (count) {
         const questionCount = parseInt(count as string);
@@ -82,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         questions = await storage.getQuestionsBySubject(subjectId);
       }
-      
+
       res.json(questions);
     } catch (error) {
       console.error("Error fetching questions:", error);
@@ -94,12 +94,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/test-sessions', async (req: any, res) => {
     try {
       const sessionData = insertTestSessionSchema.parse(req.body);
-      
+
       // If user is authenticated, add their ID
       if (req.isAuthenticated && req.user?.claims?.sub) {
         sessionData.userId = req.user.claims.sub;
       }
-      
+
       const session = await storage.createTestSession(sessionData);
       res.json(session);
     } catch (error) {
@@ -112,11 +112,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const session = await storage.getTestSession(id);
-      
+
       if (!session) {
         return res.status(404).json({ message: "Test session not found" });
       }
-      
+
       res.json(session);
     } catch (error) {
       console.error("Error fetching test session:", error);
@@ -128,7 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
-      
+
       const session = await storage.updateTestSession(id, updates);
       res.json(session);
     } catch (error) {
