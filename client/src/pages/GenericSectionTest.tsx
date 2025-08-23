@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Clock, Flag, MessageSquare, BarChart3, FileText, ThumbsUp, ThumbsDown, Send, Home, Calendar, Users } from 'lucide-react';
+import { Clock, Flag, MessageSquare, FileText, ThumbsUp, ThumbsDown, Send, Home, Calendar, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -361,10 +361,9 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
             <Card className="h-full">
               <CardContent className="p-6">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="question">Question</TabsTrigger>
                     <TabsTrigger value="explanation">Explanation</TabsTrigger>
-                    <TabsTrigger value="statistics">Statistics</TabsTrigger>
                     <TabsTrigger value="comments">Comments</TabsTrigger>
                   </TabsList>
 
@@ -390,23 +389,51 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
                           { key: 'B', text: currentQuestion.option_b },
                           { key: 'C', text: currentQuestion.option_c },
                           { key: 'D', text: currentQuestion.option_d }
-                        ].map((option) => (
-                          <Button
-                            key={option.key}
-                            variant={selectedAnswers[currentQuestion.id] === option.key ? "default" : "outline"}
-                            className={cn(
-                              "w-full text-left justify-start p-4 h-auto",
-                              selectedAnswers[currentQuestion.id] === option.key 
-                                ? "bg-blue-600 text-white" 
-                                : "bg-white text-black hover:bg-gray-50"
-                            )}
-                            onClick={() => handleAnswerSelect(currentQuestion.id, option.key)}
-                          >
-                            <span className="font-semibold mr-3">{option.key}.</span>
-                            {option.text}
-                          </Button>
-                        ))}
+                        ].map((option) => {
+                          const isSelected = selectedAnswers[currentQuestion.id] === option.key;
+                          const isCorrect = currentQuestion.correct_answer === option.key;
+                          const hasAnswered = currentQuestion.id in selectedAnswers;
+                          
+                          let buttonClass = "";
+                          if (hasAnswered) {
+                            if (isSelected && !isCorrect) {
+                              buttonClass = "bg-red-500 text-white border-red-500";
+                            } else if (isCorrect) {
+                              buttonClass = "bg-green-500 text-white border-green-500";
+                            } else {
+                              buttonClass = "bg-gray-100 text-gray-600";
+                            }
+                          } else {
+                            buttonClass = isSelected ? "bg-blue-600 text-white" : "bg-white text-black hover:bg-gray-50";
+                          }
+                          
+                          return (
+                            <Button
+                              key={option.key}
+                              variant="outline"
+                              className={cn(
+                                "w-full text-left justify-start p-4 h-auto",
+                                buttonClass
+                              )}
+                              onClick={() => handleAnswerSelect(currentQuestion.id, option.key)}
+                              disabled={hasAnswered}
+                            >
+                              <span className="font-semibold mr-3">{option.key}.</span>
+                              {option.text}
+                              {hasAnswered && isCorrect && <span className="ml-2">✓</span>}
+                              {hasAnswered && isSelected && !isCorrect && <span className="ml-2">✗</span>}
+                            </Button>
+                          );
+                        })}
                       </div>
+
+                      {/* Show explanation immediately when answer is selected */}
+                      {currentQuestion.id in selectedAnswers && (currentQuestion.explanation_text || currentQuestion.explanation) && (
+                        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                          <h4 className="font-semibold mb-2 text-blue-800">Explanation:</h4>
+                          <p className="text-blue-700">{currentQuestion.explanation_text || currentQuestion.explanation}</p>
+                        </div>
+                      )}
 
                       <div className="flex justify-between pt-4">
                         <Button
@@ -439,24 +466,6 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="statistics" className="mt-4">
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold flex items-center">
-                        <BarChart3 className="h-5 w-5 mr-2" />
-                        Question Statistics
-                      </h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                          <div className="text-2xl font-bold text-green-600">78%</div>
-                          <div className="text-sm text-gray-600">Answered Correctly</div>
-                        </div>
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                          <div className="text-2xl font-bold text-blue-600">1,234</div>
-                          <div className="text-sm text-gray-600">Total Attempts</div>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
 
                   <TabsContent value="comments" className="mt-4">
                     <div className="space-y-4">
