@@ -40,7 +40,7 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [testStartTime, setTestStartTime] = useState<number | null>(null);
-  const [isTestActive, setIsTestActive] = useState(false);
+  const [isTestActive, setIsTestActive] = useState(true);
   const [reportIssue, setReportIssue] = useState<{ questionId: number | null; description: string }>({
     questionId: null,
     description: ''
@@ -71,6 +71,13 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
   const { data: questions, isLoading } = useQuery<Question[]>({
     queryKey: [`/api/sections/${sectionId}/questions`],
   });
+
+  // Auto-start test when component mounts
+  useEffect(() => {
+    if (!testStartTime) {
+      setTestStartTime(Date.now());
+    }
+  }, []);
 
   // Timer effect
   useEffect(() => {
