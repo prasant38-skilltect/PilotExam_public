@@ -22,6 +22,9 @@ import Airbus320 from "@/pages/Airbus320";
 import Syllabus from "@/pages/Syllabus";
 import PilotResume from "@/pages/PilotResume";
 import RadioWavesTest from "@/pages/RadioWavesTest";
+import Subjects from "@/pages/Subjects";
+import RadioNavigation from "@/pages/RadioNavigation";
+import ChapterwiseQuestions from "@/pages/ChapterwiseQuestions";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -48,6 +51,29 @@ function Router() {
             )}
           </Route>
 
+          {/* Navigation Flow Routes - SEO-friendly URLs */}
+          <Route path="/subjects/" component={Subjects} />
+          <Route path="/radio-navigation/chapters/" component={ChapterwiseQuestions} />
+          <Route path="/radio-navigation/radio-waves/" component={RadioWavesTest} />
+          <Route path="/radio-navigation/" component={RadioNavigation} />
+
+          {/* Other Subject Routes - for future implementation */}
+          <Route path="/instruments/" component={NotFound} />
+          <Route path="/performance/" component={NotFound} />
+          <Route path="/meteorology/" component={NotFound} />
+          <Route path="/technical/" component={NotFound} />
+          <Route path="/navigation/" component={NotFound} />
+          <Route path="/atpl-question-bank/" component={NotFound} />
+          <Route path="/indigo-question-bank-6000-jaa-qb/" component={NotFound} />
+          <Route path="/keith-williams/" component={NotFound} />
+          <Route path="/oxod-all-subjects/" component={NotFound} />
+          <Route path="/regulations/" component={NotFound} />
+          <Route path="/aircraft-specific/" component={NotFound} />
+          <Route path="/mass-and-balance/" component={NotFound} />
+          <Route path="/previous-attempt-dgca-papers/" component={NotFound} />
+          <Route path="/airline-written-exam-previous-attempt/" component={NotFound} />
+          <Route path="/airbus-320/" component={NotFound} />
+
           {/* Public pages - accessible to all users */}
           <Route path="/question-bank" component={QuestionBank} />
           <Route path="/test/:subjectId" component={Test} />
@@ -59,6 +85,8 @@ function Router() {
           <Route path="/airbus-320" component={Airbus320} />
           <Route path="/syllabus" component={Syllabus} />
           <Route path="/pilot-resume" component={PilotResume} />
+          
+          {/* Legacy route for backward compatibility */}
           <Route path="/test" component={RadioWavesTest} />
 
           {/* 404 fallback */}
