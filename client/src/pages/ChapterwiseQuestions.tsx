@@ -1,21 +1,44 @@
 import { Link } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { getChapterUrl } from '@shared/urlMapping';
+import { Skeleton } from '@/components/ui/skeleton';
+
+type Section = {
+  id: number;
+  name: string;
+  description?: string;
+  chapterId: number;
+};
 
 export default function ChapterwiseQuestions() {
-  const chapterwiseOptions = [
-    'RADIO WAVES',
-    'PROPAGATION',
-    'MODULATION',
-    'ANTENNAE',
-    'DOPPLER',
-    'VDF'
-  ];
+  // CHAPTERWISE QUESTIONS O#F#RD chapter ID is 1 based on our database insert
+  const { data: sections, isLoading } = useQuery<Section[]>({
+    queryKey: ['/api/chapters/1/sections'],
+  });
 
-  const handleChapterClick = (chapter: string) => {
-    const url = getChapterUrl(chapter);
+  const handleSectionClick = (section: string) => {
+    const url = getChapterUrl(section);
     window.open(url, '_blank');
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
+        <div className="max-w-2xl mx-auto px-4 py-20">
+          <div className="text-center mb-12">
+            <Skeleton className="h-12 w-80 mx-auto mb-6" />
+            <Skeleton className="h-10 w-40 mx-auto" />
+          </div>
+          <div className="space-y-6">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
@@ -36,15 +59,15 @@ export default function ChapterwiseQuestions() {
         </div>
         
         <div className="space-y-6">
-          {chapterwiseOptions.map((chapter, index) => (
+          {sections?.map((section: Section) => (
             <Button
-              key={index}
+              key={section.id}
               variant="outline"
               className="w-full h-16 text-lg font-medium bg-slate-700/80 border-slate-600 text-white hover:bg-slate-600/80 transition-all duration-300 rounded-full"
-              onClick={() => handleChapterClick(chapter)}
-              data-testid={`chapter-${chapter.toLowerCase().replace(/\s+/g, '-')}`}
+              onClick={() => handleSectionClick(section.name)}
+              data-testid={`chapter-${section.name.toLowerCase().replace(/\s+/g, '-')}`}
             >
-              {chapter}
+              {section.name}
             </Button>
           ))}
         </div>

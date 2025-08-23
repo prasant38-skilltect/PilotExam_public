@@ -69,6 +69,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chapter routes (public)
+  app.get('/api/subjects/:subjectId/chapters', async (req, res) => {
+    try {
+      const subjectId = parseInt(req.params.subjectId);
+      const chapters = await storage.getChaptersBySubject(subjectId);
+      res.json(chapters);
+    } catch (error) {
+      console.error("Error fetching chapters:", error);
+      res.status(500).json({ message: "Failed to fetch chapters" });
+    }
+  });
+
+  app.get('/api/chapters/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const chapter = await storage.getChapter(id);
+
+      if (!chapter) {
+        return res.status(404).json({ message: "Chapter not found" });
+      }
+
+      res.json(chapter);
+    } catch (error) {
+      console.error("Error fetching chapter:", error);
+      res.status(500).json({ message: "Failed to fetch chapter" });
+    }
+  });
+
+  // Section routes (public)
+  app.get('/api/chapters/:chapterId/sections', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const sections = await storage.getSectionsByChapter(chapterId);
+      res.json(sections);
+    } catch (error) {
+      console.error("Error fetching sections:", error);
+      res.status(500).json({ message: "Failed to fetch sections" });
+    }
+  });
+
+  app.get('/api/sections/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const section = await storage.getSection(id);
+
+      if (!section) {
+        return res.status(404).json({ message: "Section not found" });
+      }
+
+      res.json(section);
+    } catch (error) {
+      console.error("Error fetching section:", error);
+      res.status(500).json({ message: "Failed to fetch section" });
+    }
+  });
+
   // Question routes (public)
   app.get('/api/subjects/:subjectId/questions', async (req, res) => {
     try {

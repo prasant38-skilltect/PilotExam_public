@@ -16,8 +16,8 @@ export default function Landing() {
   });
 
   const filteredSubjects = (apiSubjects as any)?.filter((subject: any) =>
-    subject.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    subject.code.toLowerCase().includes(searchTerm.toLowerCase())
+    subject.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    subject.description?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const stats = {
