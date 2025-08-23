@@ -53,17 +53,32 @@ export default function Instruments() {
         </div>
         
         <div className="space-y-4">
-          {chapters?.map((chapter: Chapter) => (
-            <Link key={chapter.id} href={`/instruments/${chapter.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}/`}>
-              <Button
-                variant="outline"
-                className="w-full h-16 text-lg font-medium bg-slate-700/80 border-slate-600 text-white hover:bg-slate-600/80 transition-all duration-300 rounded-full"
-                data-testid={`instruments-${chapter.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`}
-              >
-                {chapter.name}
-              </Button>
-            </Link>
-          ))}
+          {chapters?.map((chapter: Chapter) => {
+            const getChapterUrl = (chapterName: string) => {
+              switch (chapterName) {
+                case 'O#F#RD':
+                  return '/oxford-instruments-questions/';
+                case 'K#ITH WI##I#M':
+                  return '/keith-instruments-questions/';
+                case 'EASA (INDIGO)':
+                  return '/easa-instruments-questions/';
+                default:
+                  return `/instruments/${chapterName.toLowerCase().replace(/[^a-z0-9]/g, '-')}/`;
+              }
+            };
+
+            return (
+              <Link key={chapter.id} href={getChapterUrl(chapter.name)}>
+                <Button
+                  variant="outline"
+                  className="w-full h-16 text-lg font-medium bg-slate-700/80 border-slate-600 text-white hover:bg-slate-600/80 transition-all duration-300 rounded-full"
+                  data-testid={`instruments-${chapter.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`}
+                >
+                  {chapter.name}
+                </Button>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </div>
