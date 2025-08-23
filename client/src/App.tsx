@@ -31,6 +31,7 @@ const RadioWavesTest = lazy(() => import("@/pages/RadioWavesTest"));
 const Subjects = lazy(() => import("@/pages/Subjects"));
 const RadioNavigation = lazy(() => import("@/pages/RadioNavigation"));
 const ChapterwiseQuestions = lazy(() => import("@/pages/ChapterwiseQuestions"));
+const Instruments = lazy(() => import("@/pages/Instruments"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Loading component for lazy loaded pages
@@ -133,7 +134,7 @@ function Router() {
           {/* Subject Routes - for all ATPL subjects */}
           <Route path="/instruments/">
             <Suspense fallback={<PageLoader />}>
-              <NotFound />
+              <Instruments />
             </Suspense>
           </Route>
           <Route path="/performance/">
