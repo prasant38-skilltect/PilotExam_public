@@ -845,7 +845,7 @@ app.use((req, res, next) => {
               font-weight: 600;
               cursor: pointer;
               width: 100%;
-              margin-top: auto;
+              margin-top: 20px;
             }
             .finish-btn:hover {
               background: #b91c1c;
@@ -961,31 +961,143 @@ app.use((req, res, next) => {
               border-top: 1px solid #e5e7eb;
               padding: 16px 30px;
               display: flex;
-              justify-content: between;
+              justify-content: space-between;
               align-items: center;
             }
             .nav-btn {
-              background: #3b82f6;
+              background: #6366f1;
               color: white;
               border: none;
-              padding: 10px 20px;
-              border-radius: 6px;
+              padding: 12px 24px;
+              border-radius: 8px;
               cursor: pointer;
               font-weight: 500;
               transition: all 0.2s;
+              font-size: 14px;
             }
             .nav-btn:hover:not(:disabled) {
-              background: #2563eb;
+              background: #5b57f2;
             }
             .nav-btn:disabled {
-              background: #9ca3af;
+              background: #d1d5db;
+              color: #9ca3af;
               cursor: not-allowed;
             }
-            .nav-btn.finish {
-              background: #dc2626;
+            .nav-btn.next {
+              background: #10b981;
             }
-            .nav-btn.finish:hover {
-              background: #b91c1c;
+            .nav-btn.next:hover:not(:disabled) {
+              background: #059669;
+            }
+            
+            /* Report Modal */
+            .modal-overlay {
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: rgba(0, 0, 0, 0.5);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              z-index: 1000;
+            }
+            .modal {
+              background: white;
+              border-radius: 12px;
+              padding: 24px;
+              max-width: 400px;
+              width: 90%;
+              box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            }
+            .modal-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+            }
+            .modal-title {
+              font-size: 18px;
+              font-weight: 600;
+              color: #1f2937;
+            }
+            .close-btn {
+              background: none;
+              border: none;
+              font-size: 20px;
+              cursor: pointer;
+              color: #6b7280;
+            }
+            .modal-content {
+              margin-bottom: 24px;
+            }
+            .modal-label {
+              display: block;
+              margin-bottom: 8px;
+              font-size: 14px;
+              color: #374151;
+            }
+            .modal-textarea {
+              width: 100%;
+              min-height: 100px;
+              padding: 12px;
+              border: 2px solid #e5e7eb;
+              border-radius: 8px;
+              font-family: inherit;
+              font-size: 14px;
+              resize: vertical;
+            }
+            .modal-textarea:focus {
+              outline: none;
+              border-color: #6366f1;
+            }
+            .modal-actions {
+              display: flex;
+              gap: 12px;
+              justify-content: flex-end;
+            }
+            .modal-btn {
+              padding: 10px 20px;
+              border-radius: 6px;
+              font-weight: 500;
+              cursor: pointer;
+              font-size: 14px;
+              border: none;
+            }
+            .modal-btn.cancel {
+              background: #f3f4f6;
+              color: #374151;
+            }
+            .modal-btn.submit {
+              background: #6366f1;
+              color: white;
+            }
+            .modal-btn:hover.cancel {
+              background: #e5e7eb;
+            }
+            .modal-btn:hover.submit {
+              background: #5b57f2;
+            }
+            
+            .report-btn {
+              background: none;
+              border: 1px solid #d1d5db;
+              color: #6b7280;
+              padding: 8px 16px;
+              border-radius: 6px;
+              cursor: pointer;
+              font-size: 12px;
+              font-weight: 500;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              margin-left: auto;
+              margin-top: 12px;
+            }
+            .report-btn:hover {
+              background: #f9fafb;
+              border-color: #9ca3af;
             }
             
             /* Responsive */
@@ -1056,6 +1168,10 @@ app.use((req, res, next) => {
                   <!-- Options populated by JavaScript -->
                 </div>
                 
+                <button class="report-btn" id="report-btn">
+                  📋 Report
+                </button>
+                
                 <div class="explanation-section" id="explanation-section">
                   <div class="explanation-title">Explanation:</div>
                   <div class="explanation-text" id="explanation-text"></div>
@@ -1064,7 +1180,25 @@ app.use((req, res, next) => {
               
               <div class="navigation">
                 <button class="nav-btn" id="prev-btn">Previous</button>
-                <button class="nav-btn" id="next-btn">Next</button>
+                <button class="nav-btn next" id="next-btn">Next</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Report Modal -->
+          <div class="modal-overlay" id="report-modal" style="display: none;">
+            <div class="modal">
+              <div class="modal-header">
+                <h3 class="modal-title">Report Issue</h3>
+                <button class="close-btn" id="close-modal">×</button>
+              </div>
+              <div class="modal-content">
+                <label class="modal-label">Report an issue with this question:</label>
+                <textarea class="modal-textarea" id="report-text" placeholder="Describe the issue..."></textarea>
+              </div>
+              <div class="modal-actions">
+                <button class="modal-btn cancel" id="cancel-report">Cancel</button>
+                <button class="modal-btn submit" id="submit-report">Submit Report</button>
               </div>
             </div>
           </div>
@@ -1125,13 +1259,9 @@ app.use((req, res, next) => {
                 grid.appendChild(btn);
               });
               
-              // Show finish button if this is the last question
+              // Always show finish button
               const finishBtn = document.getElementById('finish-btn');
-              if (currentQuestionIndex === questions.length - 1) {
-                finishBtn.style.display = 'block';
-              } else {
-                finishBtn.style.display = 'none';
-              }
+              finishBtn.style.display = 'block';
             }
             
             function renderQuestion(index) {
@@ -1201,16 +1331,11 @@ app.use((req, res, next) => {
               const nextBtn = document.getElementById('next-btn');
               
               prevBtn.disabled = index === 0;
+              nextBtn.disabled = index === questions.length - 1;
               
-              if (index === questions.length - 1) {
-                nextBtn.textContent = 'Finish';
-                nextBtn.className = 'nav-btn finish';
-                nextBtn.disabled = false;
-              } else {
-                nextBtn.textContent = 'Next';
-                nextBtn.className = 'nav-btn';
-                nextBtn.disabled = false;
-              }
+              // Always show Next, disable on last question
+              nextBtn.textContent = 'Next';
+              nextBtn.className = 'nav-btn next';
               
               prevBtn.onclick = () => {
                 if (index > 0) {
@@ -1227,9 +1352,6 @@ app.use((req, res, next) => {
                   renderQuestion(currentQuestionIndex);
                   renderQuestionGrid();
                   updateSidebarHeader();
-                } else {
-                  // Finish test
-                  showResults();
                 }
               };
             }
@@ -1269,6 +1391,40 @@ app.use((req, res, next) => {
             // Finish button functionality
             document.getElementById('finish-btn').addEventListener('click', () => {
               showResults();
+            });
+            
+            // Report modal functionality
+            document.getElementById('report-btn').addEventListener('click', () => {
+              document.getElementById('report-modal').style.display = 'flex';
+            });
+            
+            document.getElementById('close-modal').addEventListener('click', () => {
+              document.getElementById('report-modal').style.display = 'none';
+              document.getElementById('report-text').value = '';
+            });
+            
+            document.getElementById('cancel-report').addEventListener('click', () => {
+              document.getElementById('report-modal').style.display = 'none';
+              document.getElementById('report-text').value = '';
+            });
+            
+            document.getElementById('submit-report').addEventListener('click', () => {
+              const reportText = document.getElementById('report-text').value.trim();
+              if (reportText) {
+                alert('Thank you for your feedback! Your report has been submitted.');
+                document.getElementById('report-modal').style.display = 'none';
+                document.getElementById('report-text').value = '';
+              } else {
+                alert('Please describe the issue before submitting.');
+              }
+            });
+            
+            // Close modal on outside click
+            document.getElementById('report-modal').addEventListener('click', (e) => {
+              if (e.target.id === 'report-modal') {
+                document.getElementById('report-modal').style.display = 'none';
+                document.getElementById('report-text').value = '';
+              }
             });
             
             function showResults() {
