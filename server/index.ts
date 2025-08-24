@@ -934,27 +934,6 @@ app.use((req, res, next) => {
               color: #1f2937;
             }
             
-            .explanation-section {
-              background: #f8fafc;
-              border: 1px solid #e2e8f0;
-              border-radius: 8px;
-              padding: 20px;
-              margin-top: 20px;
-              display: none;
-            }
-            .explanation-section.show {
-              display: block;
-            }
-            .explanation-title {
-              font-size: 16px;
-              font-weight: 600;
-              margin-bottom: 12px;
-              color: #1e40af;
-            }
-            .explanation-text {
-              color: #374151;
-              line-height: 1.6;
-            }
             
             .navigation {
               background: #f9fafb;
@@ -1270,7 +1249,6 @@ app.use((req, res, next) => {
             <div class="main-panel">
               <div class="content-tabs">
                 <div class="content-tab active" data-tab="question">Question</div>
-                <div class="content-tab" data-tab="explanation">Explanation</div>
                 <div class="content-tab" data-tab="comments">Comments</div>
               </div>
               
@@ -1286,11 +1264,6 @@ app.use((req, res, next) => {
                   <button class="report-btn" id="report-btn">
                     📋 Report
                   </button>
-                  
-                  <div class="explanation-section" id="explanation-section">
-                    <div class="explanation-title">Explanation:</div>
-                    <div class="explanation-text" id="explanation-text"></div>
-                  </div>
                 </div>
                 
                 <!-- Comments Tab Content -->
@@ -1474,17 +1447,6 @@ app.use((req, res, next) => {
                 container.appendChild(option);
               });
               
-              // Update explanation
-              const explanation = question.explanation_text || question.explanation || 'No explanation available.';
-              document.getElementById('explanation-text').textContent = explanation;
-              
-              // Show/hide explanation based on attempt status
-              const explanationSection = document.getElementById('explanation-section');
-              if (attemptedQuestions.has(question.id)) {
-                explanationSection.classList.add('show');
-              } else {
-                explanationSection.classList.remove('show');
-              }
               
               // Update navigation buttons
               const prevBtn = document.getElementById('prev-btn');
@@ -1542,21 +1504,8 @@ app.use((req, res, next) => {
                 if (tabType === 'comments') {
                   commentsSection.style.display = 'block';
                 } else {
-                  // Show question content for both question and explanation tabs
+                  // Show question content for question tab
                   questionContent.style.display = 'block';
-                  
-                  const explanationSection = document.getElementById('explanation-section');
-                  if (tabType === 'explanation') {
-                    explanationSection.classList.add('show');
-                  } else if (tabType === 'question') {
-                    // Only show explanation if question was attempted
-                    const question = questions[currentQuestionIndex];
-                    if (attemptedQuestions.has(question.id)) {
-                      explanationSection.classList.add('show');
-                    } else {
-                      explanationSection.classList.remove('show');
-                    }
-                  }
                 }
               });
             });
