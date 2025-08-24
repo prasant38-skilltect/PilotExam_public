@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { log } from "./vite";
+import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 app.use(express.json());
@@ -60,10 +60,12 @@ app.use((req, _res, next) => {
   // Note: Authentication pages are now handled by React components
   // in client/src/pages/SignIn.tsx, SignUp.tsx, and ForgotPassword.tsx
 
-  // This Express server only handles API routes
-  // Next.js dev server runs on port 5000 (main port)
-  const PORT = 3001;
+  // For Next.js, we don't need to setup Vite
+  // Next.js will handle its own dev server on port 3000
+  // This Express server only handles API routes on port 5000
+
+  const PORT = 5000;
   server.listen(PORT, "0.0.0.0", () => {
-    log(`API Server running on port ${PORT}`);
+    log(`Server serving on port ${PORT} (API + ${app.get("env") === "development" ? "Vite" : "Static"})`);
   });
 })();

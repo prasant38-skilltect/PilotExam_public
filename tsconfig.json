@@ -25,7 +25,8 @@
       "@/app/*": ["./app/*"],
       "@/lib/*": ["./lib/*"],
       "@/hooks/*": ["./hooks/*"],
-      "@shared/*": ["./shared/*"]
+      "@/shared/*": ["./shared/*"],
+      "@/client/*": ["./client/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
