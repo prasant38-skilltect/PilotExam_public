@@ -47,6 +47,245 @@ app.use((req, res, next) => {
     throw err;
   });
 
+  // Serve the subjects selection page
+  app.get('/subjects', (req, res) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Eatpl.in - Select ATPL Subject</title>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+              background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #3b82f6 100%);
+              min-height: 100vh;
+              color: white;
+            }
+            
+            /* Header */
+            .header {
+              background: rgba(255, 255, 255, 0.1);
+              backdrop-filter: blur(10px);
+              border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+              padding: 0 24px;
+              height: 64px;
+              display: flex;
+              align-items: center;
+            }
+            .nav-container {
+              max-width: 1200px;
+              margin: 0 auto;
+              width: 100%;
+              display: flex;
+              align-items: center;
+              justify-content: between;
+            }
+            .logo {
+              display: flex;
+              align-items: center;
+              font-size: 18px;
+              font-weight: 600;
+              color: white;
+              text-decoration: none;
+            }
+            .logo::before {
+              content: "✈️";
+              margin-right: 8px;
+            }
+            .nav-links {
+              display: flex;
+              align-items: center;
+              gap: 32px;
+              flex: 1;
+              justify-content: center;
+            }
+            .nav-link {
+              color: rgba(255, 255, 255, 0.8);
+              text-decoration: none;
+              font-size: 14px;
+              font-weight: 500;
+              transition: color 0.2s;
+            }
+            .nav-link:hover {
+              color: white;
+            }
+            .header-actions {
+              display: flex;
+              align-items: center;
+              gap: 16px;
+            }
+            .theme-toggle {
+              background: none;
+              border: none;
+              padding: 8px;
+              border-radius: 6px;
+              cursor: pointer;
+              color: rgba(255, 255, 255, 0.8);
+              font-size: 16px;
+            }
+            .sign-in-btn {
+              background: #6366f1;
+              color: white;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 8px;
+              font-size: 14px;
+              font-weight: 500;
+              cursor: pointer;
+              transition: background 0.2s;
+            }
+            .sign-in-btn:hover {
+              background: #5b57f2;
+            }
+            
+            /* Main Content */
+            .main-content {
+              max-width: 1200px;
+              margin: 0 auto;
+              padding: 40px 24px;
+            }
+            .subjects-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+              gap: 20px;
+              margin-top: 20px;
+            }
+            .subject-card {
+              background: rgba(255, 255, 255, 0.1);
+              backdrop-filter: blur(10px);
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              border-radius: 16px;
+              padding: 24px;
+              text-align: center;
+              cursor: pointer;
+              transition: all 0.3s;
+              text-decoration: none;
+              color: white;
+              display: block;
+            }
+            .subject-card:hover {
+              transform: translateY(-5px);
+              background: rgba(255, 255, 255, 0.2);
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            }
+            .subject-title {
+              font-size: 16px;
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              line-height: 1.4;
+            }
+            .subject-description {
+              font-size: 14px;
+              opacity: 0.8;
+              margin-top: 8px;
+            }
+            .loading {
+              text-align: center;
+              padding: 60px;
+              font-size: 18px;
+              opacity: 0.8;
+            }
+            
+            /* Responsive */
+            @media (max-width: 768px) {
+              .nav-links { display: none; }
+              .subjects-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+              }
+              .main-content {
+                padding: 20px 16px;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <!-- Header -->
+          <header class="header">
+            <div class="nav-container">
+              <a href="/" class="logo">Eatpl.in</a>
+              
+              <nav class="nav-links">
+                <a href="/question-bank" class="nav-link">Question Bank</a>
+                <a href="/airline-interviews" class="nav-link">Airline Interviews & Sim Prep</a>
+                <a href="/atpl-viva" class="nav-link">ATPL Viva</a>
+                <a href="/classes" class="nav-link">Classes</a>
+                <a href="/aptitude-test" class="nav-link">Aptitude Test</a>
+                <a href="/airbus-320" class="nav-link">Airbus 320</a>
+                <a href="/syllabus" class="nav-link">Syllabus</a>
+                <a href="/pilot-resume" class="nav-link">Pilot Resume</a>
+              </nav>
+              
+              <div class="header-actions">
+                <button class="theme-toggle">🌙</button>
+                <button class="sign-in-btn">Sign In</button>
+              </div>
+            </div>
+          </header>
+          
+          <!-- Main Content -->
+          <main class="main-content">
+            <div id="subjects-container">
+              <div class="loading">Loading ATPL Subjects...</div>
+            </div>
+          </main>
+          
+          <script>
+            async function loadSubjects() {
+              try {
+                const response = await fetch('/api/subjects');
+                const subjects = await response.json();
+                
+                const container = document.getElementById('subjects-container');
+                container.innerHTML = '';
+                
+                const grid = document.createElement('div');
+                grid.className = 'subjects-grid';
+                
+                subjects.forEach(subject => {
+                  const card = document.createElement('a');
+                  card.className = 'subject-card';
+                  card.href = '/mcq-test'; // For now, all subjects go to the same test
+                  
+                  const title = document.createElement('div');
+                  title.className = 'subject-title';
+                  title.textContent = subject.name || subject.title || subject.code || 'Subject';
+                  
+                  const description = document.createElement('div');
+                  description.className = 'subject-description';
+                  description.textContent = subject.description || 'ATPL Exam Practice';
+                  
+                  card.appendChild(title);
+                  card.appendChild(description);
+                  grid.appendChild(card);
+                });
+                
+                container.appendChild(grid);
+                
+              } catch (error) {
+                console.error('Error loading subjects:', error);
+                document.getElementById('subjects-container').innerHTML = 
+                  '<div class="loading">Error loading subjects. Please try again.</div>';
+              }
+            }
+            
+            // Load subjects on page load
+            loadSubjects();
+            
+            // Sign in functionality
+            document.querySelector('.sign-in-btn').addEventListener('click', () => {
+              window.location.href = '/api/login';
+            });
+          </script>
+        </body>
+      </html>
+    `);
+  });
+
   // Serve the dynamic MCQ test interface for PRESSURE HEADS
   app.get('/mcq-test', (req, res) => {
     res.send(`
