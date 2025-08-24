@@ -1,15 +1,15 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+// import { setupAuth, isAuthenticated } from "./replitAuth"; // Disabled Replit auth
 import { insertTestSessionSchema, insertUserAnswerSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
-  await setupAuth(app);
+  // await setupAuth(app); // Disabled Replit auth
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // Auth routes (temporarily disabled)
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -21,7 +21,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user theme preference
-  app.patch('/api/auth/user/theme', isAuthenticated, async (req: any, res) => {
+  app.patch('/api/auth/user/theme', async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { theme } = req.body;
@@ -228,8 +228,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Progress tracking routes (protected)
-  app.get('/api/progress', isAuthenticated, async (req: any, res) => {
+  // Progress tracking routes (temporarily disabled authentication)
+  app.get('/api/progress', async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const progress = await storage.getUserProgress(userId);
@@ -240,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/test-sessions/user/history', isAuthenticated, async (req: any, res) => {
+  app.get('/api/test-sessions/user/history', async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const sessions = await storage.getUserTestSessions(userId);
