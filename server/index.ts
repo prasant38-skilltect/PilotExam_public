@@ -1229,7 +1229,7 @@ app.use((req, res, next) => {
                   updateSidebarHeader();
                 } else {
                   // Finish test
-                  alert('Test completed! Thank you for practicing.');
+                  showResults();
                 }
               };
             }
@@ -1268,8 +1268,95 @@ app.use((req, res, next) => {
             
             // Finish button functionality
             document.getElementById('finish-btn').addEventListener('click', () => {
-              alert('Test completed! Thank you for practicing.');
+              showResults();
             });
+            
+            function showResults() {
+              // Calculate score
+              let correctCount = 0;
+              let totalAttempted = attemptedQuestions.size;
+              
+              questions.forEach(q => {
+                if (attemptedQuestions.has(q.id) && selectedAnswers[q.id] === q.correct_answer) {
+                  correctCount++;
+                }
+              });
+              
+              const percentage = totalAttempted > 0 ? Math.round((correctCount / questions.length) * 100) : 0;
+              
+              // Replace main content with results
+              document.querySelector('.container').innerHTML = \`
+                <div style="max-width: 900px; margin: 0 auto; padding: 40px 20px;">
+                  <!-- Score Summary Card -->
+                  <div style="background: white; border-radius: 16px; padding: 40px; text-align: center; margin-bottom: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                    <h2 style="font-size: 24px; font-weight: 600; color: #1f2937; margin-bottom: 16px;">Your Score</h2>
+                    <div style="font-size: 64px; font-weight: 700; color: #3b82f6; margin-bottom: 16px;">\${percentage}%</div>
+                    <div style="font-size: 16px; color: #6b7280; margin-bottom: 8px;">\${correctCount} out of \${questions.length} questions correct</div>
+                    <div style="font-size: 14px; color: #9ca3af;">Time taken: 12:26</div>
+                  </div>
+                  
+                  <!-- Questions Review -->
+                  <div id="results-questions"></div>
+                </div>
+              \`;
+              
+              // Render all questions with results
+              const resultsContainer = document.getElementById('results-questions');
+              
+              questions.forEach((question, index) => {
+                const userAnswer = selectedAnswers[question.id];
+                const correctAnswer = question.correct_answer;
+                const isCorrect = userAnswer === correctAnswer;
+                const wasAttempted = attemptedQuestions.has(question.id);
+                
+                const questionCard = document.createElement('div');
+                questionCard.style.cssText = 'background: white; border-radius: 12px; padding: 30px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);';
+                
+                questionCard.innerHTML = \`
+                  <h3 style="font-size: 18px; font-weight: 600; color: #1f2937; margin-bottom: 24px;">
+                    #\${index + 1}. \${question.question_text}
+                  </h3>
+                  
+                  <div style="margin-bottom: 24px;">
+                    \${renderResultOptions(question, userAnswer, correctAnswer, wasAttempted)}
+                  </div>
+                  
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
+                    <div style="font-size: 16px; font-weight: 600; color: #1e40af; margin-bottom: 12px;">Explanation:</div>
+                    <div style="color: #374151; line-height: 1.6;">\${question.explanation_text || question.explanation || 'No explanation available.'}</div>
+                  </div>
+                \`;
+                
+                resultsContainer.appendChild(questionCard);
+              });
+            }
+            
+            function renderResultOptions(question, userAnswer, correctAnswer, wasAttempted) {
+              const optionTexts = [question.option_a, question.option_b, question.option_c, question.option_d];
+              const letters = ['A', 'B', 'C', 'D'];
+              
+              return letters.map((letter, i) => {
+                let optionStyle = 'display: flex; align-items: flex-start; gap: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #e5e7eb; border-radius: 6px; background: white;';
+                
+                if (wasAttempted) {
+                  if (letter === correctAnswer) {
+                    // Correct answer - always green
+                    optionStyle = 'display: flex; align-items: flex-start; gap: 12px; padding: 12px; margin-bottom: 8px; border: 2px solid #10b981; border-radius: 6px; background: #dcfce7;';
+                  } else if (letter === userAnswer && userAnswer !== correctAnswer) {
+                    // User's wrong answer - red
+                    optionStyle = 'display: flex; align-items: flex-start; gap: 12px; padding: 12px; margin-bottom: 8px; border: 2px solid #ef4444; border-radius: 6px; background: #fef2f2;';
+                  }
+                }
+                
+                return \`
+                  <div style="\${optionStyle}">
+                    <span style="font-weight: 700; min-width: 20px; color: #374151;">\${letter}.</span>
+                    <span style="color: #1f2937;">\${optionTexts[i]}</span>
+                    \${wasAttempted && letter === correctAnswer ? '<span style="color: #10b981; margin-left: auto; font-weight: 600;">✓ Correct</span>' : ''}
+                  </div>
+                \`;
+              }).join('');
+            }
             
             // Initialize
             loadQuestions();
