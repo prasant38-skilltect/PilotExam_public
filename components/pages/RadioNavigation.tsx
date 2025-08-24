@@ -52,7 +52,7 @@ export default function RadioNavigation() {
             </Button>
           </Link>
         </div>
-        
+
         <div className="space-y-4">
           {chapters?.map((chapter: Chapter) => (
             <Link key={chapter.id} href={getRadioNavOptionUrl(chapter.name)}>

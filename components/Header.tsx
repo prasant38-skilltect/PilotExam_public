@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/components/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun, Plane } from '@/components/Icons';

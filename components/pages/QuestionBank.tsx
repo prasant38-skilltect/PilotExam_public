@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Clock, Search, Play } from '@/components/Icons';
 import { Skeleton } from '@/components/ui/skeleton';
+// import { useTheme } from '@/contexts/ThemeContext'; // This import is not used in the provided file.
 
 export default function QuestionBank() {
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const { data: subjects, isLoading } = useQuery({
     queryKey: ['/api/subjects'],
   });
@@ -88,12 +89,12 @@ export default function QuestionBank() {
                   {subject.title}
                 </CardTitle>
               </CardHeader>
-              
+
               <CardContent>
                 <p className="text-gray-600 dark:text-gray-300 text-sm mb-4" data-testid={`text-subject-description-${subject.id}`}>
                   {subject.description}
                 </p>
-                
+
                 <div className="flex justify-between items-center mb-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
                     <Clock className="mr-1" size={16} />
@@ -103,7 +104,7 @@ export default function QuestionBank() {
 
                 <div className="flex space-x-2">
                   <Link href={`/test/${subject.id}`} className="flex-1">
-                    <Button 
+                    <Button
                       className="w-full bg-gradient-to-r from-purple-600 to-blue-700 text-white hover:shadow-lg transition-all duration-300"
                       data-testid={`button-start-test-${subject.id}`}
                     >
@@ -111,9 +112,9 @@ export default function QuestionBank() {
                       Start Test
                     </Button>
                   </Link>
-                  
+
                   <Link href={`/test/${subject.id}?mode=practice`}>
-                    <Button 
+                    <Button
                       variant="outline"
                       data-testid={`button-practice-${subject.id}`}
                     >

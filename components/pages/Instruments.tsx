@@ -51,7 +51,7 @@ export default function Instruments() {
             </Button>
           </Link>
         </div>
-        
+
         <div className="space-y-4">
           {chapters?.map((chapter: Chapter) => {
             const getChapterUrl = (chapterName: string) => {

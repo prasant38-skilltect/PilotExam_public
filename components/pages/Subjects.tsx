@@ -50,7 +50,7 @@ export default function Subjects() {
             </Button>
           </Link>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {subjects?.map((subject: Subject) => (
             <Link key={subject.id} href={getSubjectUrl(subject.name)}>

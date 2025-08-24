@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAuth } from '../../hooks/useAuth';
-import { apiRequest } from '../../lib/queryClient';
+import { useAuth } from '@/hooks/useAuth';
+import { apiRequest } from '@/lib/queryClient';
 
 type Theme = 'light' | 'dark';
 

@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const { data: subjects, isLoading } = useQuery({
     queryKey: ['/api/subjects'],
   });
@@ -55,8 +55,8 @@ export default function Home() {
         {/* Start Your Flight Prep Button */}
         <div className="text-center mb-8">
           <Link href="/test">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="bg-gradient-to-r from-blue-800 via-blue-700 to-cyan-600 text-white hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border border-cyan-400/20 shadow-lg shadow-cyan-400/20"
               data-testid="button-start-flight-prep"
             >
@@ -102,12 +102,12 @@ export default function Home() {
                   {subject.title}
                 </CardTitle>
               </CardHeader>
-              
+
               <CardContent>
                 <p className="text-gray-600 dark:text-gray-300 text-sm mb-4" data-testid={`text-subject-description-${subject.id}`}>
                   {subject.description}
                 </p>
-                
+
                 <div className="flex justify-between items-center mb-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
                     <Clock className="mr-1" size={16} />
@@ -117,7 +117,7 @@ export default function Home() {
 
                 <div className="flex space-x-2">
                   <Link href={`/test/${subject.id}`} className="flex-1">
-                    <Button 
+                    <Button
                       className="w-full bg-gradient-to-r from-purple-600 to-blue-700 text-white hover:shadow-lg transition-all duration-300"
                       data-testid={`button-start-test-${subject.id}`}
                     >
