@@ -249,7 +249,12 @@ app.use((req, res, next) => {
                 subjects.forEach(subject => {
                   const card = document.createElement('a');
                   card.className = 'subject-card';
-                  card.href = '/mcq-test'; // For now, all subjects go to the same test
+                  // Create specific routes for each subject
+                  if (subject.name === 'INSTRUMENTS') {
+                    card.href = '/instruments';
+                  } else {
+                    card.href = '/mcq-test'; // Default for other subjects
+                  }
                   
                   const title = document.createElement('div');
                   title.className = 'subject-title';
@@ -280,6 +285,689 @@ app.use((req, res, next) => {
             document.querySelector('.sign-in-btn').addEventListener('click', () => {
               window.location.href = '/api/login';
             });
+          </script>
+        </body>
+      </html>
+    `);
+  });
+
+  // Serve Instruments chapters page  
+  app.get('/instruments', (req, res) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Instruments - ATPL Chapters</title>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+              background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #3b82f6 100%);
+              min-height: 100vh;
+              color: white;
+            }
+            
+            .header {
+              background: rgba(255, 255, 255, 0.1);
+              backdrop-filter: blur(10px);
+              border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+              padding: 20px 24px;
+              display: flex;
+              align-items: center;
+              gap: 16px;
+            }
+            .back-btn {
+              background: rgba(255, 255, 255, 0.2);
+              border: 1px solid rgba(255, 255, 255, 0.3);
+              color: white;
+              padding: 8px 16px;
+              border-radius: 8px;
+              text-decoration: none;
+              font-size: 14px;
+              transition: all 0.2s;
+            }
+            .back-btn:hover {
+              background: rgba(255, 255, 255, 0.3);
+            }
+            .page-title {
+              font-size: 28px;
+              font-weight: 700;
+            }
+            
+            .main-content {
+              max-width: 1200px;
+              margin: 0 auto;
+              padding: 40px 24px;
+            }
+            .chapters-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+              gap: 20px;
+              margin-top: 20px;
+            }
+            .chapter-card {
+              background: rgba(255, 255, 255, 0.1);
+              backdrop-filter: blur(10px);
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              border-radius: 16px;
+              padding: 32px;
+              text-align: center;
+              cursor: pointer;
+              transition: all 0.3s;
+              text-decoration: none;
+              color: white;
+              display: block;
+            }
+            .chapter-card:hover {
+              transform: translateY(-5px);
+              background: rgba(255, 255, 255, 0.2);
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            }
+            .chapter-title {
+              font-size: 20px;
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              margin-bottom: 12px;
+            }
+            .chapter-description {
+              font-size: 16px;
+              opacity: 0.8;
+            }
+            .loading {
+              text-align: center;
+              padding: 60px;
+              font-size: 18px;
+              opacity: 0.8;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <a href="/subjects" class="back-btn">← Back to Subjects</a>
+            <h1 class="page-title">Instruments Chapters</h1>
+          </div>
+          
+          <main class="main-content">
+            <div id="chapters-container">
+              <div class="loading">Loading chapters...</div>
+            </div>
+          </main>
+          
+          <script>
+            async function loadChapters() {
+              try {
+                const response = await fetch('/api/subjects/1/chapters');
+                const chapters = await response.json();
+                
+                const container = document.getElementById('chapters-container');
+                container.innerHTML = '';
+                
+                const grid = document.createElement('div');
+                grid.className = 'chapters-grid';
+                
+                chapters.forEach(chapter => {
+                  const card = document.createElement('a');
+                  card.className = 'chapter-card';
+                  
+                  // Route to specific chapter pages
+                  if (chapter.name === 'O#F#RD') {
+                    card.href = '/oxford-instruments-questions';
+                  } else {
+                    card.href = '/mcq-test'; // Default for other chapters
+                  }
+                  
+                  const title = document.createElement('div');
+                  title.className = 'chapter-title';
+                  title.textContent = chapter.name;
+                  
+                  const description = document.createElement('div');
+                  description.className = 'chapter-description';
+                  description.textContent = chapter.description || 'Chapter practice questions';
+                  
+                  card.appendChild(title);
+                  card.appendChild(description);
+                  grid.appendChild(card);
+                });
+                
+                container.appendChild(grid);
+                
+              } catch (error) {
+                console.error('Error loading chapters:', error);
+                document.getElementById('chapters-container').innerHTML = 
+                  '<div class="loading">Error loading chapters. Please try again.</div>';
+              }
+            }
+            
+            loadChapters();
+          </script>
+        </body>
+      </html>
+    `);
+  });
+
+  // Serve Oxford Instruments sections page
+  app.get('/oxford-instruments-questions', (req, res) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Oxford Instruments - ATPL Sections</title>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+              background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #3b82f6 100%);
+              min-height: 100vh;
+              color: white;
+            }
+            
+            .header {
+              background: rgba(255, 255, 255, 0.1);
+              backdrop-filter: blur(10px);
+              border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+              padding: 20px 24px;
+              display: flex;
+              align-items: center;
+              gap: 16px;
+            }
+            .back-btn {
+              background: rgba(255, 255, 255, 0.2);
+              border: 1px solid rgba(255, 255, 255, 0.3);
+              color: white;
+              padding: 8px 16px;
+              border-radius: 8px;
+              text-decoration: none;
+              font-size: 14px;
+              transition: all 0.2s;
+            }
+            .back-btn:hover {
+              background: rgba(255, 255, 255, 0.3);
+            }
+            .page-title {
+              font-size: 28px;
+              font-weight: 700;
+            }
+            
+            .main-content {
+              max-width: 1200px;
+              margin: 0 auto;
+              padding: 40px 24px;
+            }
+            .sections-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+              gap: 16px;
+              margin-top: 20px;
+            }
+            .section-card {
+              background: rgba(255, 255, 255, 0.1);
+              backdrop-filter: blur(10px);
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              border-radius: 12px;
+              padding: 20px;
+              text-align: center;
+              cursor: pointer;
+              transition: all 0.3s;
+              text-decoration: none;
+              color: white;
+              display: block;
+            }
+            .section-card:hover {
+              transform: translateY(-3px);
+              background: rgba(255, 255, 255, 0.2);
+              box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            }
+            .section-title {
+              font-size: 16px;
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+              line-height: 1.3;
+            }
+            .loading {
+              text-align: center;
+              padding: 60px;
+              font-size: 18px;
+              opacity: 0.8;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <a href="/instruments" class="back-btn">← Back to Chapters</a>
+            <h1 class="page-title">Oxford Instruments Sections</h1>
+          </div>
+          
+          <main class="main-content">
+            <div id="sections-container">
+              <div class="loading">Loading sections...</div>
+            </div>
+          </main>
+          
+          <script>
+            async function loadSections() {
+              try {
+                const response = await fetch('/api/chapters/4/sections'); // Oxford chapter ID is 4
+                const sections = await response.json();
+                
+                const container = document.getElementById('sections-container');
+                container.innerHTML = '';
+                
+                const grid = document.createElement('div');
+                grid.className = 'sections-grid';
+                
+                sections.forEach(section => {
+                  const card = document.createElement('a');
+                  card.className = 'section-card';
+                  
+                  // Route to specific section pages
+                  if (section.name === 'PRESSURE HEADS') {
+                    card.href = '/pressure-heads';
+                  } else {
+                    card.href = '/mcq-test'; // Default for other sections
+                  }
+                  
+                  const title = document.createElement('div');
+                  title.className = 'section-title';
+                  title.textContent = section.name;
+                  
+                  card.appendChild(title);
+                  grid.appendChild(card);
+                });
+                
+                container.appendChild(grid);
+                
+              } catch (error) {
+                console.error('Error loading sections:', error);
+                document.getElementById('sections-container').innerHTML = 
+                  '<div class="loading">Error loading sections. Please try again.</div>';
+              }
+            }
+            
+            loadSections();
+          </script>
+        </body>
+      </html>
+    `);
+  });
+
+  // Serve Pressure Heads MCQ page
+  app.get('/pressure-heads', (req, res) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Pressure Heads - ATPL MCQ Test</title>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+              background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #3b82f6 100%);
+              min-height: 100vh;
+              color: white;
+              overflow-x: hidden;
+            }
+            
+            .header {
+              background: rgba(255, 255, 255, 0.1);
+              backdrop-filter: blur(10px);
+              border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+              padding: 16px 24px;
+              display: flex;
+              align-items: center;
+              gap: 16px;
+            }
+            .back-btn {
+              background: rgba(255, 255, 255, 0.2);
+              border: 1px solid rgba(255, 255, 255, 0.3);
+              color: white;
+              padding: 8px 16px;
+              border-radius: 8px;
+              text-decoration: none;
+              font-size: 14px;
+              transition: all 0.2s;
+            }
+            .back-btn:hover {
+              background: rgba(255, 255, 255, 0.3);
+            }
+            .page-title {
+              font-size: 24px;
+              font-weight: 700;
+            }
+            
+            .container { display: flex; height: calc(100vh - 70px); }
+            
+            .sidebar {
+              width: 280px;
+              background: rgba(255, 255, 255, 0.05);
+              backdrop-filter: blur(10px);
+              border-right: 1px solid rgba(255, 255, 255, 0.1);
+              padding: 20px;
+              overflow-y: auto;
+            }
+            
+            .tabs {
+              display: flex;
+              gap: 8px;
+              margin-bottom: 20px;
+            }
+            .tab {
+              flex: 1;
+              padding: 8px 12px;
+              background: rgba(255, 255, 255, 0.1);
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              border-radius: 6px;
+              text-align: center;
+              font-size: 12px;
+              cursor: pointer;
+              transition: all 0.2s;
+            }
+            .tab.active {
+              background: rgba(255, 255, 255, 0.2);
+              border-color: rgba(255, 255, 255, 0.4);
+            }
+            
+            .question-grid {
+              display: grid;
+              grid-template-columns: repeat(5, 1fr);
+              gap: 8px;
+            }
+            .question-number {
+              width: 40px;
+              height: 40px;
+              border: 1px solid rgba(255, 255, 255, 0.3);
+              border-radius: 6px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+              font-size: 12px;
+              font-weight: 500;
+              transition: all 0.2s;
+            }
+            .question-number.current {
+              background: #3b82f6;
+              border-color: #3b82f6;
+            }
+            .question-number.answered {
+              background: rgba(34, 197, 94, 0.8);
+              border-color: rgba(34, 197, 94, 0.8);
+            }
+            .question-number.unanswered {
+              background: rgba(239, 68, 68, 0.8);
+              border-color: rgba(239, 68, 68, 0.8);
+            }
+            
+            .main-panel {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              overflow: hidden;
+            }
+            
+            .question-panel {
+              flex: 1;
+              padding: 30px;
+              overflow-y: auto;
+            }
+            
+            .question-header {
+              margin-bottom: 30px;
+            }
+            .question-text {
+              font-size: 20px;
+              font-weight: 600;
+              line-height: 1.4;
+              margin-bottom: 30px;
+            }
+            
+            .options {
+              margin-bottom: 30px;
+            }
+            .option {
+              display: flex;
+              align-items: flex-start;
+              gap: 12px;
+              padding: 16px;
+              margin-bottom: 12px;
+              background: rgba(255, 255, 255, 0.05);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              border-radius: 8px;
+              cursor: pointer;
+              transition: all 0.2s;
+            }
+            .option:hover {
+              background: rgba(255, 255, 255, 0.1);
+              border-color: rgba(255, 255, 255, 0.2);
+            }
+            .option.selected {
+              background: rgba(59, 130, 246, 0.2);
+              border-color: #3b82f6;
+            }
+            .option-letter {
+              font-weight: 700;
+              min-width: 20px;
+            }
+            
+            .explanation {
+              background: rgba(255, 255, 255, 0.05);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              border-radius: 8px;
+              padding: 20px;
+              margin-bottom: 20px;
+            }
+            .explanation h3 {
+              font-size: 16px;
+              margin-bottom: 12px;
+              color: #93c5fd;
+            }
+            
+            .navigation {
+              background: rgba(255, 255, 255, 0.05);
+              border-top: 1px solid rgba(255, 255, 255, 0.1);
+              padding: 20px 30px;
+              display: flex;
+              justify-content: between;
+              align-items: center;
+            }
+            .nav-btn {
+              background: #3b82f6;
+              color: white;
+              border: none;
+              padding: 10px 20px;
+              border-radius: 6px;
+              cursor: pointer;
+              font-weight: 500;
+              transition: all 0.2s;
+            }
+            .nav-btn:hover:not(:disabled) {
+              background: #2563eb;
+            }
+            .nav-btn:disabled {
+              background: rgba(255, 255, 255, 0.1);
+              cursor: not-allowed;
+              opacity: 0.5;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <a href="/oxford-instruments-questions" class="back-btn">← Back to Sections</a>
+            <h1 class="page-title">Pressure Heads - MCQ Test</h1>
+          </div>
+          
+          <div class="container">
+            <div class="sidebar">
+              <div class="tabs">
+                <div class="tab active">MCQ</div>
+                <div class="tab">Theory</div>
+              </div>
+              
+              <div class="question-grid">
+                <!-- Question numbers will be populated by JavaScript -->
+              </div>
+            </div>
+            
+            <div class="main-panel">
+              <div class="question-panel">
+                <div class="question-header">
+                  <div class="question-text">Loading question...</div>
+                </div>
+                
+                <div class="options">
+                  <div class="option">
+                    <span class="option-letter">A.</span>
+                    <span>Loading...</span>
+                  </div>
+                  <div class="option">
+                    <span class="option-letter">B.</span>
+                    <span>Loading...</span>
+                  </div>
+                  <div class="option">
+                    <span class="option-letter">C.</span>
+                    <span>Loading...</span>
+                  </div>
+                  <div class="option">
+                    <span class="option-letter">D.</span>
+                    <span>Loading...</span>
+                  </div>
+                </div>
+                
+                <div class="explanation">
+                  <h3>Explanation</h3>
+                  <p>Loading explanation...</p>
+                </div>
+              </div>
+              
+              <div class="navigation">
+                <button class="nav-btn previous">Previous</button>
+                <button class="nav-btn next">Next</button>
+              </div>
+            </div>
+          </div>
+          
+          <script>
+            // Same MCQ functionality as before
+            let questions = [];
+            let currentQuestionIndex = 0;
+            let selectedAnswers = {};
+            
+            async function loadQuestions() {
+              try {
+                const response = await fetch('/api/sections/7/questions');
+                questions = await response.json();
+                if (questions.length > 0) {
+                  renderQuestion(currentQuestionIndex);
+                  renderQuestionGrid();
+                }
+              } catch (error) {
+                console.error('Error loading questions:', error);
+              }
+            }
+            
+            function renderQuestionGrid() {
+              const grid = document.querySelector('.question-grid');
+              grid.innerHTML = '';
+              
+              questions.forEach((q, index) => {
+                const btn = document.createElement('div');
+                btn.className = 'question-number';
+                btn.textContent = index + 1;
+                
+                if (selectedAnswers[q.id]) {
+                  btn.classList.add('answered');
+                }
+                if (index === currentQuestionIndex) {
+                  btn.classList.add('current');
+                }
+                if (!selectedAnswers[q.id] && index !== currentQuestionIndex) {
+                  btn.classList.add('unanswered');
+                }
+                
+                btn.addEventListener('click', () => {
+                  currentQuestionIndex = index;
+                  renderQuestion(index);
+                  renderQuestionGrid();
+                });
+                
+                grid.appendChild(btn);
+              });
+            }
+            
+            function renderQuestion(index) {
+              const question = questions[index];
+              if (!question) return;
+              
+              document.querySelector('.question-text').textContent = 
+                '#' + (index + 1) + '. ' + question.question_text;
+              
+              const options = document.querySelectorAll('.option');
+              const optionTexts = [question.option_a, question.option_b, question.option_c, question.option_d];
+              const letters = ['A', 'B', 'C', 'D'];
+              
+              options.forEach((option, i) => {
+                const letterSpan = option.querySelector('.option-letter');
+                const textSpan = option.querySelector('span:last-child');
+                
+                letterSpan.textContent = letters[i] + '.';
+                textSpan.textContent = optionTexts[i];
+                
+                option.classList.remove('selected');
+                if (selectedAnswers[question.id] === letters[i]) {
+                  option.classList.add('selected');
+                }
+                
+                option.onclick = () => selectOption(question.id, letters[i], option);
+              });
+              
+              const explanation = question.explanation_text || question.explanation || 'No explanation available.';
+              document.querySelector('.explanation p').textContent = explanation;
+              
+              const prevBtn = document.querySelector('.nav-btn.previous');
+              const nextBtn = document.querySelector('.nav-btn.next');
+              
+              prevBtn.disabled = index === 0;
+              nextBtn.disabled = index === questions.length - 1;
+              
+              prevBtn.onclick = () => {
+                if (index > 0) {
+                  currentQuestionIndex = index - 1;
+                  renderQuestion(currentQuestionIndex);
+                  renderQuestionGrid();
+                }
+              };
+              
+              nextBtn.onclick = () => {
+                if (index < questions.length - 1) {
+                  currentQuestionIndex = index + 1;
+                  renderQuestion(currentQuestionIndex);
+                  renderQuestionGrid();
+                }
+              };
+            }
+            
+            function selectOption(questionId, answer, optionElement) {
+              selectedAnswers[questionId] = answer;
+              document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+              optionElement.classList.add('selected');
+              renderQuestionGrid();
+            }
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+              tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+              });
+            });
+            
+            loadQuestions();
           </script>
         </body>
       </html>
