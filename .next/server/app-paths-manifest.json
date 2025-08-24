@@ -1,10 +1,10 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
+  "/instruments/page": "app/instruments/page.js",
   "/oxford-instruments-questions/page": "app/oxford-instruments-questions/page.js",
   "/page": "app/page.js",
-  "/instruments/page": "app/instruments/page.js",
   "/pressure-heads/page": "app/pressure-heads/page.js",
+  "/radio-navigation/page": "app/radio-navigation/page.js",
   "/question-bank/page": "app/question-bank/page.js",
-  "/subjects/page": "app/subjects/page.js",
-  "/radio-navigation/page": "app/radio-navigation/page.js"
+  "/subjects/page": "app/subjects/page.js"
 }

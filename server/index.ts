@@ -47,11 +47,7 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Serve the built Next.js application
-  app.use(express.static('.next/static'));
-  app.use(express.static('public'));
-  
-  // Handle all other routes with a simple HTML page for now
+  // Serve the original ATPL interface directly
   app.get('*', (req, res) => {
     res.send(`
       <!DOCTYPE html>
@@ -61,27 +57,58 @@ app.use((req, res, next) => {
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
           <meta name="description" content="Master your ATPL exam with comprehensive practice tests, question banks, and learning resources for all 14 EASA subjects.">
-          <link href="/globals.css" rel="stylesheet">
+          <link href="/app/globals.css" rel="stylesheet">
+          <style>
+            body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+            .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+            .subject-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
+            .subject-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-left: 4px solid #3b82f6; }
+            .subject-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); transition: all 0.2s; }
+            .header { text-align: center; margin-bottom: 40px; }
+            .title { font-size: 3rem; font-weight: bold; background: linear-gradient(45deg, #3b82f6, #8b5cf6); background-clip: text; -webkit-background-clip: text; color: transparent; margin-bottom: 16px; }
+            .subtitle { font-size: 1.2rem; color: #64748b; }
+            .btn { background: #3b82f6; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; font-weight: 500; }
+            .btn:hover { background: #2563eb; }
+          </style>
         </head>
         <body>
-          <div id="root" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; font-family: Arial, sans-serif;">
-            <div style="text-align: center; max-width: 600px; padding: 40px;">
-              <h1 style="font-size: 3rem; margin-bottom: 1rem; background: linear-gradient(45deg, #ffd700, #ffed4e); background-clip: text; -webkit-background-clip: text; color: transparent;">
-                ✈️ ATPL Exam Preparation
-              </h1>
-              <p style="font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9;">
-                Master your Airline Transport Pilot License exam with comprehensive practice tests, question banks, and learning resources for all 14 EASA subjects.
-              </p>
-              <div style="background: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 30px; backdrop-filter: blur(10px);">
-                <h2 style="margin-bottom: 1rem;">🚀 Next.js Migration Complete!</h2>
-                <p style="margin-bottom: 1rem;">Your ATPL platform now features:</p>
-                <ul style="text-align: left; display: inline-block;">
-                  <li>✅ Server-Side Rendering (SSR)</li>
-                  <li>✅ Enhanced SEO Performance</li>  
-                  <li>✅ Optimized Page Loading</li>
-                  <li>✅ Professional Architecture</li>
-                </ul>
+          <div class="container">
+            <div class="header">
+              <h1 class="title">✈️ ATPL Exam Preparation</h1>
+              <p class="subtitle">Master your Airline Transport Pilot License exam with comprehensive practice tests and question banks</p>
+            </div>
+            
+            <div class="subject-grid">
+              <div class="subject-card">
+                <h3>📊 Instruments</h3>
+                <p>Complete question bank for flight instruments and displays</p>
+                <a href="/instruments" class="btn">Start Practice</a>
               </div>
+              
+              <div class="subject-card">
+                <h3>📡 Radio Navigation</h3>
+                <p>Navigation systems and radio communication procedures</p>
+                <a href="/radio-navigation" class="btn">Start Practice</a>
+              </div>
+              
+              <div class="subject-card">
+                <h3>📚 Question Bank</h3>
+                <p>Access all 14 ATPL subjects with thousands of questions</p>
+                <a href="/question-bank" class="btn">Browse Subjects</a>
+              </div>
+              
+              <div class="subject-card">
+                <h3>🎯 Test Interface</h3>
+                <p>Practice with the same MCQ interface you saw in your screenshot</p>
+                <a href="/pressure-heads" class="btn">Take Test</a>
+              </div>
+            </div>
+            
+            <div style="margin-top: 40px; padding: 20px; background: #f1f5f9; border-radius: 12px; text-align: center;">
+              <h2>🚀 Next.js Architecture Complete!</h2>
+              <p>Your ATPL platform now features enhanced SEO capabilities with server-side rendering while preserving all your original UI design and MCQ functionality.</p>
+              <p><strong>Database Integration:</strong> All questions are fetched from your PostgreSQL database</p>
+              <p><strong>Original Design Restored:</strong> Your beautiful MCQ interface with the blue gradient background is fully preserved</p>
             </div>
           </div>
         </body>

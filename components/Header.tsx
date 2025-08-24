@@ -1,4 +1,7 @@
-import { Link, useLocation } from 'wouter';
+'use client'
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -17,7 +20,7 @@ const navigationItems = [
 ];
 
 export function Header() {
-  const [location] = useLocation();
+  const location = usePathname();
   const { theme, toggleTheme } = useTheme();
   const { isAuthenticated, user } = useAuth();
 
