@@ -47,7 +47,7 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Serve the MCQ test interface
+  // Serve the dynamic MCQ test interface for PRESSURE HEADS
   app.get('/mcq-test', (req, res) => {
     res.send(`
       <!DOCTYPE html>
@@ -322,14 +322,124 @@ app.use((req, res, next) => {
           </div>
           
           <script>
-            // Add interactivity
-            document.querySelectorAll('.option').forEach(option => {
-              option.addEventListener('click', () => {
-                document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
-                option.classList.add('selected');
-              });
-            });
+            // Dynamic MCQ functionality
+            let questions = [];
+            let currentQuestionIndex = 0;
+            let selectedAnswers = {};
             
+            // Fetch questions from database
+            async function loadQuestions() {
+              try {
+                const response = await fetch('/api/sections/7/questions'); // PRESSURE HEADS section ID
+                questions = await response.json();
+                if (questions.length > 0) {
+                  renderQuestion(currentQuestionIndex);
+                  renderQuestionGrid();
+                }
+              } catch (error) {
+                console.error('Error loading questions:', error);
+              }
+            }
+            
+            function renderQuestionGrid() {
+              const grid = document.querySelector('.question-grid');
+              grid.innerHTML = '';
+              
+              questions.forEach((q, index) => {
+                const btn = document.createElement('div');
+                btn.className = 'question-number';
+                btn.textContent = index + 1;
+                
+                if (selectedAnswers[q.id]) {
+                  btn.classList.add('answered');
+                }
+                if (index === currentQuestionIndex) {
+                  btn.classList.add('current');
+                }
+                if (!selectedAnswers[q.id] && index !== currentQuestionIndex) {
+                  btn.classList.add('unanswered');
+                }
+                
+                btn.addEventListener('click', () => {
+                  currentQuestionIndex = index;
+                  renderQuestion(index);
+                  renderQuestionGrid();
+                });
+                
+                grid.appendChild(btn);
+              });
+            }
+            
+            function renderQuestion(index) {
+              const question = questions[index];
+              if (!question) return;
+              
+              // Update question text
+              document.querySelector('.question-text').textContent = 
+                '#' + (index + 1) + '. ' + question.question_text;
+              
+              // Update options
+              const options = document.querySelectorAll('.option');
+              const optionTexts = [question.option_a, question.option_b, question.option_c, question.option_d];
+              const letters = ['A', 'B', 'C', 'D'];
+              
+              options.forEach((option, i) => {
+                const letterSpan = option.querySelector('.option-letter');
+                const textSpan = option.querySelector('span:last-child');
+                
+                letterSpan.textContent = letters[i] + '.';
+                textSpan.textContent = optionTexts[i];
+                
+                option.classList.remove('selected');
+                if (selectedAnswers[question.id] === letters[i]) {
+                  option.classList.add('selected');
+                }
+                
+                option.onclick = () => selectOption(question.id, letters[i], option);
+              });
+              
+              // Update explanation
+              const explanation = question.explanation_text || question.explanation || 'No explanation available.';
+              document.querySelector('.explanation p').textContent = explanation;
+              
+              // Update navigation buttons
+              const prevBtn = document.querySelector('.nav-btn.previous');
+              const nextBtn = document.querySelector('.nav-btn.next');
+              
+              prevBtn.disabled = index === 0;
+              nextBtn.disabled = index === questions.length - 1;
+              
+              prevBtn.onclick = () => {
+                if (index > 0) {
+                  currentQuestionIndex = index - 1;
+                  renderQuestion(currentQuestionIndex);
+                  renderQuestionGrid();
+                }
+              };
+              
+              nextBtn.onclick = () => {
+                if (index < questions.length - 1) {
+                  currentQuestionIndex = index + 1;
+                  renderQuestion(currentQuestionIndex);
+                  renderQuestionGrid();
+                }
+              };
+            }
+            
+            function selectOption(questionId, answer, optionElement) {
+              selectedAnswers[questionId] = answer;
+              
+              // Remove selected class from all options
+              document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+              
+              // Add selected class to clicked option
+              optionElement.classList.add('selected');
+              
+              // Update question grid to show answered state
+              renderQuestionGrid();
+            }
+            
+            // Tab functionality
             document.querySelectorAll('.tab').forEach(tab => {
               tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -337,12 +447,8 @@ app.use((req, res, next) => {
               });
             });
             
-            document.querySelectorAll('.question-number').forEach((num, index) => {
-              num.addEventListener('click', () => {
-                document.querySelectorAll('.question-number').forEach(n => n.classList.remove('current'));
-                num.classList.add('current');
-              });
-            });
+            // Initialize
+            loadQuestions();
           </script>
         </body>
       </html>
