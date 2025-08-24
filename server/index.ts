@@ -455,70 +455,266 @@ app.use((req, res, next) => {
     `);
   });
 
-  // Serve the original ATPL interface directly
+  // Serve the Eatpl.in home page design
   app.get('*', (req, res) => {
     res.send(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>ATPL Exam Preparation Platform</title>
+          <title>Eatpl.in - 14 ATPL Subject Modules</title>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          <meta name="description" content="Master your ATPL exam with comprehensive practice tests, question banks, and learning resources for all 14 EASA subjects.">
-          <link href="/app/globals.css" rel="stylesheet">
+          <meta name="description" content="Master all EASA ATPL subjects with our comprehensive question bank and practice tests">
           <style>
-            body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-            .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-            .subject-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
-            .subject-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-left: 4px solid #3b82f6; }
-            .subject-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); transition: all 0.2s; }
-            .header { text-align: center; margin-bottom: 40px; }
-            .title { font-size: 3rem; font-weight: bold; background: linear-gradient(45deg, #3b82f6, #8b5cf6); background-clip: text; -webkit-background-clip: text; color: transparent; margin-bottom: 16px; }
-            .subtitle { font-size: 1.2rem; color: #64748b; }
-            .btn { background: #3b82f6; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; font-weight: 500; }
-            .btn:hover { background: #2563eb; }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+              background: #ffffff;
+              color: #1f2937;
+              line-height: 1.6;
+            }
+            
+            /* Header */
+            .header {
+              background: white;
+              border-bottom: 1px solid #e5e7eb;
+              padding: 0 24px;
+              height: 64px;
+              display: flex;
+              align-items: center;
+              justify-content: between;
+            }
+            .nav-container {
+              max-width: 1200px;
+              margin: 0 auto;
+              width: 100%;
+              display: flex;
+              align-items: center;
+              justify-content: between;
+            }
+            .logo {
+              display: flex;
+              align-items: center;
+              font-size: 18px;
+              font-weight: 600;
+              color: #6366f1;
+              text-decoration: none;
+            }
+            .logo::before {
+              content: "✈️";
+              margin-right: 8px;
+            }
+            .nav-links {
+              display: flex;
+              align-items: center;
+              gap: 32px;
+              flex: 1;
+              justify-content: center;
+            }
+            .nav-link {
+              color: #6b7280;
+              text-decoration: none;
+              font-size: 14px;
+              font-weight: 500;
+              transition: color 0.2s;
+            }
+            .nav-link:hover {
+              color: #6366f1;
+            }
+            .header-actions {
+              display: flex;
+              align-items: center;
+              gap: 16px;
+            }
+            .theme-toggle {
+              background: none;
+              border: none;
+              padding: 8px;
+              border-radius: 6px;
+              cursor: pointer;
+              color: #6b7280;
+              font-size: 16px;
+            }
+            .sign-in-btn {
+              background: #6366f1;
+              color: white;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 8px;
+              font-size: 14px;
+              font-weight: 500;
+              cursor: pointer;
+              transition: background 0.2s;
+            }
+            .sign-in-btn:hover {
+              background: #5b57f2;
+            }
+            
+            /* Main Content */
+            .main-content {
+              max-width: 1200px;
+              margin: 0 auto;
+              padding: 80px 24px;
+              text-align: center;
+            }
+            .main-title {
+              font-size: 48px;
+              font-weight: 700;
+              color: #6366f1;
+              margin-bottom: 24px;
+              line-height: 1.2;
+            }
+            .subtitle {
+              font-size: 18px;
+              color: #6b7280;
+              margin-bottom: 40px;
+              max-width: 600px;
+              margin-left: auto;
+              margin-right: auto;
+            }
+            .cta-button {
+              display: inline-flex;
+              align-items: center;
+              background: #3b82f6;
+              color: white;
+              padding: 14px 28px;
+              border: none;
+              border-radius: 12px;
+              font-size: 16px;
+              font-weight: 600;
+              text-decoration: none;
+              cursor: pointer;
+              transition: all 0.2s;
+              margin-bottom: 40px;
+            }
+            .cta-button:hover {
+              background: #2563eb;
+              transform: translateY(-2px);
+              box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+            }
+            .cta-button::before {
+              content: "✈️";
+              margin-right: 8px;
+            }
+            
+            /* Search Bar */
+            .search-container {
+              max-width: 400px;
+              margin: 0 auto;
+              position: relative;
+            }
+            .search-input {
+              width: 100%;
+              padding: 12px 16px 12px 48px;
+              border: 1px solid #d1d5db;
+              border-radius: 12px;
+              font-size: 16px;
+              background: white;
+              outline: none;
+              transition: border-color 0.2s, box-shadow 0.2s;
+            }
+            .search-input:focus {
+              border-color: #6366f1;
+              box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            }
+            .search-icon {
+              position: absolute;
+              left: 16px;
+              top: 50%;
+              transform: translateY(-50%);
+              color: #9ca3af;
+            }
+            
+            /* Responsive */
+            @media (max-width: 768px) {
+              .nav-links {
+                display: none;
+              }
+              .main-title {
+                font-size: 36px;
+              }
+              .subtitle {
+                font-size: 16px;
+              }
+              .main-content {
+                padding: 60px 20px;
+              }
+            }
           </style>
         </head>
         <body>
-          <div class="container">
-            <div class="header">
-              <h1 class="title">✈️ ATPL Exam Preparation</h1>
-              <p class="subtitle">Master your Airline Transport Pilot License exam with comprehensive practice tests and question banks</p>
+          <!-- Header -->
+          <header class="header">
+            <div class="nav-container">
+              <a href="/" class="logo">Eatpl.in</a>
+              
+              <nav class="nav-links">
+                <a href="/question-bank" class="nav-link">Question Bank</a>
+                <a href="/airline-interviews" class="nav-link">Airline Interviews & Sim Prep</a>
+                <a href="/atpl-viva" class="nav-link">ATPL Viva</a>
+                <a href="/classes" class="nav-link">Classes</a>
+                <a href="/aptitude-test" class="nav-link">Aptitude Test</a>
+                <a href="/airbus-320" class="nav-link">Airbus 320</a>
+                <a href="/syllabus" class="nav-link">Syllabus</a>
+                <a href="/pilot-resume" class="nav-link">Pilot Resume</a>
+              </nav>
+              
+              <div class="header-actions">
+                <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+                <button class="sign-in-btn">Sign In</button>
+              </div>
             </div>
+          </header>
+          
+          <!-- Main Content -->
+          <main class="main-content">
+            <h1 class="main-title">14 ATPL Subject Modules</h1>
+            <p class="subtitle">
+              Master all EASA ATPL subjects with our comprehensive question bank 
+              and practice tests
+            </p>
             
-            <div class="subject-grid">
-              <div class="subject-card">
-                <h3>📊 Instruments</h3>
-                <p>Complete question bank for flight instruments and displays</p>
-                <a href="/mcq-test" class="btn">Start Practice</a>
-              </div>
-              
-              <div class="subject-card">
-                <h3>📡 Radio Navigation</h3>
-                <p>Navigation systems and radio communication procedures</p>
-                <a href="/mcq-test" class="btn">Start Practice</a>
-              </div>
-              
-              <div class="subject-card">
-                <h3>📚 Question Bank</h3>
-                <p>Access all 14 ATPL subjects with thousands of questions</p>
-                <a href="/mcq-test" class="btn">Browse Subjects</a>
-              </div>
-              
-              <div class="subject-card">
-                <h3>🎯 MCQ Test Interface</h3>
-                <p>Experience the exact MCQ interface from your screenshot</p>
-                <a href="/mcq-test" class="btn">Take Test</a>
-              </div>
-            </div>
+            <a href="/mcq-test" class="cta-button">Start Your Flight Prep</a>
             
-            <div style="margin-top: 40px; padding: 20px; background: #f1f5f9; border-radius: 12px; text-align: center;">
-              <h2>🚀 Next.js Architecture Complete!</h2>
-              <p>Your ATPL platform now features enhanced SEO capabilities with server-side rendering while preserving all your original UI design and MCQ functionality.</p>
-              <p><strong>Database Integration:</strong> All questions are fetched from your PostgreSQL database</p>
-              <p><strong>Original Design Restored:</strong> Your beautiful MCQ interface with the blue gradient background is fully preserved</p>
+            <div class="search-container">
+              <div class="search-icon">🔍</div>
+              <input 
+                type="text" 
+                class="search-input" 
+                placeholder="Search subjects..."
+                onkeyup="searchSubjects(this.value)"
+              >
             </div>
-          </div>
+          </main>
+          
+          <script>
+            function toggleTheme() {
+              // Theme toggle functionality
+              const body = document.body;
+              const isDark = body.classList.contains('dark-theme');
+              
+              if (isDark) {
+                body.classList.remove('dark-theme');
+                document.querySelector('.theme-toggle').textContent = '🌙';
+              } else {
+                body.classList.add('dark-theme');
+                document.querySelector('.theme-toggle').textContent = '☀️';
+              }
+            }
+            
+            function searchSubjects(query) {
+              // Search functionality - can be connected to actual search later
+              if (query.length > 2) {
+                console.log('Searching for:', query);
+                // Here you would implement the actual search logic
+              }
+            }
+            
+            // Sign in functionality
+            document.querySelector('.sign-in-btn').addEventListener('click', () => {
+              window.location.href = '/api/login';
+            });
+          </script>
         </body>
       </html>
     `);
