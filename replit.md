@@ -9,11 +9,11 @@ Preferred communication style: Simple, everyday language.
 # System Architecture
 
 ## Frontend Architecture
-- **React with TypeScript**: Modern React application using functional components and hooks
-- **Wouter**: Lightweight client-side routing library for navigation
+- **Next.js with TypeScript**: React framework with Server-Side Rendering (SSR) and Static Site Generation (SSG)
+- **Next.js App Router**: File-based routing with enhanced SEO capabilities
 - **shadcn/ui**: Component library built on Radix UI primitives with Tailwind CSS styling
 - **TanStack Query**: Data fetching and caching for API interactions
-- **Vite**: Build tool and development server with hot module replacement
+- **Server-Side Rendering**: Improved SEO and initial page load performance
 
 ## Backend Architecture
 - **Express.js**: Node.js web framework handling REST API endpoints
@@ -65,7 +65,7 @@ Preferred communication style: Simple, everyday language.
 - **Express Session Store**: PostgreSQL-backed session management
 
 ## Development Tools
-- **Vite**: Frontend build tool and development server
+- **Next.js**: Frontend framework with SSR/SSG capabilities and built-in optimizations
 - **Drizzle Kit**: Database migration and schema management
 - **TypeScript Compiler**: Type checking and compilation
 
@@ -77,11 +77,21 @@ Preferred communication style: Simple, everyday language.
 
 ## Runtime Dependencies
 - **Node.js**: Server runtime environment
-- **React**: Frontend framework
+- **Next.js**: React framework with SSR/SSG
+- **React**: Frontend UI library
 - **TanStack Query**: Data fetching and state management
-- **Wouter**: Client-side routing
 
 # Recent Changes
+
+**January 25, 2025:**
+- **MAJOR MIGRATION**: Migrated entire application from Vite + React to Next.js with SSR
+- Improved SEO capabilities with server-side rendering and proper meta tags
+- Added comprehensive structured data (JSON-LD) for search engines
+- Updated routing from client-side Wouter to Next.js App Router
+- Enhanced page load performance with SSR/SSG
+- Added proper Open Graph and Twitter Card meta tags
+- Configured Next.js to work with existing Express API backend
+- Updated all pages with SEO-optimized metadata
 
 **January 23, 2025:**
 - Implemented hierarchical database structure: subjects → chapters → sections
