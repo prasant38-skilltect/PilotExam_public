@@ -1,12 +1,12 @@
+
 'use client'
 
-import React from 'react'
-import { useAuth } from '@/hooks/useAuth'
-import Landing from '@/components/pages/Landing'
-import Home from '@/components/pages/Home'
+import { useAuth } from "@/hooks/useAuth";
+import Home from "@/components/pages/Home";
+import Landing from "@/components/pages/Landing";
 
 export default function AuthenticatedHome() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -16,8 +16,8 @@ export default function AuthenticatedHome() {
           <p>Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
-  return isAuthenticated ? <Home /> : <Landing />
+  return isAuthenticated ? <Home /> : <Landing />;
 }

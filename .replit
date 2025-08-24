@@ -7,14 +7,14 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["npm", "run", "build"]
-run = ["npm", "run", "start"]
+build = ["sh", "-c", "next build"]
+run = ["sh", "-c", "npm start"]
 
 [env]
 PORT = "5000"
 
 [workflows]
-runButton = "Project"
+runButton = "Next.js Development"
 
 [[workflows.workflow]]
 name = "Project"
@@ -33,6 +33,19 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Next.js Development"
+author = 44129130
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "tsx server/index.ts"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "next dev -p 3000"
 
 [agent]
 integrations = ["javascript_database==1.0.0", "javascript_log_in_with_replit==1.0.0"]
