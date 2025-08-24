@@ -34,6 +34,9 @@ const ChapterwiseQuestions = lazy(() => import("@/pages/ChapterwiseQuestions"));
 const Instruments = lazy(() => import("@/pages/Instruments"));
 const OxfordInstruments = lazy(() => import("@/pages/OxfordInstruments"));
 const GenericSectionTest = lazy(() => import("@/pages/GenericSectionTest"));
+const SignIn = lazy(() => import("@/pages/SignIn"));
+const SignUp = lazy(() => import("@/pages/SignUp"));
+const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Loading component for lazy loaded pages
@@ -221,6 +224,23 @@ function Router() {
           <Route path="/airbus-320/">
             <Suspense fallback={<PageLoader />}>
               <NotFound />
+            </Suspense>
+          </Route>
+
+          {/* Authentication Pages */}
+          <Route path="/sign-in">
+            <Suspense fallback={<PageLoader />}>
+              <SignIn />
+            </Suspense>
+          </Route>
+          <Route path="/sign-up">
+            <Suspense fallback={<PageLoader />}>
+              <SignUp />
+            </Suspense>
+          </Route>
+          <Route path="/forgot-password">
+            <Suspense fallback={<PageLoader />}>
+              <ForgotPassword />
             </Suspense>
           </Route>
 

@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun, Plane } from '@/components/Icons';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 const navigationItems = [
   { href: '/question-bank', label: 'Question Bank' },
@@ -20,6 +21,7 @@ export function Header() {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { isAuthenticated, user } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogin = () => {
     window.location.href = '/sign-in';
@@ -31,20 +33,20 @@ export function Header() {
 
   return (
     <header className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center flex-shrink-0">
             <div className="flex items-center">
-              <h1 className="text-xl xl:text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
-                <Plane className="inline-block mr-1 xl:mr-2 text-blue-700" size={20} />
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
+                <Plane className="inline-block mr-1 sm:mr-2 text-blue-700" size={18} />
                 Eatpl.in
               </h1>
             </div>
           </Link>
 
-          {/* Navigation Menu - Always visible */}
-          <nav className="flex space-x-1 xl:space-x-3">
+          {/* Desktop Navigation Menu */}
+          <nav className="hidden lg:flex space-x-1 xl:space-x-3">
             {navigationItems.map((item) => (
               <Link key={item.href} href={item.href}>
                 <span
@@ -60,8 +62,28 @@ export function Header() {
             ))}
           </nav>
 
-          {/* Theme Toggle and Auth */}
-          <div className="flex items-center space-x-2 xl:space-x-4 ml-2">
+          {/* Mobile Menu Button */}
+          <div className="lg:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2"
+            >
+              {isMobileMenuOpen ? (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </Button>
+          </div>
+
+          {/* Desktop Theme Toggle and Auth */}
+          <div className="hidden lg:flex items-center space-x-2 xl:space-x-4 ml-2">
             <Button
               variant="outline"
               size="icon"
@@ -108,6 +130,90 @@ export function Header() {
             )}
           </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm">
+            <div className="px-4 py-4 space-y-3">
+              {/* Mobile Navigation Links */}
+              <div className="space-y-2">
+                {navigationItems.map((item) => (
+                  <Link key={item.href} href={item.href}>
+                    <span
+                      className={cn(
+                        "block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors px-3 py-2 rounded-md text-sm font-medium",
+                        location === item.href && "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                      )}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      data-testid={`mobile-nav-${item.href.slice(1)}`}
+                    >
+                      {item.label}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Mobile Theme Toggle and Auth */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Theme</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleTheme}
+                    data-testid="mobile-button-theme-toggle"
+                  >
+                    {theme === 'dark' ? (
+                      <>
+                        <Sun className="h-4 w-4 mr-2" />
+                        Light
+                      </>
+                    ) : (
+                      <>
+                        <Moon className="h-4 w-4 mr-2" />
+                        Dark
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {isAuthenticated ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                      {(user as any)?.profileImageUrl && (
+                        <img
+                          src={(user as any).profileImageUrl}
+                          alt="Profile"
+                          className="w-8 h-8 rounded-full object-cover"
+                          data-testid="mobile-img-profile"
+                        />
+                      )}
+                      <span className="text-sm text-gray-700 dark:text-gray-300" data-testid="mobile-text-username">
+                        {(user as any)?.firstName || (user as any)?.email}
+                      </span>
+                    </div>
+                    <Button
+                      onClick={handleLogout}
+                      variant="outline"
+                      className="w-full"
+                      data-testid="mobile-button-logout"
+                    >
+                      Sign Out
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handleLogin}
+                    className="w-full bg-gradient-to-r from-purple-600 to-blue-700 text-white hover:shadow-lg transition-all duration-300 font-medium"
+                    data-testid="mobile-button-signin"
+                  >
+                    Sign In
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );
