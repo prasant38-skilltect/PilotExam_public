@@ -22,11 +22,11 @@ export function Header() {
   const { isAuthenticated, user } = useAuth();
 
   const handleLogin = () => {
-    window.location.href = '/api/login';
+    window.location.href = '/sign-in';
   };
 
   const handleLogout = () => {
-    window.location.href = '/api/logout';
+    window.location.href = '/sign-out';
   };
 
   return (

@@ -47,6 +47,19 @@ app.use((req, res, next) => {
     throw err;
   });
 
+  // Redirect old auth routes to new custom pages
+  app.get('/api/login', (req, res) => {
+    res.redirect('/sign-in');
+  });
+
+  app.get('/api/logout', (req, res) => {
+    res.redirect('/');
+  });
+
+  app.get('/sign-out', (req, res) => {
+    res.redirect('/');
+  });
+
   // Serve Sign In page
   app.get('/sign-in', (req, res) => {
     res.send(`
