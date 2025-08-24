@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 // import { setupAuth, isAuthenticated } from "./replitAuth"; // Disabled Replit auth
-import { insertTestSessionSchema, insertUserAnswerSchema } from "@shared/schema";
+import { insertTestSessionSchema, insertUserAnswerSchema } from "../shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware

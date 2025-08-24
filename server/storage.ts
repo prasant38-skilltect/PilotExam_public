@@ -27,7 +27,7 @@ import {
   type InsertUserAnswer,
   type UserProgress,
   type InsertUserProgress,
-} from "@shared/schema";
+} from "../shared/schema";
 import { db } from "./db";
 import { eq, and, desc, avg, max, count } from "drizzle-orm";
 

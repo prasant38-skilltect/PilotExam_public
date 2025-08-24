@@ -60,9 +60,12 @@ app.use((req, _res, next) => {
   // Note: Authentication pages are now handled by React components
   // in client/src/pages/SignIn.tsx, SignUp.tsx, and ForgotPassword.tsx
 
-  // For Next.js, we don't need to setup Vite
-  // Next.js will handle its own dev server on port 3000
-  // This Express server only handles API routes on port 5000
+  // Setup Vite for development or static files for production
+  if (app.get("env") === "development") {
+    await setupVite(app, server);
+  } else {
+    serveStatic(app);
+  }
 
   const PORT = 5000;
   server.listen(PORT, "0.0.0.0", () => {
