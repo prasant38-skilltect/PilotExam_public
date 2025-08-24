@@ -913,7 +913,7 @@ app.use((req, res, next) => {
               and practice tests
             </p>
             
-            <a href="/mcq-test" class="cta-button">Start Your Flight Prep</a>
+            <a href="/subjects" class="cta-button">Start Your Flight Prep</a>
             
             <div class="search-container">
               <div class="search-icon">🔍</div>
