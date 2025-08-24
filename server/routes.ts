@@ -11,6 +11,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes (temporarily disabled)
   app.get('/api/auth/user', async (req: any, res) => {
     try {
+      // For now, return a guest user when authentication is disabled
+      if (!req.user || !req.user.claims) {
+        return res.json({ 
+          id: 'guest',
+          email: 'guest@example.com',
+          firstName: 'Guest',
+          lastName: 'User',
+          isAuthenticated: false
+        });
+      }
+      
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       res.json(user);

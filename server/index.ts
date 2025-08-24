@@ -61,8 +61,8 @@ app.use((req, _res, next) => {
   // in client/src/pages/SignIn.tsx, SignUp.tsx, and ForgotPassword.tsx
 
   // This Express server only handles API routes
-  // Next.js dev server runs separately on port 3000
-  const PORT = 5000;
+  // Next.js dev server runs on port 5000 (main port)
+  const PORT = 3001;
   server.listen(PORT, "0.0.0.0", () => {
     log(`API Server running on port ${PORT}`);
   });

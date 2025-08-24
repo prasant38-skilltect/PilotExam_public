@@ -45,7 +45,7 @@ args = "tsx server/index.ts"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "next dev -p 3000"
+args = "next dev -p 5000"
 
 [agent]
 integrations = ["javascript_database==1.0.0", "javascript_log_in_with_replit==1.0.0"]
