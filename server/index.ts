@@ -1100,6 +1100,119 @@ app.use((req, res, next) => {
               border-color: #9ca3af;
             }
             
+            /* Comments Section */
+            .comments-section {
+              padding: 20px;
+              display: none;
+            }
+            .comments-section.active {
+              display: block;
+            }
+            .comments-header {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              margin-bottom: 20px;
+              font-size: 16px;
+              font-weight: 600;
+              color: #1f2937;
+            }
+            .comment-input-section {
+              margin-bottom: 30px;
+            }
+            .comment-textarea {
+              width: 100%;
+              min-height: 80px;
+              padding: 12px;
+              border: 1px solid #d1d5db;
+              border-radius: 8px;
+              font-family: inherit;
+              font-size: 14px;
+              resize: vertical;
+              margin-bottom: 12px;
+              background: #f9fafb;
+            }
+            .comment-textarea:focus {
+              outline: none;
+              border-color: #6366f1;
+              background: white;
+            }
+            .post-comment-btn {
+              background: #8b5cf6;
+              color: white;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 6px;
+              font-size: 14px;
+              font-weight: 500;
+              cursor: pointer;
+            }
+            .post-comment-btn:hover {
+              background: #7c3aed;
+            }
+            .comments-list {
+              display: flex;
+              flex-direction: column;
+              gap: 20px;
+            }
+            .comment {
+              display: flex;
+              gap: 12px;
+            }
+            .comment-avatar {
+              width: 32px;
+              height: 32px;
+              border-radius: 50%;
+              background: #6b7280;
+              color: white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 12px;
+              font-weight: 600;
+              flex-shrink: 0;
+            }
+            .comment-content {
+              flex: 1;
+            }
+            .comment-header {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              margin-bottom: 4px;
+            }
+            .comment-username {
+              font-weight: 600;
+              font-size: 14px;
+              color: #1f2937;
+            }
+            .comment-date {
+              font-size: 12px;
+              color: #6b7280;
+            }
+            .comment-text {
+              font-size: 14px;
+              color: #374151;
+              line-height: 1.5;
+              margin-bottom: 8px;
+            }
+            .comment-actions {
+              display: flex;
+              align-items: center;
+              gap: 16px;
+            }
+            .comment-action {
+              display: flex;
+              align-items: center;
+              gap: 4px;
+              font-size: 12px;
+              color: #6b7280;
+              cursor: pointer;
+            }
+            .comment-action:hover {
+              color: #374151;
+            }
+            
             /* Responsive */
             @media (max-width: 768px) {
               .nav-links { display: none; }
@@ -1162,19 +1275,66 @@ app.use((req, res, next) => {
               </div>
               
               <div class="content-panel">
-                <div class="question-text" id="question-text">Loading question...</div>
-                
-                <div class="options" id="options-container">
-                  <!-- Options populated by JavaScript -->
+                <!-- Question Tab Content -->
+                <div class="question-content" id="question-content">
+                  <div class="question-text" id="question-text">Loading question...</div>
+                  
+                  <div class="options" id="options-container">
+                    <!-- Options populated by JavaScript -->
+                  </div>
+                  
+                  <button class="report-btn" id="report-btn">
+                    📋 Report
+                  </button>
+                  
+                  <div class="explanation-section" id="explanation-section">
+                    <div class="explanation-title">Explanation:</div>
+                    <div class="explanation-text" id="explanation-text"></div>
+                  </div>
                 </div>
                 
-                <button class="report-btn" id="report-btn">
-                  📋 Report
-                </button>
-                
-                <div class="explanation-section" id="explanation-section">
-                  <div class="explanation-title">Explanation:</div>
-                  <div class="explanation-text" id="explanation-text"></div>
+                <!-- Comments Tab Content -->
+                <div class="comments-section" id="comments-section">
+                  <div class="comments-header">
+                    💬 Comments
+                  </div>
+                  
+                  <div class="comment-input-section">
+                    <textarea class="comment-textarea" id="comment-input" placeholder="Add a comment..."></textarea>
+                    <button class="post-comment-btn" id="post-comment">Post Comment</button>
+                  </div>
+                  
+                  <div class="comments-list" id="comments-list">
+                    <div class="comment">
+                      <div class="comment-avatar">HA</div>
+                      <div class="comment-content">
+                        <div class="comment-header">
+                          <span class="comment-username">Handith99</span>
+                          <span class="comment-date">28 Feb 25 | 19:16</span>
+                        </div>
+                        <div class="comment-text">It appears on ease exam in trial but reworded</div>
+                        <div class="comment-actions">
+                          <div class="comment-action">👍 1</div>
+                          <div class="comment-action">👎 0</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="comment">
+                      <div class="comment-avatar">SV</div>
+                      <div class="comment-content">
+                        <div class="comment-header">
+                          <span class="comment-username">Svindy</span>
+                          <span class="comment-date">13 Jul 24 | 17:34</span>
+                        </div>
+                        <div class="comment-text">Guys on the ground singing to the guy in the air... "Everybooody... Yeeeeeaah... Rock your boooooody... Yeeeeeah!"</div>
+                        <div class="comment-actions">
+                          <div class="comment-action">👍 2</div>
+                          <div class="comment-action">👎 0</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               
@@ -1372,17 +1532,30 @@ app.use((req, res, next) => {
                 tab.classList.add('active');
                 
                 const tabType = tab.dataset.tab;
-                const explanationSection = document.getElementById('explanation-section');
+                const questionContent = document.getElementById('question-content');
+                const commentsSection = document.getElementById('comments-section');
                 
-                if (tabType === 'explanation') {
-                  explanationSection.classList.add('show');
-                } else if (tabType === 'question') {
-                  // Only show explanation if question was attempted
-                  const question = questions[currentQuestionIndex];
-                  if (attemptedQuestions.has(question.id)) {
+                // Hide all content sections first
+                questionContent.style.display = 'none';
+                commentsSection.style.display = 'none';
+                
+                if (tabType === 'comments') {
+                  commentsSection.style.display = 'block';
+                } else {
+                  // Show question content for both question and explanation tabs
+                  questionContent.style.display = 'block';
+                  
+                  const explanationSection = document.getElementById('explanation-section');
+                  if (tabType === 'explanation') {
                     explanationSection.classList.add('show');
-                  } else {
-                    explanationSection.classList.remove('show');
+                  } else if (tabType === 'question') {
+                    // Only show explanation if question was attempted
+                    const question = questions[currentQuestionIndex];
+                    if (attemptedQuestions.has(question.id)) {
+                      explanationSection.classList.add('show');
+                    } else {
+                      explanationSection.classList.remove('show');
+                    }
                   }
                 }
               });
@@ -1426,6 +1599,44 @@ app.use((req, res, next) => {
                 document.getElementById('report-text').value = '';
               }
             });
+            
+            // Post comment functionality
+            document.getElementById('post-comment').addEventListener('click', () => {
+              const commentText = document.getElementById('comment-input').value.trim();
+              if (commentText) {
+                addNewComment(commentText);
+                document.getElementById('comment-input').value = '';
+              } else {
+                alert('Please write a comment before posting.');
+              }
+            });
+            
+            function addNewComment(text) {
+              const commentsList = document.getElementById('comments-list');
+              const newComment = document.createElement('div');
+              newComment.className = 'comment';
+              
+              const now = new Date();
+              const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) + ' | ' + 
+                            now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+              
+              newComment.innerHTML = \`
+                <div class="comment-avatar">ME</div>
+                <div class="comment-content">
+                  <div class="comment-header">
+                    <span class="comment-username">You</span>
+                    <span class="comment-date">\${dateStr}</span>
+                  </div>
+                  <div class="comment-text">\${text}</div>
+                  <div class="comment-actions">
+                    <div class="comment-action">👍 0</div>
+                    <div class="comment-action">👎 0</div>
+                  </div>
+                </div>
+              \`;
+              
+              commentsList.insertBefore(newComment, commentsList.firstChild);
+            }
             
             function showResults() {
               // Calculate score
