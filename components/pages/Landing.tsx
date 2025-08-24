@@ -146,12 +146,12 @@ export default function Landing() {
                     {subject.title}
                   </CardTitle>
                 </CardHeader>
-                
+
                 <CardContent>
                   <p className="text-gray-600 dark:text-gray-300 text-sm mb-4" data-testid={`text-subject-description-${subject.id}`}>
                     {subject.description}
                   </p>
-                  
+
                   <div className="flex justify-between items-center mb-4">
                     <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
                       <Clock className="mr-1" size={16} />

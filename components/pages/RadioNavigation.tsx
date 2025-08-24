@@ -1,4 +1,5 @@
-import { Link } from 'wouter';
+'use client'
+
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { getRadioNavOptionUrl } from '@shared/urlMapping';

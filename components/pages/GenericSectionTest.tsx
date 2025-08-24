@@ -139,11 +139,11 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
 
   const calculateScore = () => {
     if (!questions) return { correct: 0, total: 0, percentage: 0 };
-    
+
     const correct = questions.filter(q => 
       selectedAnswers[q.id] === q.correct_answer
     ).length;
-    
+
     return {
       correct,
       total: questions.length,
@@ -218,7 +218,7 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
             {sortedQuestions.map((question, index) => {
               const userAnswer = selectedAnswers[question.id];
               const isCorrect = userAnswer === question.correct_answer;
-              
+
               return (
                 <Card key={question.id} className={`${isCorrect ? 'border-green-500' : 'border-red-500'}`}>
                   <CardHeader>
@@ -236,7 +236,7 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
                       ].map((option) => {
                         const isUserAnswer = userAnswer === option.key;
                         const isCorrectAnswer = question.correct_answer === option.key;
-                        
+
                         return (
                           <div
                             key={option.key}
@@ -334,7 +334,7 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
                     const isCorrect = isAnswered && selectedAnswers[q.id] === q.correct_answer;
                     const isWrong = isAnswered && selectedAnswers[q.id] !== q.correct_answer;
                     const isCurrent = currentQuestionIndex === index;
-                    
+
                     let buttonClass = "";
                     if (isCurrent) {
                       buttonClass = "bg-blue-600 text-white border-blue-600";
@@ -345,7 +345,7 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
                     } else {
                       buttonClass = "bg-white text-black border-gray-300";
                     }
-                    
+
                     return (
                       <Button
                         key={q.id}
@@ -412,7 +412,7 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
                           const isSelected = selectedAnswers[currentQuestion.id] === option.key;
                           const isCorrect = currentQuestion.correct_answer === option.key;
                           const hasAnswered = currentQuestion.id in selectedAnswers;
-                          
+
                           let buttonClass = "";
                           if (hasAnswered) {
                             if (isSelected && !isCorrect) {
@@ -425,7 +425,7 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
                           } else {
                             buttonClass = isSelected ? "bg-blue-600 text-white" : "bg-white text-black hover:bg-gray-50";
                           }
-                          
+
                           return (
                             <Button
                               key={option.key}
@@ -492,7 +492,7 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
                         <MessageSquare className="h-5 w-5 mr-2" />
                         Comments
                       </h3>
-                      
+
                       <div className="border rounded-lg p-4">
                         <Textarea
                           placeholder="Add a comment..."

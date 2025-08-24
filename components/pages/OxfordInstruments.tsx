@@ -1,3 +1,5 @@
+'use client'
+
 import { Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -50,7 +52,7 @@ export default function OxfordInstruments() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
       <div className="max-w-2xl mx-auto px-4 py-20">
         <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-6 font-serif italic">
+          <h1 className="text-3xl md:4xl font-bold text-white mb-6 font-serif italic">
             OXFORD INSTRUMENTS QUESTIONS
           </h1>
           <Link href="/instruments/">
@@ -63,7 +65,7 @@ export default function OxfordInstruments() {
             </Button>
           </Link>
         </div>
-        
+
         <div className="space-y-6">
           {sections?.map((section: Section) => (
             <Button

@@ -1,6 +1,8 @@
+'use client'
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { apiRequest } from '@/lib/queryClient';
+import { useAuth } from '../../hooks/useAuth';
+import { apiRequest } from '../../lib/queryClient';
 
 type Theme = 'light' | 'dark';
 
@@ -33,7 +35,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const savedTheme = localStorage.getItem('theme') as Theme;
     const userTheme = (user as any)?.themePreference as Theme;
     const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    
+
     const initialTheme = userTheme || savedTheme || systemTheme;
     setThemeState(initialTheme);
     applyTheme(initialTheme);
@@ -52,10 +54,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const setTheme = async (newTheme: Theme) => {
     setThemeState(newTheme);
     applyTheme(newTheme);
-    
+
     // Save to localStorage
     localStorage.setItem('theme', newTheme);
-    
+
     // Save to user preferences if authenticated
     if (isAuthenticated) {
       try {

@@ -1,14 +1,13 @@
-import { Link } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+'use client'
 
-type Chapter = {
-  id: number;
-  name: string;
-  description?: string;
-  subjectId: number;
-};
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Clock, Search, Play, ArrowLeft } from '@/components/Icons';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Instruments() {
   // Instruments subject ID is 1 based on our database insert

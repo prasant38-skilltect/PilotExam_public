@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react';
-import { MessageCircle, X } from 'lucide-react';
+import { MessageCircle, X, ExternalLink } from '@/components/Icons';
 import { Button } from '@/components/ui/button';
+
 
 export function WhatsAppChat() {
   const [isOpen, setIsOpen] = useState(false);
-  
+
   const handleWhatsAppChat = () => {
     // Replace with your actual WhatsApp business number
     const phoneNumber = "+1234567890"; // Update this with the actual business number
@@ -49,7 +50,7 @@ export function WhatsAppChat() {
                 </p>
               </div>
             </div>
-            
+
             <div className="space-y-3">
               <p className="text-sm text-gray-700 dark:text-gray-300">
                 Get instant support for:
@@ -60,7 +61,7 @@ export function WhatsAppChat() {
                 <li>• Technical support</li>
                 <li>• Account assistance</li>
               </ul>
-              
+
               <Button
                 onClick={handleWhatsAppChat}
                 className="w-full bg-green-500 hover:bg-green-600 text-white"

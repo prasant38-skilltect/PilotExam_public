@@ -1,7 +1,12 @@
-import { Link } from 'wouter';
+'use client'
+
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getSubjectUrl } from '@shared/urlMapping';
+import { Input } from '@/components/ui/input';
+import { Clock, Search, Play, BookOpen, Users, Target } from '@/components/Icons';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type Subject = {

@@ -78,7 +78,7 @@ export function Header() {
                 <Moon className="h-4 w-4" />
               )}
             </Button>
-            
+
             {isAuthenticated ? (
               <div className="flex items-center space-x-3">
                 {(user as any)?.profileImageUrl && (

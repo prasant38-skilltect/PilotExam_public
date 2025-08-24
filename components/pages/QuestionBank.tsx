@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Clock, Search, Play } from '@/components/Icons';
+import { Clock, Search, Play, Plane } from '@/components/Icons';
 import { Skeleton } from '@/components/ui/skeleton';
 // import { useTheme } from '@/contexts/ThemeContext'; // This import is not used in the provided file.
 

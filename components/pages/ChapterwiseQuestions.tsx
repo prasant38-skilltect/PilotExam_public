@@ -1,3 +1,5 @@
+'use client'
+
 import { Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -57,7 +59,7 @@ export default function ChapterwiseQuestions() {
             </Button>
           </Link>
         </div>
-        
+
         <div className="space-y-6">
           {sections?.map((section: Section) => (
             <Button
