@@ -1439,11 +1439,14 @@ app.use((req, res, next) => {
                   if (letters[i] === userAnswer) {
                     option.classList.add('selected');
                   }
+                  // Don't add click handler - option is locked
                 } else if (selectedAnswers[question.id] === letters[i]) {
                   option.classList.add('selected');
+                  option.onclick = () => selectOption(question.id, letters[i], question.correct_answer);
+                } else {
+                  // Only add click handler if question not attempted
+                  option.onclick = () => selectOption(question.id, letters[i], question.correct_answer);
                 }
-                
-                option.onclick = () => selectOption(question.id, letters[i], question.correct_answer);
                 container.appendChild(option);
               });
               
@@ -1479,6 +1482,11 @@ app.use((req, res, next) => {
             }
             
             function selectOption(questionId, answer, correctAnswer) {
+              // If question already attempted, don't allow changes
+              if (attemptedQuestions.has(questionId)) {
+                return;
+              }
+              
               selectedAnswers[questionId] = answer;
               attemptedQuestions.add(questionId);
               
