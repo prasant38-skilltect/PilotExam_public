@@ -33,7 +33,7 @@ import {
   type Topics,
 } from "../shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, avg, max, count, isNull } from "drizzle-orm";
+import { eq, and, or, desc, avg, max, count, isNull, like } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -108,22 +108,81 @@ export class DatabaseStorage implements IStorage {
   // Subject operations
 
   async getTopicByName(name: string): Promise<any | []> {
-    // Search for topics by slug or text that match the name
-    const matchingTopics = await db
+    // First, try to find a parent topic that matches the name (where parent_id is NULL)
+    const parentTopic = await db
       .select()
       .from(topics)
       .where(
         and(
           or(
             eq(topics.slug, name),
-            eq(topics.text, name)
+            eq(topics.text, name),
+            // Also search for partial matches (e.g., "instruments" matches "oxford-instruments-questions")
+            like(topics.slug, `%${name}%`),
+            like(topics.text, `%${name}%`)
           ),
-          eq(topics.quizId, -1)
+          isNull(topics.parentId) // This is a parent topic
+        )
+      )
+      .limit(1);
+    
+    if (parentTopic.length > 0) {
+      // Found a parent topic, now get all child topics where parent_id = parent topic's id
+      const childTopics = await db
+        .select()
+        .from(topics)
+        .where(eq(topics.parentId, parentTopic[0].id));
+      
+      // Transform the child topics to match the expected format
+      const formattedTopics = await Promise.all(
+        childTopics.map(async (topic) => {
+          const questionCount = await this.getQuestionCountByTopic(topic.id);
+          
+          return {
+            id: topic.id,
+            title: topic.text,
+            description: topic.text,
+            code: topic.slug.toUpperCase().slice(0, 3),
+            slug: topic.slug,
+            questionCount,
+            duration: 120,
+          };
+        })
+      );
+      
+      return formattedTopics;
+    }
+    
+    // If no parent topic found, search for any topics that match the name
+    const matchingTopics = await db
+      .select()
+      .from(topics)
+      .where(
+        or(
+          eq(topics.slug, name),
+          eq(topics.text, name)
         )
       );
     
     if (matchingTopics.length > 0) {
-      return matchingTopics;
+      // Transform the matching topics to the expected format
+      const formattedTopics = await Promise.all(
+        matchingTopics.map(async (topic) => {
+          const questionCount = await this.getQuestionCountByTopic(topic.id);
+          
+          return {
+            id: topic.id,
+            title: topic.text,
+            description: topic.text,
+            code: topic.slug.toUpperCase().slice(0, 3),
+            slug: topic.slug,
+            questionCount,
+            duration: 120,
+          };
+        })
+      );
+      
+      return formattedTopics;
     }
     
     console.log("No topics found for name:", name);
