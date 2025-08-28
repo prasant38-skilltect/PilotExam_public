@@ -33,7 +33,7 @@ import {
   type Topics,
 } from "../shared/schema";
 import { db } from "./db";
-import { eq, and, desc, avg, max, count, isNull } from "drizzle-orm";
+import { eq, and, or, desc, avg, max, count, isNull } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -108,18 +108,25 @@ export class DatabaseStorage implements IStorage {
   // Subject operations
 
   async getTopicByName(name: string): Promise<any | []> {
-    const parentTopics = await db.select().from(topics).where(and(eq(topics.parentName, name), eq(topics.quizId, -1)));
-    if (parentTopics.length > 0) {
-      return parentTopics;
+    // Search for topics by slug or text that match the name
+    const matchingTopics = await db
+      .select()
+      .from(topics)
+      .where(
+        and(
+          or(
+            eq(topics.slug, name),
+            eq(topics.text, name)
+          ),
+          eq(topics.quizId, -1)
+        )
+      );
+    
+    if (matchingTopics.length > 0) {
+      return matchingTopics;
     }
-    console.log("parentTopics...",parentTopics);
-
-    const categoryTopics = await db.select().from(topics).where(and(eq(topics.categoryName, name), eq(topics.quizId, -1)));
-    console.log("categoryTopics...",categoryTopics)
-
-    if (categoryTopics.length > 0) {
-      return categoryTopics;
-    }
+    
+    console.log("No topics found for name:", name);
     return [];
   }
 

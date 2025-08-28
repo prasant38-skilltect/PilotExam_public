@@ -34,13 +34,9 @@ export const topics = pgTable(
     categoryId: integer("category_id")
       .notNull()
       .references(() => categories.id, { onDelete: "cascade" }),
-    categoryName: varchar("category_name", { length: 255 })
-      .notNull()
-      .references(() => categories.text, { onDelete: "cascade" }), // new
 
-    // ✅ fixed: wrap in arrow fn so TS resolves later
+    // Self-referencing parent relationship
     parentId: integer("parent_id").references((): any => topics.id, { onDelete: "cascade" }),
-    parentName: varchar("parent_name").references((): any => topics.slug, { onDelete: "cascade" }), //new 
 
     slug: varchar("slug", { length: 255 }).notNull(),
     text: varchar("text", { length: 255 }).notNull(),
