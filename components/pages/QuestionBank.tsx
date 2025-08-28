@@ -13,13 +13,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function QuestionBank() {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: subjects, isLoading } = useQuery({
-    queryKey: ['/api/subjects'],
+  const { data: topics, isLoading } = useQuery({
+    queryKey: ['/api/topics'],
   });
 
-  const filteredSubjects = (subjects as any)?.filter((subject: any) =>
-    subject.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    subject.code.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTopics = (topics as any)?.filter((topic: any) =>
+    (topic.text || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (topic.slug || '').toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   if (isLoading) {
@@ -46,10 +46,10 @@ export default function QuestionBank() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
-            14 ATPL Subject Modules
+            Question Bank
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Master all EASA ATPL subjects with our comprehensive question bank and practice tests
+            Browse categories and topics to start practicing questions
           </p>
         </div>
 
@@ -58,86 +58,39 @@ export default function QuestionBank() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <Input
-              placeholder="Search subjects..."
+              placeholder="Search topics..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
-              data-testid="input-search-subjects"
+              data-testid="input-search-topics"
             />
           </div>
         </div>
 
-        {/* Subject Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSubjects.map((subject: any) => (
-            <Card key={subject.id} className="hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700">
-              <CardHeader>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="bg-gradient-to-r from-purple-600 to-blue-700 w-12 h-12 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold" data-testid={`text-subject-code-${subject.code}`}>
-                      {subject.code}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Questions</div>
-                    <div className="font-bold text-purple-600 dark:text-purple-400" data-testid={`text-question-count-${subject.id}`}>
-                      {subject.questionCount}
-                    </div>
-                  </div>
-                </div>
-                <CardTitle className="text-lg" data-testid={`text-subject-title-${subject.id}`}>
-                  {subject.title}
-                </CardTitle>
-              </CardHeader>
-
-              <CardContent>
-                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4" data-testid={`text-subject-description-${subject.id}`}>
-                  {subject.description}
-                </p>
-
-                <div className="flex justify-between items-center mb-4">
-                  <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                    <Clock className="mr-1" size={16} />
-                    <span data-testid={`text-duration-${subject.id}`}>{subject.duration} min</span>
-                  </div>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Link href={`/test/${subject.id}`} className="flex-1">
-                    <Button
-                      className="w-full bg-gradient-to-r from-purple-600 to-blue-700 text-white hover:shadow-lg transition-all duration-300"
-                      data-testid={`button-start-test-${subject.id}`}
-                    >
-                      <Play className="mr-2" size={16} />
-                      Start Test
-                    </Button>
-                  </Link>
-
-                  <Link href={`/test/${subject.id}?mode=practice`}>
-                    <Button
-                      variant="outline"
-                      data-testid={`button-practice-${subject.id}`}
-                    >
-                      Practice
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Top-level Topics as Buttons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredTopics.map((topic: any) => (
+            <Button
+              key={topic.id}
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-700 text-white hover:shadow-lg transition-all duration-300"
+              data-testid={`button-topic-${topic.slug}`}
+            >
+              {topic.text}
+            </Button>
           ))}
         </div>
 
-        {filteredSubjects.length === 0 && searchTerm && (
+        {filteredTopics.length === 0 && searchTerm && (
           <div className="text-center py-12">
             <p className="text-gray-500 dark:text-gray-400 text-lg">
-              No subjects found matching "{searchTerm}"
+              No topics found matching "{searchTerm}"
             </p>
           </div>
         )}
 
         {/* Info Section */}
         <div className="mt-16 bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-lg">
-          <h2 className="text-2xl font-bold mb-4 text-center">About ATPL Subjects</h2>
+          <h2 className="text-2xl font-bold mb-4 text-center">About the Question Bank</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <h3 className="font-semibold mb-2">Exam Requirements</h3>

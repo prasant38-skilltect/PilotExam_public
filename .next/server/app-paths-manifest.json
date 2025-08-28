@@ -1,1 +1,11 @@
-{}
+{
+  "/api/auth/user/route": "app/api/auth/user/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/pressure-heads/page": "app/pressure-heads/page.js",
+  "/page": "app/page.js",
+  "/instruments/page": "app/instruments/page.js",
+  "/question-bank/page": "app/question-bank/page.js",
+  "/radio-navigation/page": "app/radio-navigation/page.js",
+  "/subjects/page": "app/subjects/page.js",
+  "/oxford-instruments-questions/page": "app/oxford-instruments-questions/page.js"
+}
