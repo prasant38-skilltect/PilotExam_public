@@ -71,6 +71,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Specific route for question-bank page
+  app.get('/api/question-bank', async (req, res) => {
+    try {
+      const parentTopics = await storage.getParentTopics();
+      
+      // Transform the topics data to match the expected format
+      const formattedTopics = await Promise.all(
+        parentTopics.map(async (topic) => {
+          const questionCount = await storage.getQuestionCountByTopic(topic.id);
+          
+          return {
+            id: topic.id,
+            title: topic.text,
+            description: topic.text, // Using text as description for now
+            code: topic.slug.toUpperCase().slice(0, 3), // Generate code from slug
+            slug: topic.slug,
+            questionCount,
+            duration: 120, // Default duration in minutes
+          };
+        })
+      );
+      
+      res.json(formattedTopics);
+    } catch (error) {
+      console.error("Error fetching question bank topics:", error);
+      res.status(500).json({ message: "Failed to fetch question bank topics" });
+    }
+  });
+
   app.get('/api/:topic', async (req, res) => {
     try {
       const subjects = await storage.getTopicByName(req.params.topic);

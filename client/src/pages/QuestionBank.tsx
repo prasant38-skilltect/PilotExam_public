@@ -11,7 +11,7 @@ export default function QuestionBank() {
   const [searchTerm, setSearchTerm] = useState('');
   
   const { data: subjects, isLoading } = useQuery({
-    queryKey: ['/api/subjects'], // This will now return topics data
+    queryKey: ['/api/question-bank'], // Use the specific question-bank endpoint
   });
 
   const filteredSubjects = (subjects as any)?.filter((subject: any) =>
