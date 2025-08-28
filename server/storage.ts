@@ -41,7 +41,6 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   
   // Subject operations
-  getAllSubjects(): Promise<Categories[]>;
   getSubject(id: number): Promise<Subject | undefined>;
   createSubject(subject: InsertSubject): Promise<Subject>;
   
@@ -107,9 +106,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Subject operations
-  async getAllSubjects(): Promise<Categories[]> {
-    return await db.select().from(categories).orderBy(categories.id);
-  }
 
   async getTopicByName(name: string): Promise<any | []> {
     const parentTopics = await db.select().from(topics).where(and(eq(topics.parentName, name), eq(topics.quizId, -1)));
