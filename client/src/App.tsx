@@ -29,6 +29,7 @@ const Syllabus = lazy(() => import("@/pages/Syllabus"));
 const PilotResume = lazy(() => import("@/pages/PilotResume"));
 const RadioWavesTest = lazy(() => import("@/pages/RadioWavesTest"));
 const Subjects = lazy(() => import("@/pages/Subjects"));
+const DynamicPage = lazy(() => import("@/pages/DynamicPage"));
 const RadioNavigation = lazy(() => import("@/pages/RadioNavigation"));
 const ChapterwiseQuestions = lazy(() => import("@/pages/ChapterwiseQuestions"));
 const Instruments = lazy(() => import("@/pages/Instruments"));
@@ -79,6 +80,11 @@ function Router() {
           <Route path="/subjects/">
             <Suspense fallback={<PageLoader />}>
               <Subjects />
+            </Suspense>
+          </Route>
+          <Route path="*">
+            <Suspense fallback={<PageLoader />}>
+              <DynamicPage />
             </Suspense>
           </Route>
           <Route path="/radio-navigation/">

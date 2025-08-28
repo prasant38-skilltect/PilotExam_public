@@ -9,11 +9,49 @@ import {
   integer,
   boolean,
   serial,
+  uniqueIndex
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Session storage table for Replit Auth
+export const categories = pgTable(
+  "categories",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 100 }).notNull().unique(),
+    text: varchar("text", { length: 100 }).default("null"),
+  },
+  (table) => [
+    uniqueIndex("uq_category_name").on(table.name),
+  ]
+);
+
+export const topics = pgTable(
+  "topics",
+  {
+    id: serial("id").primaryKey(),
+    categoryId: integer("category_id")
+      .notNull()
+      .references(() => categories.id, { onDelete: "cascade" }),
+    categoryName: varchar("category_name", { length: 255 })
+      .notNull()
+      .references(() => categories.text, { onDelete: "cascade" }), // new
+
+    // ✅ fixed: wrap in arrow fn so TS resolves later
+    parentId: integer("parent_id").references((): any => topics.id, { onDelete: "cascade" }),
+    parentName: varchar("parent_name").references((): any => topics.slug, { onDelete: "cascade" }), //new 
+
+    slug: varchar("slug", { length: 255 }).notNull(),
+    text: varchar("text", { length: 255 }).notNull(),
+
+    quizId: integer("quiz_id"), // NULL = sub-topic, NOT NULL = quiz
+  },
+  (table) => [
+    uniqueIndex("uq_topic").on(table.categoryId, table.parentId, table.slug),
+  ]
+);
+
 export const sessions = pgTable(
   "sessions",
   {
@@ -165,6 +203,9 @@ export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true 
 export const insertSectionSchema = createInsertSchema(sections).omit({ id: true });
 export const insertQuestionSchema = createInsertSchema(questions).omit({ id: true });
 export const insertAnswerSchema = createInsertSchema(answers).omit({ id: true });
+export const insertCategorySchema = createInsertSchema(categories);
+export const insertTopicSchema = createInsertSchema(topics);
+
 
 export const insertTestSessionSchema = createInsertSchema(testSessions).omit({
   id: true,
@@ -215,3 +256,8 @@ export type QuestionComment = typeof questionComments.$inferSelect;
 export type InsertQuestionComment = z.infer<typeof insertQuestionCommentSchema>;
 export type CommentVote = typeof commentVotes.$inferSelect;
 export type InsertCommentVote = z.infer<typeof insertCommentVoteSchema>;
+
+export type Categories = typeof categories.$inferSelect;
+export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type Topics = typeof topics.$inferSelect;
+export type InsertTopic = z.infer<typeof insertTopicSchema>;

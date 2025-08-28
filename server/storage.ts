@@ -9,6 +9,8 @@ import {
   testSessions,
   userAnswers,
   userProgress,
+  categories,
+  topics,
   type User,
   type UpsertUser,
   type Subject,
@@ -27,6 +29,8 @@ import {
   type InsertUserAnswer,
   type UserProgress,
   type InsertUserProgress,
+  type Categories,
+  type Topics,
 } from "../shared/schema";
 import { db } from "./db";
 import { eq, and, desc, avg, max, count } from "drizzle-orm";
@@ -37,7 +41,7 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   
   // Subject operations
-  getAllSubjects(): Promise<Subject[]>;
+  getAllSubjects(): Promise<Categories[]>;
   getSubject(id: number): Promise<Subject | undefined>;
   createSubject(subject: InsertSubject): Promise<Subject>;
   
@@ -99,8 +103,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Subject operations
-  async getAllSubjects(): Promise<Subject[]> {
-    return await db.select().from(subjects).orderBy(subjects.sequence, subjects.name);
+  async getAllSubjects(): Promise<Categories[]> {
+    return await db.select().from(categories).orderBy(categories.id);
+  }
+
+  async getTopicByName(name: string): Promise<any | []> {
+    const parentTopics = await db.select().from(topics).where(and(eq(topics.parentName, name), eq(topics.quizId, -1)));
+    if (parentTopics.length > 0) {
+      return parentTopics;
+    }
+    console.log("parentTopics...",parentTopics);
+
+    const categoryTopics = await db.select().from(topics).where(and(eq(topics.categoryName, name), eq(topics.quizId, -1)));
+    console.log("categoryTopics...",categoryTopics)
+
+    if (categoryTopics.length > 0) {
+      return categoryTopics;
+    }
+    return [];
   }
 
   async getSubject(id: number): Promise<Subject | undefined> {

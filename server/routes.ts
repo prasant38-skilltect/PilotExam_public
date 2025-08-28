@@ -53,6 +53,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/:topic', async (req, res) => {
+    try {
+      const subjects = await storage.getTopicByName(req.params.topic);
+      res.json(subjects);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+      res.status(500).json({ message: "Failed to fetch subjects" });
+    }
+  });
+
   app.get('/api/subjects/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);

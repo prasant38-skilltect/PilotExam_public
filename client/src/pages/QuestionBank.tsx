@@ -15,8 +15,8 @@ export default function QuestionBank() {
   });
 
   const filteredSubjects = (subjects as any)?.filter((subject: any) =>
-    subject.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    subject.code.toLowerCase().includes(searchTerm.toLowerCase())
+    subject?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    subject?.code?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   if (isLoading) {
