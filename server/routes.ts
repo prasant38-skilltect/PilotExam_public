@@ -53,6 +53,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Topics routes (public, raw SQL)
+  app.get('/api/topics', async (req, res) => {
+    try {
+      const topics = await storage.getRootTopicsRaw();
+      res.json(topics);
+    } catch (error) {
+      console.error("Error fetching topics:", error);
+      res.status(500).json({ message: "Failed to fetch topics" });
+    }
+  });
+
   app.get('/api/:topic', async (req, res) => {
     try {
       const subjects = await storage.getTopicByName(req.params.topic);

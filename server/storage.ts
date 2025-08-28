@@ -32,7 +32,7 @@ import {
   type Categories,
   type Topics,
 } from "../shared/schema";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, and, desc, avg, max, count } from "drizzle-orm";
 
 export interface IStorage {
@@ -78,6 +78,9 @@ export interface IStorage {
   getUserProgress(userId: string): Promise<UserProgress[]>;
   updateUserProgress(progress: InsertUserProgress): Promise<UserProgress>;
   getSubjectProgress(userId: string, subjectId: number): Promise<UserProgress | undefined>;
+
+  // Topics (raw SQL)
+  getRootTopicsRaw(): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -306,6 +309,18 @@ export class DatabaseStorage implements IStorage {
         )
       );
     return progress;
+  }
+
+  // Topics via plain SQL (no ORM)
+  async getRootTopicsRaw(): Promise<any[]> {
+    const sql = `
+      SELECT id, category_id, parent_id, slug, text, quiz_id
+      FROM topics
+      WHERE parent_id IS NULL
+      ORDER BY id ASC
+    `;
+    const result = await pool.query(sql);
+    return result.rows as any[];
   }
 }
 
