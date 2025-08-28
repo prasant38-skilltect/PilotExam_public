@@ -42,11 +42,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Subject routes (public)
+  // Subject routes (public) - now using topics instead of categories
   app.get('/api/subjects', async (req, res) => {
     try {
-      const subjects = await storage.getAllSubjects();
-      res.json(subjects);
+      const parentTopics = await storage.getParentTopics();
+      
+      // Transform the topics data to match the expected format
+      const formattedTopics = await Promise.all(
+        parentTopics.map(async (topic) => {
+          const questionCount = await storage.getQuestionCountByTopic(topic.id);
+          
+          return {
+            id: topic.id,
+            title: topic.text,
+            description: topic.text, // Using text as description for now
+            code: topic.slug.toUpperCase().slice(0, 3), // Generate code from slug
+            slug: topic.slug,
+            questionCount,
+            duration: 120, // Default duration in minutes
+          };
+        })
+      );
+      
+      res.json(formattedTopics);
     } catch (error) {
       console.error("Error fetching subjects:", error);
       res.status(500).json({ message: "Failed to fetch subjects" });

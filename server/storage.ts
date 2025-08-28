@@ -33,7 +33,7 @@ import {
   type Topics,
 } from "../shared/schema";
 import { db } from "./db";
-import { eq, and, desc, avg, max, count } from "drizzle-orm";
+import { eq, and, desc, avg, max, count, isNull } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -44,6 +44,10 @@ export interface IStorage {
   getAllSubjects(): Promise<Categories[]>;
   getSubject(id: number): Promise<Subject | undefined>;
   createSubject(subject: InsertSubject): Promise<Subject>;
+  
+  // Topics operations
+  getParentTopics(): Promise<Topics[]>;
+  getQuestionCountByTopic(topicId: number): Promise<number>;
   
   // Chapter operations
   getChaptersBySubject(subjectId: number): Promise<Chapter[]>;
@@ -131,6 +135,34 @@ export class DatabaseStorage implements IStorage {
   async createSubject(subject: InsertSubject): Promise<Subject> {
     const [created] = await db.insert(subjects).values(subject).returning();
     return created;
+  }
+
+  // Topics operations
+  async getParentTopics(): Promise<Topics[]> {
+    return await db
+      .select()
+      .from(topics)
+      .where(isNull(topics.parentId))
+      .orderBy(topics.id);
+  }
+
+  async getQuestionCountByTopic(topicId: number): Promise<number> {
+    // First get the topic to check if it has a quizId
+    const topic = await db.select().from(topics).where(eq(topics.id, topicId)).limit(1);
+    
+    if (topic.length === 0 || !topic[0].quizId) {
+      return 0;
+    }
+
+    // Count questions that match the quiz_id
+    // Assuming there's a connection between topics.quizId and questions
+    // This might need adjustment based on your actual data structure
+    const result = await db
+      .select({ count: count() })
+      .from(questions)
+      .where(eq(questions.subject_id, topic[0].quizId));
+    
+    return result[0]?.count || 0;
   }
 
   // Chapter operations
