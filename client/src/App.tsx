@@ -20,20 +20,10 @@ import Home from "@/pages/Home";
 const QuestionBank = lazy(() => import("@/pages/QuestionBank"));
 const Test = lazy(() => import("@/pages/Test"));
 const Results = lazy(() => import("@/pages/Results"));
-const AirlineInterviews = lazy(() => import("@/pages/AirlineInterviews"));
-const AtplViva = lazy(() => import("@/pages/AtplViva"));
-const Classes = lazy(() => import("@/pages/Classes"));
-const AptitudeTest = lazy(() => import("@/pages/AptitudeTest"));
-const Airbus320 = lazy(() => import("@/pages/Airbus320"));
-const Syllabus = lazy(() => import("@/pages/Syllabus"));
-const PilotResume = lazy(() => import("@/pages/PilotResume"));
 const RadioWavesTest = lazy(() => import("@/pages/RadioWavesTest"));
 const Subjects = lazy(() => import("@/pages/Subjects"));
 const DynamicPage = lazy(() => import("@/pages/DynamicPage"));
-const RadioNavigation = lazy(() => import("@/pages/RadioNavigation"));
-const ChapterwiseQuestions = lazy(() => import("@/pages/ChapterwiseQuestions"));
 const Instruments = lazy(() => import("@/pages/Instruments"));
-const OxfordInstruments = lazy(() => import("@/pages/OxfordInstruments"));
 const GenericSectionTest = lazy(() => import("@/pages/GenericSectionTest"));
 const SignIn = lazy(() => import("@/pages/SignIn"));
 const SignUp = lazy(() => import("@/pages/SignUp"));
@@ -82,27 +72,7 @@ function Router() {
               <Subjects />
             </Suspense>
           </Route>
-          <Route path="*">
-            <Suspense fallback={<PageLoader />}>
-              <DynamicPage />
-            </Suspense>
-          </Route>
-          <Route path="/radio-navigation/">
-            <Suspense fallback={<PageLoader />}>
-              <RadioNavigation />
-            </Suspense>
-          </Route>
-          <Route path="/chapterwise-questions-oxford/">
-            <Suspense fallback={<PageLoader />}>
-              <ChapterwiseQuestions />
-            </Suspense>
-          </Route>
-          <Route path="/oxford-instruments-questions/">
-            <Suspense fallback={<PageLoader />}>
-              <OxfordInstruments />
-            </Suspense>
-          </Route>
-          <Route path="/pressure-heads/">
+          {/* <Route path="/pressure-heads/">
             <Suspense fallback={<PageLoader />}>
               <GenericSectionTest 
                 sectionId={7} 
@@ -110,128 +80,23 @@ function Router() {
                 backUrl="/oxford-instruments-questions/" 
               />
             </Suspense>
-          </Route>
+          </Route> */}
           
           {/* Chapter Routes - Direct MCQ pages */}
-          <Route path="/radio-waves/">
+          {/* <Route path="/radio-waves/">
             <Suspense fallback={<PageLoader />}>
               <RadioWavesTest />
             </Suspense>
-          </Route>
-          <Route path="/propagation/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/modulation/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/antennae/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/doppler/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/vdf/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
+          </Route> */}
+          
 
           {/* Radio Navigation Options */}
-          <Route path="/keith-radio-qb/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/indigo-radio-nav/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-
-          {/* Subject Routes - for all ATPL subjects */}
-          <Route path="/instruments/">
+          {/* <Route path="/instruments/">
             <Suspense fallback={<PageLoader />}>
               <Instruments />
             </Suspense>
-          </Route>
-          <Route path="/performance/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/meteorology/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/technical/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/navigation/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/atpl-question-bank/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/indigo-question-bank/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/keith-williams/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/oxford-all-subjects/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/regulations/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/aircraft-specific/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/mass-and-balance/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/dgca-papers/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/airline-exam-papers/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-          <Route path="/airbus-320/">
-            <Suspense fallback={<PageLoader />}>
-              <NotFound />
-            </Suspense>
-          </Route>
+          </Route> */}
+          
 
           {/* Authentication Pages */}
           <Route path="/sign-in">
@@ -251,7 +116,7 @@ function Router() {
           </Route>
 
           {/* Public pages - accessible to all users */}
-          <Route path="/question-bank">
+          {/* <Route path="/question-bank">
             <Suspense fallback={<PageLoader />}>
               <QuestionBank />
             </Suspense>
@@ -265,51 +130,12 @@ function Router() {
             <Suspense fallback={<PageLoader />}>
               <Results />
             </Suspense>
-          </Route>
-          <Route path="/airline-interviews">
+          </Route> */} 
+          <Route path="*">
             <Suspense fallback={<PageLoader />}>
-              <AirlineInterviews />
+              <DynamicPage />
             </Suspense>
           </Route>
-          <Route path="/atpl-viva">
-            <Suspense fallback={<PageLoader />}>
-              <AtplViva />
-            </Suspense>
-          </Route>
-          <Route path="/classes">
-            <Suspense fallback={<PageLoader />}>
-              <Classes />
-            </Suspense>
-          </Route>
-          <Route path="/aptitude-test">
-            <Suspense fallback={<PageLoader />}>
-              <AptitudeTest />
-            </Suspense>
-          </Route>
-          <Route path="/airbus-320">
-            <Suspense fallback={<PageLoader />}>
-              <Airbus320 />
-            </Suspense>
-          </Route>
-          <Route path="/syllabus">
-            <Suspense fallback={<PageLoader />}>
-              <Syllabus />
-            </Suspense>
-          </Route>
-          <Route path="/pilot-resume">
-            <Suspense fallback={<PageLoader />}>
-              <PilotResume />
-            </Suspense>
-          </Route>
-          
-          {/* Legacy route for backward compatibility */}
-          <Route path="/test">
-            <Suspense fallback={<PageLoader />}>
-              <RadioWavesTest />
-            </Suspense>
-          </Route>
-
-          {/* 404 fallback */}
           <Route>
             <Suspense fallback={<PageLoader />}>
               <NotFound />
