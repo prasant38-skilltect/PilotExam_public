@@ -33,7 +33,7 @@ import {
   type Topics,
 } from "../shared/schema";
 import { db } from "./db";
-import { eq, and, desc, avg, max, count } from "drizzle-orm";
+import { eq, and, desc, avg, max, count, ne } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -108,17 +108,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTopicByName(name: string): Promise<any | []> {
-    const parentTopics = await db.select().from(topics).where(and(eq(topics.parentName, name), eq(topics.quizId, -1)));
+    const parentTopics = await db.select().from(topics).where(and(eq(topics.categoryName, name), eq(topics.parentId, -1)));
+    console.log("parentTopics...",parentTopics);
     if (parentTopics.length > 0) {
       return parentTopics;
     }
-    console.log("parentTopics...",parentTopics);
 
-    const categoryTopics = await db.select().from(topics).where(and(eq(topics.categoryName, name), eq(topics.quizId, -1)));
-    console.log("categoryTopics...",categoryTopics)
-
-    if (categoryTopics.length > 0) {
-      return categoryTopics;
+    const subTopics = await db.select().from(topics).where(and(eq(topics.parentName, name), ne(topics.quizId, -1)));
+    console.log("subTopics...",subTopics);
+    if (subTopics.length > 0) {
+      return subTopics;
     }
     return [];
   }
