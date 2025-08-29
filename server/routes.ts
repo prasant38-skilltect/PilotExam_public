@@ -3,6 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 // import { setupAuth, isAuthenticated } from "./replitAuth"; // Disabled Replit auth
 import { insertTestSessionSchema, insertUserAnswerSchema } from "../shared/schema";
+import { db } from "./db";
+import { topics } from "../shared/schema";
+import { and, eq, isNull } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -100,9 +103,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Debug endpoint to investigate the O#F#RD issue
+  app.get('/api/debug/oxford', async (req, res) => {
+    try {
+      const name = "O#F#RD";
+      
+      // Check for parent topics with exact text match
+      const exactTextMatches = await db
+        .select()
+        .from(topics)
+        .where(
+          and(
+            eq(topics.text, name),
+            isNull(topics.parentId)
+          )
+        );
+      
+      // Check for parent topics with exact slug match  
+      const exactSlugMatches = await db
+        .select() 
+        .from(topics)
+        .where(
+          and(
+            eq(topics.slug, "oxford-instruments-questions"),
+            isNull(topics.parentId)
+          )
+        );
+      
+      // Find all parents that have children with ID >= 190
+      const allParents = await db
+        .select()
+        .from(topics)
+        .where(isNull(topics.parentId));
+      
+      let parentsWithHighIds = [];
+      for (const parent of allParents) {
+        const children = await db
+          .select()
+          .from(topics)
+          .where(eq(topics.parentId, parent.id));
+        
+        const hasHighIds = children.some(child => child.id >= 190);
+        if (hasHighIds) {
+          parentsWithHighIds.push({
+            parent: parent,
+            childCount: children.length,
+            childIdRange: children.length > 0 ? `${Math.min(...children.map(c => c.id))}-${Math.max(...children.map(c => c.id))}` : 'none'
+          });
+        }
+      }
+      
+      res.json({
+        searchTerm: name,
+        exactTextMatches,
+        exactSlugMatches,
+        parentsWithHighIds,
+        explanation: "Debug info for O#F#RD topic matching"
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get('/api/:topic', async (req, res) => {
     try {
-      const subjects = await storage.getTopicByName(req.params.topic);
+      const topicName = req.params.topic;
+      console.log(`[ROUTE DEBUG] Received request for topic: "${topicName}"`);
+      const subjects = await storage.getTopicByName(topicName);
+      console.log(`[ROUTE DEBUG] Returning ${Array.isArray(subjects) ? subjects.length : 'non-array'} items for topic: "${topicName}"`);
       res.json(subjects);
     } catch (error) {
       console.error("Error fetching subjects:", error);

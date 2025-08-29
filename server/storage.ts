@@ -110,43 +110,59 @@ export class DatabaseStorage implements IStorage {
   async getTopicByName(name: string): Promise<any | []> {
     console.log(`[DEBUG] getTopicByName called with: "${name}"`);
     
-    // First, try to find a parent topic that matches the name (where parent_id is NULL)
-    // Try exact matches first, then partial matches
-    let parentTopic = await db
-      .select()
-      .from(topics)
-      .where(
-        and(
-          or(
-            eq(topics.slug, name),
-            eq(topics.text, name)
-          ),
-          isNull(topics.parentId) // This is a parent topic
-        )
-      )
-      .limit(1);
+    // Find the parent topic that matches the name (where parent_id is NULL)
+    // For the specific case of "O#F#RD", prioritize text match to avoid duplicate slug confusion
+    let parentTopic;
     
-    // If no exact match found, try partial matches
-    if (parentTopic.length === 0) {
+    if (name === "O#F#RD") {
+      // For O#F#RD, we want to return the same children as oxford-instruments-questions
+      // So we search for the INSTRUMENTS parent (ID 38) instead of the O#F#RD parent (ID 172)
       parentTopic = await db
         .select()
         .from(topics)
         .where(
           and(
-            or(
-              like(topics.slug, `%${name}%`),
-              like(topics.text, `%${name}%`)
-            ),
+            eq(topics.text, "INSTRUMENTS"),
             isNull(topics.parentId) // This is a parent topic
           )
         )
         .limit(1);
+    } else {
+      // For other topics, try slug first, then text
+      parentTopic = await db
+        .select()
+        .from(topics)
+        .where(
+          and(
+            eq(topics.slug, name),
+            isNull(topics.parentId) // This is a parent topic
+          )
+        )
+        .limit(1);
+      
+      // If no slug match, try exact text match
+      if (parentTopic.length === 0) {
+        parentTopic = await db
+          .select()
+          .from(topics)
+          .where(
+            and(
+              eq(topics.text, name),
+              isNull(topics.parentId) // This is a parent topic
+            )
+          )
+          .limit(1);
+      }
     }
     
     console.log(`[DEBUG] Found parent topic:`, parentTopic);
     
     if (parentTopic.length > 0) {
-      // Found a parent topic, now get all child topics where parent_id = parent topic's id
+      console.log(`[DEBUG] Parent topic details: ID=${parentTopic[0].id}, text="${parentTopic[0].text}", slug="${parentTopic[0].slug}", parentId=${parentTopic[0].parentId}`);
+    }
+    
+    if (parentTopic.length > 0) {
+      // Found a parent topic, now get ALL child topics where parent_id = parent topic's id
       const childTopics = await db
         .select()
         .from(topics)
@@ -175,44 +191,7 @@ export class DatabaseStorage implements IStorage {
       return formattedTopics;
     }
     
-    // If no parent topic found, search for any topics that match the name
-    console.log(`[DEBUG] No parent topic found, searching for any matching topics...`);
-    
-    const matchingTopics = await db
-      .select()
-      .from(topics)
-      .where(
-        or(
-          eq(topics.slug, name),
-          eq(topics.text, name)
-        )
-      );
-    
-    console.log(`[DEBUG] Found ${matchingTopics.length} matching topics:`, matchingTopics);
-    
-    if (matchingTopics.length > 0) {
-      // Transform the matching topics to the expected format
-      const formattedTopics = await Promise.all(
-        matchingTopics.map(async (topic) => {
-          const questionCount = await this.getQuestionCountByTopic(topic.id);
-          
-          return {
-            id: topic.id,
-            title: topic.text,
-            description: topic.text,
-            code: topic.slug.toUpperCase().slice(0, 3),
-            slug: topic.slug,
-            questionCount,
-            duration: 120,
-          };
-        })
-      );
-      
-      console.log(`[DEBUG] Returning ${formattedTopics.length} formatted matching topics`);
-      return formattedTopics;
-    }
-    
-    console.log("[DEBUG] No topics found for name:", name);
+    console.log("[DEBUG] No parent topic found for name:", name);
     return [];
   }
 
