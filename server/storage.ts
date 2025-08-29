@@ -108,23 +108,42 @@ export class DatabaseStorage implements IStorage {
   // Subject operations
 
   async getTopicByName(name: string): Promise<any | []> {
+    console.log(`[DEBUG] getTopicByName called with: "${name}"`);
+    
     // First, try to find a parent topic that matches the name (where parent_id is NULL)
-    const parentTopic = await db
+    // Try exact matches first, then partial matches
+    let parentTopic = await db
       .select()
       .from(topics)
       .where(
         and(
           or(
             eq(topics.slug, name),
-            eq(topics.text, name),
-            // Also search for partial matches (e.g., "instruments" matches "oxford-instruments-questions")
-            like(topics.slug, `%${name}%`),
-            like(topics.text, `%${name}%`)
+            eq(topics.text, name)
           ),
           isNull(topics.parentId) // This is a parent topic
         )
       )
       .limit(1);
+    
+    // If no exact match found, try partial matches
+    if (parentTopic.length === 0) {
+      parentTopic = await db
+        .select()
+        .from(topics)
+        .where(
+          and(
+            or(
+              like(topics.slug, `%${name}%`),
+              like(topics.text, `%${name}%`)
+            ),
+            isNull(topics.parentId) // This is a parent topic
+          )
+        )
+        .limit(1);
+    }
+    
+    console.log(`[DEBUG] Found parent topic:`, parentTopic);
     
     if (parentTopic.length > 0) {
       // Found a parent topic, now get all child topics where parent_id = parent topic's id
@@ -132,6 +151,8 @@ export class DatabaseStorage implements IStorage {
         .select()
         .from(topics)
         .where(eq(topics.parentId, parentTopic[0].id));
+      
+      console.log(`[DEBUG] Found ${childTopics.length} child topics for parent ID ${parentTopic[0].id}`);
       
       // Transform the child topics to match the expected format
       const formattedTopics = await Promise.all(
@@ -150,10 +171,13 @@ export class DatabaseStorage implements IStorage {
         })
       );
       
+      console.log(`[DEBUG] Returning ${formattedTopics.length} formatted child topics`);
       return formattedTopics;
     }
     
     // If no parent topic found, search for any topics that match the name
+    console.log(`[DEBUG] No parent topic found, searching for any matching topics...`);
+    
     const matchingTopics = await db
       .select()
       .from(topics)
@@ -163,6 +187,8 @@ export class DatabaseStorage implements IStorage {
           eq(topics.text, name)
         )
       );
+    
+    console.log(`[DEBUG] Found ${matchingTopics.length} matching topics:`, matchingTopics);
     
     if (matchingTopics.length > 0) {
       // Transform the matching topics to the expected format
@@ -182,10 +208,11 @@ export class DatabaseStorage implements IStorage {
         })
       );
       
+      console.log(`[DEBUG] Returning ${formattedTopics.length} formatted matching topics`);
       return formattedTopics;
     }
     
-    console.log("No topics found for name:", name);
+    console.log("[DEBUG] No topics found for name:", name);
     return [];
   }
 
