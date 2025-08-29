@@ -3,6 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 // import { setupAuth, isAuthenticated } from "./replitAuth"; // Disabled Replit auth
 import { insertTestSessionSchema, insertUserAnswerSchema } from "../shared/schema";
+import { db } from "./db";
+import { topics } from "../shared/schema";
+import { and, eq, isNull } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -42,20 +45,132 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Subject routes (public)
+  // Subject routes (public) - now using topics instead of categories
   app.get('/api/subjects', async (req, res) => {
     try {
-      const subjects = await storage.getAllSubjects();
-      res.json(subjects);
+      const parentTopics = await storage.getParentTopics();
+      
+      // Transform the topics data to match the expected format
+      const formattedTopics = await Promise.all(
+        parentTopics.map(async (topic) => {
+          const questionCount = await storage.getQuestionCountByTopic(topic.id);
+          
+          return {
+            id: topic.id,
+            title: topic.text,
+            description: topic.text, // Using text as description for now
+            code: topic.slug.toUpperCase().slice(0, 3), // Generate code from slug
+            slug: topic.slug,
+            questionCount,
+            duration: 120, // Default duration in minutes
+          };
+        })
+      );
+      
+      res.json(formattedTopics);
     } catch (error) {
       console.error("Error fetching subjects:", error);
       res.status(500).json({ message: "Failed to fetch subjects" });
     }
   });
 
+  // Specific route for question-bank page
+  app.get('/api/question-bank', async (req, res) => {
+    try {
+      const parentTopics = await storage.getParentTopics();
+      
+      // Transform the topics data to match the expected format
+      const formattedTopics = await Promise.all(
+        parentTopics.map(async (topic) => {
+          const questionCount = await storage.getQuestionCountByTopic(topic.id);
+          
+          return {
+            id: topic.id,
+            title: topic.text,
+            description: topic.text, // Using text as description for now
+            code: topic.slug.toUpperCase().slice(0, 3), // Generate code from slug
+            slug: topic.slug,
+            questionCount,
+            duration: 120, // Default duration in minutes
+          };
+        })
+      );
+      
+      res.json(formattedTopics);
+    } catch (error) {
+      console.error("Error fetching question bank topics:", error);
+      res.status(500).json({ message: "Failed to fetch question bank topics" });
+    }
+  });
+
+  // Debug endpoint to investigate the O#F#RD issue
+  app.get('/api/debug/oxford', async (req, res) => {
+    try {
+      const name = "O#F#RD";
+      
+      // Check for parent topics with exact text match
+      const exactTextMatches = await db
+        .select()
+        .from(topics)
+        .where(
+          and(
+            eq(topics.text, name),
+            isNull(topics.parentId)
+          )
+        );
+      
+      // Check for parent topics with exact slug match  
+      const exactSlugMatches = await db
+        .select() 
+        .from(topics)
+        .where(
+          and(
+            eq(topics.slug, "oxford-instruments-questions"),
+            isNull(topics.parentId)
+          )
+        );
+      
+      // Find all parents that have children with ID >= 190
+      const allParents = await db
+        .select()
+        .from(topics)
+        .where(isNull(topics.parentId));
+      
+      let parentsWithHighIds = [];
+      for (const parent of allParents) {
+        const children = await db
+          .select()
+          .from(topics)
+          .where(eq(topics.parentId, parent.id));
+        
+        const hasHighIds = children.some(child => child.id >= 190);
+        if (hasHighIds) {
+          parentsWithHighIds.push({
+            parent: parent,
+            childCount: children.length,
+            childIdRange: children.length > 0 ? `${Math.min(...children.map(c => c.id))}-${Math.max(...children.map(c => c.id))}` : 'none'
+          });
+        }
+      }
+      
+      res.json({
+        searchTerm: name,
+        exactTextMatches,
+        exactSlugMatches,
+        parentsWithHighIds,
+        explanation: "Debug info for O#F#RD topic matching"
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get('/api/:topic', async (req, res) => {
     try {
-      const subjects = await storage.getTopicByName(req.params.topic);
+      const topicName = req.params.topic;
+      console.log(`[ROUTE DEBUG] Received request for topic: "${topicName}"`);
+      const subjects = await storage.getTopicByName(topicName);
+      console.log(`[ROUTE DEBUG] Returning ${Array.isArray(subjects) ? subjects.length : 'non-array'} items for topic: "${topicName}"`);
       res.json(subjects);
     } catch (error) {
       console.error("Error fetching subjects:", error);

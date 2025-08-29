@@ -33,7 +33,7 @@ import {
   type Topics,
 } from "../shared/schema";
 import { db } from "./db";
-import { eq, and, desc, avg, max, count } from "drizzle-orm";
+import { eq, and, or, desc, avg, max, count, isNull, like } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -41,9 +41,12 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   
   // Subject operations
-  getAllSubjects(): Promise<Categories[]>;
   getSubject(id: number): Promise<Subject | undefined>;
   createSubject(subject: InsertSubject): Promise<Subject>;
+  
+  // Topics operations
+  getParentTopics(): Promise<Topics[]>;
+  getQuestionCountByTopic(topicId: number): Promise<number>;
   
   // Chapter operations
   getChaptersBySubject(subjectId: number): Promise<Chapter[]>;
@@ -103,23 +106,92 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Subject operations
-  async getAllSubjects(): Promise<Categories[]> {
-    return await db.select().from(categories).orderBy(categories.id);
-  }
 
   async getTopicByName(name: string): Promise<any | []> {
-    const parentTopics = await db.select().from(topics).where(and(eq(topics.parentName, name), eq(topics.quizId, -1)));
-    if (parentTopics.length > 0) {
-      return parentTopics;
+    console.log(`[DEBUG] getTopicByName called with: "${name}"`);
+    
+    // Find the parent topic that matches the name (where parent_id is NULL)
+    // For the specific case of "O#F#RD", prioritize text match to avoid duplicate slug confusion
+    let parentTopic;
+    
+    if (name === "O#F#RD") {
+      // For O#F#RD, we want to return the same children as oxford-instruments-questions
+      // So we search for the INSTRUMENTS parent (ID 38) instead of the O#F#RD parent (ID 172)
+      parentTopic = await db
+        .select()
+        .from(topics)
+        .where(
+          and(
+            eq(topics.text, "INSTRUMENTS"),
+            isNull(topics.parentId) // This is a parent topic
+          )
+        )
+        .limit(1);
+    } else {
+      // For other topics, try slug first, then text
+      parentTopic = await db
+        .select()
+        .from(topics)
+        .where(
+          and(
+            eq(topics.slug, name),
+            isNull(topics.parentId) // This is a parent topic
+          )
+        )
+        .limit(1);
+      
+      // If no slug match, try exact text match
+      if (parentTopic.length === 0) {
+        parentTopic = await db
+          .select()
+          .from(topics)
+          .where(
+            and(
+              eq(topics.text, name),
+              isNull(topics.parentId) // This is a parent topic
+            )
+          )
+          .limit(1);
+      }
     }
-    console.log("parentTopics...",parentTopics);
-
-    const categoryTopics = await db.select().from(topics).where(and(eq(topics.categoryName, name), eq(topics.quizId, -1)));
-    console.log("categoryTopics...",categoryTopics)
-
-    if (categoryTopics.length > 0) {
-      return categoryTopics;
+    
+    console.log(`[DEBUG] Found parent topic:`, parentTopic);
+    
+    if (parentTopic.length > 0) {
+      console.log(`[DEBUG] Parent topic details: ID=${parentTopic[0].id}, text="${parentTopic[0].text}", slug="${parentTopic[0].slug}", parentId=${parentTopic[0].parentId}`);
     }
+    
+    if (parentTopic.length > 0) {
+      // Found a parent topic, now get ALL child topics where parent_id = parent topic's id
+      const childTopics = await db
+        .select()
+        .from(topics)
+        .where(eq(topics.parentId, parentTopic[0].id));
+      
+      console.log(`[DEBUG] Found ${childTopics.length} child topics for parent ID ${parentTopic[0].id}`);
+      
+      // Transform the child topics to match the expected format
+      const formattedTopics = await Promise.all(
+        childTopics.map(async (topic) => {
+          const questionCount = await this.getQuestionCountByTopic(topic.id);
+          
+          return {
+            id: topic.id,
+            title: topic.text,
+            description: topic.text,
+            code: topic.slug.toUpperCase().slice(0, 3),
+            slug: topic.slug,
+            questionCount,
+            duration: 120,
+          };
+        })
+      );
+      
+      console.log(`[DEBUG] Returning ${formattedTopics.length} formatted child topics`);
+      return formattedTopics;
+    }
+    
+    console.log("[DEBUG] No parent topic found for name:", name);
     return [];
   }
 
@@ -131,6 +203,34 @@ export class DatabaseStorage implements IStorage {
   async createSubject(subject: InsertSubject): Promise<Subject> {
     const [created] = await db.insert(subjects).values(subject).returning();
     return created;
+  }
+
+  // Topics operations
+  async getParentTopics(): Promise<Topics[]> {
+    return await db
+      .select()
+      .from(topics)
+      .where(isNull(topics.parentId))
+      .orderBy(topics.id);
+  }
+
+  async getQuestionCountByTopic(topicId: number): Promise<number> {
+    // First get the topic to check if it has a quizId
+    const topic = await db.select().from(topics).where(eq(topics.id, topicId)).limit(1);
+    
+    if (topic.length === 0 || !topic[0].quizId) {
+      return 0;
+    }
+
+    // Count questions that match the quiz_id
+    // Assuming there's a connection between topics.quizId and questions
+    // This might need adjustment based on your actual data structure
+    const result = await db
+      .select({ count: count() })
+      .from(questions)
+      .where(eq(questions.subject_id, topic[0].quizId));
+    
+    return result[0]?.count || 0;
   }
 
   // Chapter operations

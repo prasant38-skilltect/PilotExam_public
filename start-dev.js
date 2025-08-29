@@ -18,7 +18,7 @@ apiServer.stderr.on('data', (data) => {
 // Wait a moment for API server to start, then start Next.js
 setTimeout(() => {
   console.log('🔄 Starting Next.js frontend server...');
-  const nextServer = spawn('next', ['dev'], {
+  const nextServer = spawn('npx', ['next', 'dev'], {
     env: { ...process.env, PORT: '3000' },
     stdio: 'pipe'
   });

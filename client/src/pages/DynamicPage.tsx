@@ -5,14 +5,13 @@ import { getSubjectUrl } from '@/shared/urlMapping';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type Subject = {
-  categoryId: number,
-  categoryName: string,
   id: number,
-  parentId: number,
-  parentName: string,
-  quizId: number,
+  title: string,
+  description: string,
+  code: string,
   slug: string,
-  text: string
+  questionCount: number,
+  duration: number
 };
 
 export default function DynamicPage() {
@@ -64,9 +63,9 @@ export default function DynamicPage() {
               <Button
                 variant="outline"
                 className="w-full h-16 text-sm font-medium bg-slate-800/60 border-cyan-400/30 text-cyan-100 hover:bg-cyan-400/10 hover:border-cyan-400/50 transition-all duration-300 whitespace-normal text-center p-3"
-                data-testid={`subject-${subject.text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`}
+                data-testid={`subject-${subject.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`}
               >
-                {subject.text}
+                {subject.title}
               </Button>
             </Link>
           ))}
