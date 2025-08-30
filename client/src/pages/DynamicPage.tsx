@@ -6,14 +6,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import GenericSectionTest from './GenericSectionTest';
 
 type Subject = {
+  id: number,
   categoryId: number,
   categoryName: string,
-  id: number,
   parentId: number,
   parentName: string,
-  quizId: number,
   slug: string,
-  text: string
+  text: string,
+  quizId: number
 };
 
 export default function DynamicPage() {
@@ -44,7 +44,7 @@ export default function DynamicPage() {
   console.log("subjects....", subjects)
   
   // Check if this is a single topic with a quizId (quiz page)
-  if (subjects && subjects.length === 1 && subjects[0].quizId) {
+  if (subjects && subjects.length === 1 && subjects[0].quizId && subjects[0].quizId !== -1) {
     const topic = subjects[0];
     const currentPath = link[0];
     // Extract the parent path for back navigation
@@ -82,14 +82,14 @@ export default function DynamicPage() {
               <Button
                 variant="outline"
                 className={`w-full h-16 text-sm font-medium transition-all duration-300 whitespace-normal text-center p-3 ${
-                  subject.quizId 
+                  subject.quizId && subject.quizId !== -1
                     ? 'bg-green-800/60 border-green-400/30 text-green-100 hover:bg-green-400/10 hover:border-green-400/50' 
                     : 'bg-slate-800/60 border-cyan-400/30 text-cyan-100 hover:bg-cyan-400/10 hover:border-cyan-400/50'
                 }`}
                 data-testid={`subject-${subject.text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`}
               >
                 {subject.text}
-                {subject.quizId && (
+                {subject.quizId && subject.quizId !== -1 && (
                   <span className="block text-xs text-green-300 mt-1">
                     📝 Quiz Available
                   </span>

@@ -47,10 +47,16 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 }
 
 
-// Validate ../app/instruments/page.tsx
+// Validate ../app/[slug]/page.tsx
 {
-  const handler = {} as typeof import("../app/instruments/page.js")
-  handler satisfies AppPageConfig<"/instruments">
+  const handler = {} as typeof import("../app/[slug]/page.js")
+  handler satisfies AppPageConfig<"/[slug]">
+}
+
+// Validate ../app/instruments.backup/page.tsx
+{
+  const handler = {} as typeof import("../app/instruments.backup/page.js")
+  handler satisfies AppPageConfig<"/instruments.backup">
 }
 
 // Validate ../app/oxford-instruments-questions/page.tsx
@@ -93,6 +99,12 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   const handler = {} as typeof import("../app/api/auth/user/route.js")
   handler satisfies RouteHandlerConfig<"/api/auth/user">
+}
+
+// Validate ../app/api/topics/route.ts
+{
+  const handler = {} as typeof import("../app/api/topics/route.js")
+  handler satisfies RouteHandlerConfig<"/api/topics">
 }
 
 
