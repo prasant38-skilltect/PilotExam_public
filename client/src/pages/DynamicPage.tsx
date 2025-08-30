@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { getSubjectUrl } from '@/shared/urlMapping';
 import { Skeleton } from '@/components/ui/skeleton';
+import GenericSectionTest from './GenericSectionTest';
 
 type Subject = {
   categoryId: number,
@@ -38,8 +39,25 @@ export default function DynamicPage() {
       </div>
     );
   }
+  
   console.log("link....", link[0])
   console.log("subjects....", subjects)
+  
+  // Check if this is a single topic with a quizId (quiz page)
+  if (subjects && subjects.length === 1 && subjects[0].quizId) {
+    const topic = subjects[0];
+    const currentPath = link[0];
+    // Extract the parent path for back navigation
+    const parentPath = currentPath.split('/').slice(0, -1).join('/') || '/';
+    
+    return (
+      <GenericSectionTest 
+        sectionId={topic.quizId}
+        sectionName={topic.text}
+        backUrl={parentPath}
+      />
+    );
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
       <div className="max-w-4xl mx-auto px-4 py-20">
@@ -63,10 +81,19 @@ export default function DynamicPage() {
             <Link key={subject.id} href={`/${subject.slug}/`}>
               <Button
                 variant="outline"
-                className="w-full h-16 text-sm font-medium bg-slate-800/60 border-cyan-400/30 text-cyan-100 hover:bg-cyan-400/10 hover:border-cyan-400/50 transition-all duration-300 whitespace-normal text-center p-3"
+                className={`w-full h-16 text-sm font-medium transition-all duration-300 whitespace-normal text-center p-3 ${
+                  subject.quizId 
+                    ? 'bg-green-800/60 border-green-400/30 text-green-100 hover:bg-green-400/10 hover:border-green-400/50' 
+                    : 'bg-slate-800/60 border-cyan-400/30 text-cyan-100 hover:bg-cyan-400/10 hover:border-cyan-400/50'
+                }`}
                 data-testid={`subject-${subject.text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`}
               >
                 {subject.text}
+                {subject.quizId && (
+                  <span className="block text-xs text-green-300 mt-1">
+                    📝 Quiz Available
+                  </span>
+                )}
               </Button>
             </Link>
           ))}

@@ -8,9 +8,9 @@ import {
   answers,
   testSessions,
   userAnswers,
+  topics,
   userProgress,
   categories,
-  topics,
   type User,
   type UpsertUser,
   type Subject,
@@ -108,18 +108,39 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTopicByName(name: string): Promise<any | []> {
-    const parentTopics = await db.select().from(topics).where(and(eq(topics.parentName, name), eq(topics.quizId, -1)));
-    if (parentTopics.length > 0) {
-      return parentTopics;
+    console.log(`[DEBUG] getTopicByName called with: "${name}"`);
+    
+    // First, try to find a parent topic that matches the name (where parent_id is NULL)
+    const parentTopic = await db
+      .select()
+      .from(topics)
+      .where(
+        and(
+          or(
+            eq(topics.slug, name),
+            eq(topics.text, name)
+          ),
+          isNull(topics.parentId) // This is a parent topic
+        )
+      )
+      .limit(1);
+    
+    console.log(`[DEBUG] Found parent topic:`, parentTopic);
+    
+    if (parentTopic.length > 0) {
+      // Found a parent topic, now get ALL child topics where parent_id = parent topic's id
+      const childTopics = await db
+        .select()
+        .from(topics)
+        .where(eq(topics.parentId, parentTopic[0].id));
+      
+      console.log(`[DEBUG] Found ${childTopics.length} child topics for parent ID ${parentTopic[0].id}`);
+      
+      // Return the raw child topics with all their properties (including quizId)
+      return childTopics;
     }
-    console.log("parentTopics...",parentTopics);
-
-    const categoryTopics = await db.select().from(topics).where(and(eq(topics.categoryName, name), eq(topics.quizId, -1)));
-    console.log("categoryTopics...",categoryTopics)
-
-    if (categoryTopics.length > 0) {
-      return categoryTopics;
-    }
+    
+    console.log("[DEBUG] No parent topic found for name:", name);
     return [];
   }
 
