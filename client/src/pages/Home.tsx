@@ -79,7 +79,7 @@ export default function Home() {
         </div>
 
         {/* Subject Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredSubjects.map((subject: any) => (
             <Card key={subject.id} className="hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700">
               <CardHeader>
@@ -127,7 +127,7 @@ export default function Home() {
               </CardContent>
             </Card>
           ))}
-        </div>
+        </div> */}
       </div>
     </div>
   );
