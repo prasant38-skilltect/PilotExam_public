@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { getSubjectUrl } from '@/shared/urlMapping';
 import { Skeleton } from '@/components/ui/skeleton';
+import GenericSectionTest from './GenericSectionTest';
 
 type Subject = {
   categoryId: number,
@@ -17,7 +18,7 @@ type Subject = {
 
 export default function DynamicPage() {
   const link = useLocation();
-  const { data: subjects, isLoading } = useQuery<Subject[]>({
+  const { data: subjects, isLoading } = useQuery<any>({
     queryKey: [`/api${link[0]}`],
   });
 
@@ -57,20 +58,24 @@ export default function DynamicPage() {
             </Button>
           </Link>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {subjects?.map((subject: Subject) => (
-            <Link key={subject.id} href={`/${subject.slug}/`}>
-              <Button
-                variant="outline"
-                className="w-full h-16 text-sm font-medium bg-slate-800/60 border-cyan-400/30 text-cyan-100 hover:bg-cyan-400/10 hover:border-cyan-400/50 transition-all duration-300 whitespace-normal text-center p-3"
-                data-testid={`subject-${subject.text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`}
-              >
-                {subject.text}
-              </Button>
-            </Link>
-          ))}
-        </div>
+        {subjects?.type === "topic" &&
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {subjects?.data.map((subject: any) => (
+              <Link key={subject.id} href={`/${subject.slug}/`}>
+                <Button
+                  variant="outline"
+                  className="w-full h-16 text-sm font-medium bg-slate-800/60 border-cyan-400/30 text-cyan-100 hover:bg-cyan-400/10 hover:border-cyan-400/50 transition-all duration-300 whitespace-normal text-center p-3"
+                  data-testid={`subject-${subject.text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`}
+                >
+                  {subject.text}
+                </Button>
+              </Link>
+            ))}
+          </div>
+        }
+        {subjects?.type === "quiz" &&
+          <GenericSectionTest  quizData={subjects.data}/>
+        }
       </div>
     </div>
   );

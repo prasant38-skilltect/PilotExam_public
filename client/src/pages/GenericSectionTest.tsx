@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, Link } from 'wouter';
 import { Button } from '@/components/ui/button';
@@ -11,29 +11,27 @@ import { Clock, Flag, MessageSquare, FileText, ThumbsUp, ThumbsDown, Send, Home,
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
-type Question = {
-  id: number;
-  subject_id: number;
-  question_text: string;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
-  correct_answer: string;
-  explanation?: string;
-  difficulty?: string;
-  sequence: number;
-  explanation_text?: string;
-  explanation_image?: string;
-};
+// type Question = {
+//   id: number;
+//   subject_id: number;
+//   question_text: string;
+//   option_a: string;
+//   option_b: string;
+//   option_c: string;
+//   option_d: string;
+//   correct_answer: string;
+//   explanation?: string;
+//   difficulty?: string;
+//   sequence: number;
+//   explanation_text?: string;
+//   explanation_image?: string;
+// };
 
 interface GenericSectionTestProps {
-  sectionId: number;
-  sectionName: string;
-  backUrl: string;
+  quizData: any
 }
 
-export default function GenericSectionTest({ sectionId, sectionName, backUrl }: GenericSectionTestProps) {
+export default function GenericSectionTest({ quizData }: GenericSectionTestProps) {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
   const [showResults, setShowResults] = useState(false);
@@ -68,9 +66,48 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
   const { toast } = useToast();
 
   // Get questions for this section
-  const { data: questions, isLoading } = useQuery<Question[]>({
-    queryKey: [`/api/sections/${sectionId}/questions`],
-  });
+  // const { data: questions, isLoading } = useQuery<Question[]>({
+  //   queryKey: [`/api/sections/${sectionId}/questions`],
+  // });
+
+  const questions = useMemo(() => {
+
+    const optionLabels = ["a", "b", "c", "d", "e", "f"];
+
+    if (quizData.length > 0) {
+      let index = 1;
+      const filteredQuestions = Object.values(
+        quizData.reduce((acc: any, curr: any) => {
+          if (!acc[curr.id]) {
+            acc[curr.id] = {
+              id: curr.id,
+              question_text: curr.question_text,
+              question_id: curr.question_id,
+              sequence: index
+            };
+            index++;
+          }
+          const optionKey = `option_${optionLabels[curr.optionOrder]}`;
+          acc[curr.id][optionKey] = curr.option_text;
+          acc[curr.id].featured_img = curr.featured_img;
+          
+
+          if (curr.isCorrect) {
+            acc[curr.id].correct_answer = optionLabels[curr.optionOrder].toLocaleUpperCase();
+            acc[curr.id].explanation = curr.explaination;
+            acc[curr.id].explaination_img = curr.explaination_img;
+            acc[curr.id].tooltip = curr.tooltip;
+          }
+
+          return acc;
+        }, {})
+      );
+      return filteredQuestions;
+
+    } else{
+      return [];
+    }
+  }, [quizData])
 
   // Auto-start test when component mounts
   useEffect(() => {
@@ -138,7 +175,7 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
   const calculateScore = () => {
     if (!questions) return { correct: 0, total: 0, percentage: 0 };
     
-    const correct = questions.filter(q => 
+    const correct = questions.filter((q: any) => 
       selectedAnswers[q.id] === q.correct_answer
     ).length;
     
@@ -149,17 +186,17 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
     };
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="text-center">
-            <div className="text-white">Loading questions...</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
+  //       <div className="max-w-7xl mx-auto px-4 py-8">
+  //         <div className="text-center">
+  //           <div className="text-white">Loading questions...</div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   if (!questions || questions.length === 0) {
     return (
@@ -167,9 +204,9 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center text-white">
             <h1 className="text-2xl mb-4">No Questions Available</h1>
-            <Link href={backUrl}>
+            <Link href="/">
               <Button variant="outline" className="border-cyan-400/40 text-cyan-200">
-                ← Go Back
+                ← Back to Home
               </Button>
             </Link>
           </div>
@@ -178,8 +215,8 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
     );
   }
 
-  const sortedQuestions = [...questions].sort((a, b) => a.sequence - b.sequence);
-  const currentQuestion = sortedQuestions[currentQuestionIndex];
+  const sortedQuestions = [...questions].sort((a: any, b: any) => a.sequence - b.sequence);
+  const currentQuestion: any = sortedQuestions[currentQuestionIndex] || {};
   const score = calculateScore();
 
   if (showResults) {
@@ -187,10 +224,10 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-4">{sectionName} - Results</h1>
-            <Link href={backUrl}>
+            <h1 className="text-3xl font-bold text-white mb-4">{"sectionName"} - Results</h1>
+            <Link href="/">
               <Button variant="outline" className="border-cyan-400/40 text-cyan-200 mb-6">
-                ← Go Back
+                ← Back to Home
               </Button>
             </Link>
           </div>
@@ -213,7 +250,7 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
           </Card>
 
           <div className="space-y-6">
-            {sortedQuestions.map((question, index) => {
+            {sortedQuestions.map((question: any, index) => {
               const userAnswer = selectedAnswers[question.id];
               const isCorrect = userAnswer === question.correct_answer;
               
@@ -274,15 +311,15 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
         <div className="max-w-4xl mx-auto px-4 py-20">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-white mb-6">{sectionName}</h1>
+            <h1 className="text-4xl font-bold text-white mb-6">{"sectionName"}</h1>
             <div className="text-white mb-8">
               <p className="text-xl mb-2">Ready to start the test?</p>
               <p>Total Questions: {sortedQuestions.length}</p>
             </div>
             <div className="space-x-4">
-              <Link href={backUrl}>
+              <Link href="/">
                 <Button variant="outline" className="border-cyan-400/40 text-cyan-200">
-                  ← Go Back
+                  ← Back to Home
                 </Button>
               </Link>
               <Button onClick={startTest} className="bg-green-600 hover:bg-green-700">
@@ -301,13 +338,13 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center space-x-4">
-            <Link href={backUrl}>
+            <Link href="/">
               <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
                 <Home className="h-4 w-4 mr-2" />
                 Back
               </Button>
             </Link>
-            <h1 className="text-xl font-bold text-white">{sectionName}</h1>
+            <h1 className="text-xl font-bold text-white">{"sectionName"}</h1>
           </div>
           <div className="flex items-center space-x-4 text-white">
             <Clock className="h-5 w-5" />
@@ -327,7 +364,7 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-5 gap-2">
-                  {sortedQuestions.map((q, index) => {
+                  {sortedQuestions.map((q: any, index) => {
                     const isAnswered = answeredQuestions.has(q.id);
                     const isCorrect = isAnswered && selectedAnswers[q.id] === q.correct_answer;
                     const isWrong = isAnswered && selectedAnswers[q.id] !== q.correct_answer;
