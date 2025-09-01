@@ -153,27 +153,28 @@ export class DatabaseStorage implements IStorage {
     console.log("quizId....", quizId);
     
     const result2 = await db
-      .select({
-        id: quizQuestions.id,
-        quiz_id: quizQuestions.quizId,
-        position: quizQuestions.position,
-        questionPk: questions.id,
-        question_id: questions.questionId,
-        question_text: questions.text,
-        explaination: questions.explanation,
-        explaination_img: questions.explanationImage,
-        tooltio: questions.tooltip,
-        featured_img: questions.featuredImage,
-        created_at: questions.createdAt,
-        option_text: questionOptions.optionText,
-        isCorrect: questionOptions.isCorrect,
-        optionOrder: questionOptions.optionOrder
-      })
-      .from(quizQuestions)
-      .innerJoin(questions, eq(quizQuestions.questionId, questions.questionId))
-      .leftJoin(questionOptions, eq(questions.id, questionOptions.questionId))
-      .where(eq(quizQuestions.quizId, quizId))
-      .orderBy(asc(quizQuestions.id), asc(questionOptions.optionOrder));
+    .select({
+      id: quizQuestions.id,
+      quiz_id: quizQuestions.quizId,
+      position: quizQuestions.position,
+      questionPk: questions.id,
+      question_id: questions.questionId,
+      question_text: questions.text,
+      explaination: questions.explanation,
+      explaination_img: questions.explanationImage,
+      tooltio: questions.tooltip,
+      featured_img: questions.featuredImage,
+      created_at: questions.createdAt,
+      option_text: questionOptions.optionText,
+      isCorrect: questionOptions.isCorrect,
+      optionOrder: questionOptions.optionOrder
+    })
+    .from(quizQuestions)
+    .innerJoin(questions, eq(quizQuestions.questionId, questions.id))
+    .leftJoin(questionOptions, eq(questions.id, questionOptions.questionId))
+    .where(eq(quizQuestions.quizId, quizId))
+    .orderBy(asc(quizQuestions.id), asc(questionOptions.optionOrder));
+
 
     // console.log("results quiz......", result2);
     if (result2.length > 0) {
