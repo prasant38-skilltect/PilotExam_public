@@ -10,22 +10,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Clock, Flag, MessageSquare, FileText, ThumbsUp, ThumbsDown, Send, Home, Calendar, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import DOMPurify from "dompurify";
 
-// type Question = {
-//   id: number;
-//   subject_id: number;
-//   question_text: string;
-//   option_a: string;
-//   option_b: string;
-//   option_c: string;
-//   option_d: string;
-//   correct_answer: string;
-//   explanation?: string;
-//   difficulty?: string;
-//   sequence: number;
-//   explanation_text?: string;
-//   explanation_image?: string;
-// };
 
 interface GenericSectionTestProps {
   quizData: any
@@ -93,8 +79,12 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
           
 
           if (curr.isCorrect) {
+            let rawHTML = curr.explaination;
+            rawHTML = rawHTML
+              .replace(/\\n/g, "<br/>")
+              .replace(/\\"/g, '"'); 
             acc[curr.id].correct_answer = optionLabels[curr.optionOrder].toLocaleUpperCase();
-            acc[curr.id].explanation = curr.explaination;
+            acc[curr.id].explanation_text = DOMPurify.sanitize(rawHTML);
             acc[curr.id].explaination_img = curr.explaination_img;
             acc[curr.id].tooltip = curr.tooltip;
           }
@@ -293,7 +283,8 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                     {(question.explanation_text || question.explanation) && (
                       <div className="mt-4 p-4 bg-blue-50 rounded-lg">
                         <h4 className="font-semibold mb-2">Explanation:</h4>
-                        <p className="text-sm">{question.explanation_text || question.explanation}</p>
+                        <div dangerouslySetInnerHTML={{ __html: question.explanation_text }} />
+                        {/* <p className="text-sm">{question.explanation_text || question.explanation}</p> */}
                       </div>
                     )}
                   </CardContent>
@@ -485,7 +476,7 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                       {currentQuestion.id in selectedAnswers && (currentQuestion.explanation_text || currentQuestion.explanation) && (
                         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                           <h4 className="font-semibold mb-2 text-blue-800">Explanation:</h4>
-                          <p className="text-blue-700">{currentQuestion.explanation_text || currentQuestion.explanation}</p>
+                          <div dangerouslySetInnerHTML={{ __html: currentQuestion.explanation_text }} />
                         </div>
                       )}
 
@@ -512,7 +503,8 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                       <h3 className="text-lg font-semibold">Explanation</h3>
                       {(currentQuestion.explanation_text || currentQuestion.explanation) ? (
                         <div className="p-4 bg-blue-50 rounded-lg">
-                          <p>{currentQuestion.explanation_text || currentQuestion.explanation}</p>
+                          {/* <p>{currentQuestion.explanation_text || currentQuestion.explanation}</p> */}
+                          <div dangerouslySetInnerHTML={{ __html: currentQuestion.explanation_text }} />
                         </div>
                       ) : (
                         <p className="text-gray-500">No explanation available for this question.</p>
