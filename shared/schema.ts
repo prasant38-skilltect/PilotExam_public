@@ -20,7 +20,7 @@ export const categories = pgTable(
   {
     id: serial("id").primaryKey(),
     name: varchar("name", { length: 100 }).notNull().unique(),
-    text: varchar("text", { length: 100 }).default("null"),
+    text: varchar("text", { length: 100 }).notNull().unique(),
   },
   (table) => [
     uniqueIndex("uq_category_name").on(table.name),
@@ -34,15 +34,13 @@ export const topics = pgTable(
     categoryId: integer("category_id")
       .notNull()
       .references(() => categories.id, { onDelete: "cascade" }),
-    categoryName: varchar("category_name", { length: 255 })
-      .notNull()
-      .references(() => categories.text, { onDelete: "cascade" }), // new
+    categoryName: varchar("category_name", { length: 255 }).notNull(),
 
     // ✅ fixed: wrap in arrow fn so TS resolves later
     parentId: integer("parent_id").references((): any => topics.id, { onDelete: "cascade" }),
-    parentName: varchar("parent_name").references((): any => topics.slug, { onDelete: "cascade" }), //new 
+    parentName: varchar("parent_name"),
 
-    slug: varchar("slug", { length: 255 }).notNull(),
+    slug: varchar("slug", { length: 255 }).notNull().unique(),
     text: varchar("text", { length: 255 }).notNull(),
 
     quizId: integer("quiz_id").notNull(), // NULL = sub-topic, NOT NULL = quiz

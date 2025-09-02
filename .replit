@@ -1,20 +1,20 @@
-modules = ["nodejs-20", "web", "postgresql-16"]
+modules = ["nodejs-20", "web"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
-channel = "stable-24_05"
+channel = "stable-25_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["sh", "-c", "next build"]
-run = ["sh", "-c", "npm start"]
+run = ["npm", "run", "start"]
+build = ["npm", "run", "build"]
 
 [env]
 PORT = "5000"
 
 [workflows]
-runButton = "Start Next.js App"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
@@ -61,7 +61,6 @@ task = "shell.exec"
 args = "next dev"
 
 [agent]
-integrations = ["javascript_database==1.0.0", "javascript_log_in_with_replit==1.0.0"]
 
 [[ports]]
 localPort = 3000
