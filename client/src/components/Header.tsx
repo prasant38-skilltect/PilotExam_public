@@ -2,9 +2,18 @@ import { Link, useLocation } from 'wouter';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Moon, Sun, Plane } from '@/components/Icons';
+import { Moon, Sun, Plane, Users } from '@/components/Icons';
+import { LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { apiRequest } from '@/lib/queryClient';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const navigationItems = [
   { href: '/question-bank', label: 'Question Bank' },
@@ -18,17 +27,24 @@ const navigationItems = [
 ];
 
 export function Header() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { isAuthenticated, user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleLogin = () => {
-    window.location.href = '/sign-in';
+    setLocation('/sign-in');
   };
 
-  const handleLogout = () => {
-    window.location.href = '/sign-out';
+  const handleLogout = async () => {
+    try {
+      await apiRequest('POST', '/api/auth/logout');
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      setLocation('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   return (
@@ -99,26 +115,50 @@ export function Header() {
             </Button>
             
             {isAuthenticated ? (
-              <div className="flex items-center space-x-3">
-                {(user as any)?.profileImageUrl && (
-                  <img
-                    src={(user as any).profileImageUrl}
-                    alt="Profile"
-                    className="w-8 h-8 rounded-full object-cover"
-                    data-testid="img-profile"
-                  />
-                )}
-                <span className="text-sm text-gray-700 dark:text-gray-300" data-testid="text-username">
-                  {(user as any)?.firstName || (user as any)?.email}
-                </span>
-                <Button
-                  onClick={handleLogout}
-                  variant="outline"
-                  data-testid="button-logout"
-                >
-                  Sign Out
-                </Button>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    data-testid="button-profile-dropdown"
+                  >
+                    {(user as any)?.profileImageUrl ? (
+                      <img
+                        src={(user as any).profileImageUrl}
+                        alt="Profile"
+                        className="w-8 h-8 rounded-full object-cover"
+                        data-testid="img-profile"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-blue-700 flex items-center justify-center">
+                        <User className="h-4 w-4 text-white" />
+                      </div>
+                    )}
+                    <span className="text-sm text-gray-700 dark:text-gray-300" data-testid="text-username">
+                      {(user as any)?.firstName && (user as any)?.lastName 
+                        ? `${(user as any).firstName} ${(user as any).lastName}`
+                        : (user as any)?.firstName || (user as any)?.email}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    data-testid="menu-manage-profile"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Manage Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer text-red-600 focus:text-red-600"
+                    onClick={handleLogout}
+                    data-testid="menu-logout"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button
                 onClick={handleLogin}
@@ -180,26 +220,43 @@ export function Header() {
                 {isAuthenticated ? (
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg">
-                      {(user as any)?.profileImageUrl && (
+                      {(user as any)?.profileImageUrl ? (
                         <img
                           src={(user as any).profileImageUrl}
                           alt="Profile"
                           className="w-8 h-8 rounded-full object-cover"
                           data-testid="mobile-img-profile"
                         />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-blue-700 flex items-center justify-center">
+                          <User className="h-4 w-4 text-white" />
+                        </div>
                       )}
                       <span className="text-sm text-gray-700 dark:text-gray-300" data-testid="mobile-text-username">
-                        {(user as any)?.firstName || (user as any)?.email}
+                        {(user as any)?.firstName && (user as any)?.lastName 
+                          ? `${(user as any).firstName} ${(user as any).lastName}`
+                          : (user as any)?.firstName || (user as any)?.email}
                       </span>
                     </div>
-                    <Button
-                      onClick={handleLogout}
-                      variant="outline"
-                      className="w-full"
-                      data-testid="mobile-button-logout"
-                    >
-                      Sign Out
-                    </Button>
+                    <div className="space-y-2">
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                        data-testid="mobile-menu-manage-profile"
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        Manage Profile
+                      </Button>
+                      <Button
+                        onClick={handleLogout}
+                        variant="outline"
+                        className="w-full justify-start text-red-600 hover:text-red-600 border-red-200 hover:bg-red-50"
+                        data-testid="mobile-button-logout"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Log Out
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <Button
