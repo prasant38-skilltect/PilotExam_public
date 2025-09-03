@@ -6,10 +6,17 @@ import { useLocation } from 'wouter';
 import { useTheme } from '@/components/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Moon, Sun, Plane } from '@/components/Icons';
+import { Moon, Sun, Plane, Users } from '@/components/Icons';
+import { LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { apiRequest } from '@/lib/queryClient';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const navigationItems = [
   { href: '/question-bank', label: 'Question Bank' },
@@ -91,26 +98,50 @@ export function Header() {
             </Button>
 
             {isAuthenticated ? (
-              <div className="flex items-center space-x-3">
-                {(user as any)?.profileImageUrl && (
-                  <img
-                    src={(user as any).profileImageUrl}
-                    alt="Profile"
-                    className="w-8 h-8 rounded-full object-cover"
-                    data-testid="img-profile"
-                  />
-                )}
-                <span className="text-sm text-gray-700 dark:text-gray-300" data-testid="text-username">
-                  {(user as any)?.firstName || (user as any)?.email}
-                </span>
-                <Button
-                  onClick={handleLogout}
-                  variant="outline"
-                  data-testid="button-logout"
-                >
-                  Sign Out
-                </Button>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    data-testid="button-profile-dropdown"
+                  >
+                    {(user as any)?.profileImageUrl ? (
+                      <img
+                        src={(user as any).profileImageUrl}
+                        alt="Profile"
+                        className="w-8 h-8 rounded-full object-cover"
+                        data-testid="img-profile"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-blue-700 flex items-center justify-center">
+                        <User className="h-4 w-4 text-white" />
+                      </div>
+                    )}
+                    <span className="text-sm text-gray-700 dark:text-gray-300" data-testid="text-username">
+                      {(user as any)?.firstName && (user as any)?.lastName 
+                        ? `${(user as any).firstName} ${(user as any).lastName}`
+                        : (user as any)?.firstName || (user as any)?.email}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    data-testid="menu-manage-profile"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Manage Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer text-red-600 focus:text-red-600"
+                    onClick={handleLogout}
+                    data-testid="menu-logout"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button
                 onClick={handleLogin}
