@@ -54,6 +54,8 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   createUser(userData: SignUpData): Promise<User>;
   authenticateUser(credentials: SignInData): Promise<User | null>;
+  updateUserProfile(userId: string, profileData: { firstName?: string; lastName?: string; username?: string }): Promise<User>;
+  updateUserPassword(userId: string, currentPassword: string, newPassword: string): Promise<void>;
   
   // Subject operations
   getAllSubjects(): Promise<Categories[]>;
@@ -172,6 +174,58 @@ export class DatabaseStorage implements IStorage {
     }
 
     return user;
+  }
+
+  async updateUserProfile(userId: string, profileData: { firstName?: string; lastName?: string; username?: string }): Promise<User> {
+    // Check if username already exists (if username is being updated)
+    if (profileData.username) {
+      const existingUser = await this.getUserByUsername(profileData.username);
+      if (existingUser && existingUser.id !== userId) {
+        throw new Error('A user with this username already exists');
+      }
+    }
+
+    const [user] = await db
+      .update(users)
+      .set({
+        ...profileData,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return user;
+  }
+
+  async updateUserPassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    // Get the user first to verify current password
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Verify current password
+    const isValidPassword = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isValidPassword) {
+      throw new Error('Current password is incorrect');
+    }
+
+    // Hash the new password
+    const saltRounds = 10;
+    const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update the password
+    await db
+      .update(users)
+      .set({
+        passwordHash: newPasswordHash,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
   }
 
   // Subject operations

@@ -144,6 +144,7 @@ export function Header() {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem 
                     className="cursor-pointer"
+                    onClick={() => setLocation('/manage-profile')}
                     data-testid="menu-manage-profile"
                   >
                     <User className="mr-2 h-4 w-4" />
@@ -242,6 +243,10 @@ export function Header() {
                       <Button
                         variant="outline"
                         className="w-full justify-start"
+                        onClick={() => {
+                          setLocation('/manage-profile');
+                          setIsMobileMenuOpen(false);
+                        }}
                         data-testid="mobile-menu-manage-profile"
                       >
                         <User className="mr-2 h-4 w-4" />

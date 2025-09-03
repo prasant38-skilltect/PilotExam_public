@@ -27,6 +27,7 @@ const Instruments = lazy(() => import("@/pages/Instruments"));
 const GenericSectionTest = lazy(() => import("@/pages/GenericSectionTest"));
 const SignIn = lazy(() => import("@/pages/SignIn"));
 const SignUp = lazy(() => import("@/pages/SignUp"));
+const ManageProfile = lazy(() => import("@/pages/ManageProfile"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
@@ -112,6 +113,11 @@ function Router() {
           <Route path="/forgot-password">
             <Suspense fallback={<PageLoader />}>
               <ForgotPassword />
+            </Suspense>
+          </Route>
+          <Route path="/manage-profile">
+            <Suspense fallback={<PageLoader />}>
+              <ManageProfile />
             </Suspense>
           </Route>
 

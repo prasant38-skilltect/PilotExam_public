@@ -113,6 +113,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user profile
+  app.patch('/api/auth/user/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const { firstName, lastName, username } = req.body;
+
+      const user = await storage.updateUserProfile(userId, {
+        firstName,
+        lastName,
+        username,
+      });
+
+      const { passwordHash, ...userResponse } = user;
+      res.json(userResponse);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      if (error instanceof Error && error.message.includes('username already exists')) {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Update user password
+  app.patch('/api/auth/user/password', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "New password must be at least 6 characters" });
+      }
+
+      await storage.updateUserPassword(userId, currentPassword, newPassword);
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      console.error("Error updating password:", error);
+      if (error instanceof Error && error.message.includes('Current password is incorrect')) {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Failed to update password" });
+    }
+  });
+
   // Update user theme preference
   app.patch('/api/auth/user/theme', isAuthenticated, async (req: any, res) => {
     try {
