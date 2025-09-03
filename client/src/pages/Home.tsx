@@ -15,8 +15,8 @@ export default function Home() {
   });
 
   const filteredSubjects = (subjects as any)?.filter((subject: any) =>
-    subject.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    subject.code.toLowerCase().includes(searchTerm.toLowerCase())
+    subject.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    subject.text?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   if (isLoading) {
