@@ -18,6 +18,8 @@ import {
   type UpsertUser,
   type Subject,
   type InsertSubject,
+  type SignUpData,
+  type SignInData,
   // type Chapter,
   // type InsertChapter,
   // type Section,
@@ -40,13 +42,18 @@ import {
   type QuizQuestions,
 
 } from "../shared/schema";
+import bcrypt from 'bcryptjs';
 import { db } from "./db";
 import { eq, and, desc, avg, max, count, ne,asc } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  createUser(userData: SignUpData): Promise<User>;
+  authenticateUser(credentials: SignInData): Promise<User | null>;
   
   // Subject operations
   getAllSubjects(): Promise<Categories[]>;
@@ -95,6 +102,16 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
   async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
@@ -107,6 +124,53 @@ export class DatabaseStorage implements IStorage {
         },
       })
       .returning();
+    return user;
+  }
+
+  async createUser(userData: SignUpData): Promise<User> {
+    // Check if user already exists
+    const existingUserByEmail = await this.getUserByEmail(userData.email);
+    if (existingUserByEmail) {
+      throw new Error('User with this email already exists');
+    }
+
+    if (userData.username) {
+      const existingUserByUsername = await this.getUserByUsername(userData.username);
+      if (existingUserByUsername) {
+        throw new Error('User with this username already exists');
+      }
+    }
+
+    // Hash password
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(userData.password, saltRounds);
+
+    // Create user
+    const [user] = await db
+      .insert(users)
+      .values({
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        username: userData.username,
+        passwordHash,
+      })
+      .returning();
+
+    return user;
+  }
+
+  async authenticateUser(credentials: SignInData): Promise<User | null> {
+    const user = await this.getUserByEmail(credentials.email);
+    if (!user || !user.passwordHash) {
+      return null;
+    }
+
+    const isPasswordValid = await bcrypt.compare(credentials.password, user.passwordHash);
+    if (!isPasswordValid) {
+      return null;
+    }
+
     return user;
   }
 

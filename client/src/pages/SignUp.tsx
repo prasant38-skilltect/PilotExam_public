@@ -5,11 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Eye, Plane } from '@/components/Icons';
 import { EyeOff, Mail, User } from 'lucide-react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -18,11 +22,37 @@ export default function SignUp() {
     firstName: '',
     lastName: ''
   });
+  const [error, setError] = useState('');
+
+  const signUpMutation = useMutation({
+    mutationFn: async (data: { username: string; email: string; password: string; confirmPassword: string; firstName: string; lastName: string }) => {
+      return await apiRequest('POST', '/api/auth/signup', data);
+    },
+    onSuccess: (user) => {
+      // Invalidate and refetch user data
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      setLocation('/');
+    },
+    onError: (error: any) => {
+      setError(error.message || 'Sign up failed');
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle sign up logic here
-    console.log('Sign up:', formData);
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords don\'t match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    signUpMutation.mutate(formData);
   };
 
   const handleGoogleSignUp = () => {
@@ -56,6 +86,12 @@ export default function SignUp() {
         </CardHeader>
 
         <CardContent className="space-y-3 px-4 pb-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Google Sign Up */}
           <Button
             type="button"
@@ -168,9 +204,10 @@ export default function SignUp() {
 
             <Button
               type="submit"
-              className="w-full h-9 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold transition-all duration-300 transform hover:scale-[1.02]"
+              disabled={signUpMutation.isPending}
+              className="w-full h-9 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50"
             >
-              Create Account
+              {signUpMutation.isPending ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
 

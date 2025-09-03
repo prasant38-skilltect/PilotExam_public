@@ -5,19 +5,38 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Eye, Plane } from '@/components/Icons';
 import { EyeOff, Mail } from 'lucide-react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
+  const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const [error, setError] = useState('');
+
+  const signInMutation = useMutation({
+    mutationFn: async (data: { email: string; password: string }) => {
+      return await apiRequest('POST', '/api/auth/signin', data);
+    },
+    onSuccess: (user) => {
+      // Invalidate and refetch user data
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      setLocation('/');
+    },
+    onError: (error: any) => {
+      setError(error.message || 'Sign in failed');
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle sign in logic here
-    console.log('Sign in:', formData);
+    setError('');
+    signInMutation.mutate(formData);
   };
 
   const handleGoogleSignIn = () => {
@@ -51,6 +70,12 @@ export default function SignIn() {
         </CardHeader>
 
         <CardContent className="space-y-3 px-4 pb-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Google Sign In */}
           <Button
             type="button"
@@ -108,9 +133,10 @@ export default function SignIn() {
 
             <Button
               type="submit"
-              className="w-full h-10 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold transition-all duration-300 transform hover:scale-[1.02]"
+              disabled={signInMutation.isPending}
+              className="w-full h-10 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50"
             >
-              Sign In
+              {signInMutation.isPending ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
 

@@ -118,6 +118,8 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   themePreference: varchar("theme_preference", { length: 10 }).default('light'),
+  passwordHash: varchar("password_hash"),
+  username: varchar("username").unique(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -246,6 +248,24 @@ export const insertUserSchema = createInsertSchema(users).pick({
   themePreference: true,
 });
 
+export const signUpSchema = createInsertSchema(users).pick({
+  email: true,
+  firstName: true,
+  lastName: true,
+  username: true,
+}).extend({
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6, "Password confirmation is required"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+export const signInSchema = z.object({
+  email: z.string().email("Invalid email format"),
+  password: z.string().min(1, "Password is required"),
+});
+
 export const insertSubjectSchema = createInsertSchema(subjects);
 // export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true });
 // export const insertSectionSchema = createInsertSchema(sections).omit({ id: true });
@@ -289,6 +309,8 @@ export const insertQuizQuestionsSchema = createInsertSchema(quizQuestions);
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+export type SignUpData = z.infer<typeof signUpSchema>;
+export type SignInData = z.infer<typeof signInSchema>;
 export type Subject = typeof subjects.$inferSelect;
 export type InsertSubject = z.infer<typeof insertSubjectSchema>;
 // export type Chapter = typeof chapters.$inferSelect;
