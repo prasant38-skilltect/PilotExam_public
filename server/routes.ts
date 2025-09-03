@@ -1,19 +1,112 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { signUpSchema, signInSchema } from "../shared/schema";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
 // import { setupAuth, isAuthenticated } from "./replitAuth"; // Disabled Replit auth
 // import { insertTestSessionSchema, insertUserAnswerSchema } from "../shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  // await setupAuth(app); // Disabled Replit auth
+  // Session configuration
+  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  const pgStore = connectPg(session);
+  const sessionStore = new pgStore({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: false,
+    ttl: sessionTtl,
+    tableName: "sessions",
+  });
 
-  // Auth routes (temporarily disabled)
+  app.set("trust proxy", 1);
+  app.use(session({
+    secret: process.env.SESSION_SECRET || "your-secret-key-change-this",
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: false, // Set to true in production with HTTPS
+      maxAge: sessionTtl,
+    },
+  }));
+
+  // Auth middleware for protected routes
+  const isAuthenticated = (req: any, res: any, next: any) => {
+    if (req.session && req.session.userId) {
+      return next();
+    }
+    return res.status(401).json({ message: "Unauthorized" });
+  };
+
+  // Authentication routes
+  app.post('/api/auth/signup', async (req: any, res) => {
+    try {
+      const validatedData = signUpSchema.parse(req.body);
+      const user = await storage.createUser(validatedData);
+      
+      // Set up session
+      req.session.userId = user.id;
+      
+      // Don't return password hash
+      const { passwordHash, ...userResponse } = user;
+      res.json(userResponse);
+    } catch (error) {
+      console.error("Error during signup:", error);
+      if (error instanceof Error) {
+        if (error.message.includes('already exists')) {
+          return res.status(400).json({ message: error.message });
+        }
+      }
+      res.status(500).json({ message: "Failed to create account" });
+    }
+  });
+
+  app.post('/api/auth/signin', async (req: any, res) => {
+    try {
+      const validatedData = signInSchema.parse(req.body);
+      const user = await storage.authenticateUser(validatedData);
+      
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+      
+      // Set up session
+      req.session.userId = user.id;
+      
+      // Don't return password hash
+      const { passwordHash, ...userResponse } = user;
+      res.json(userResponse);
+    } catch (error) {
+      console.error("Error during signin:", error);
+      res.status(500).json({ message: "Failed to sign in" });
+    }
+  });
+
+  app.post('/api/auth/logout', (req: any, res) => {
+    req.session.destroy((err: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Failed to logout" });
+      }
+      res.clearCookie('connect.sid');
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
   app.get('/api/auth/user', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Don't return password hash
+      const { passwordHash, ...userResponse } = user;
+      res.json(userResponse);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -21,9 +114,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user theme preference
-  app.patch('/api/auth/user/theme', async (req: any, res) => {
+  app.patch('/api/auth/user/theme', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const { theme } = req.body;
 
       if (!theme || !['light', 'dark'].includes(theme)) {
@@ -35,7 +128,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         themePreference: theme,
       });
 
-      res.json(user);
+      const { passwordHash, ...userResponse } = user;
+      res.json(userResponse);
     } catch (error) {
       console.error("Error updating theme:", error);
       res.status(500).json({ message: "Failed to update theme preference" });

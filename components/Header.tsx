@@ -2,11 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useLocation } from 'wouter';
 import { useTheme } from '@/components/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun, Plane } from '@/components/Icons';
 import { cn } from '@/lib/utils';
+import { apiRequest } from '@/lib/queryClient';
+import { useQueryClient } from '@tanstack/react-query';
 
 const navigationItems = [
   { href: '/question-bank', label: 'Question Bank' },
@@ -21,15 +24,23 @@ const navigationItems = [
 
 export function Header() {
   const location = usePathname();
+  const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const { theme, toggleTheme } = useTheme();
   const { isAuthenticated, user } = useAuth();
 
   const handleLogin = () => {
-    window.location.href = '/api/login';
+    setLocation('/sign-in');
   };
 
-  const handleLogout = () => {
-    window.location.href = '/api/logout';
+  const handleLogout = async () => {
+    try {
+      await apiRequest('POST', '/api/auth/logout');
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      setLocation('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   return (

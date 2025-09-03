@@ -14,10 +14,10 @@ export default function Home() {
     queryKey: ['/api/subjects'],
   });
 
-  const filteredSubjects = (subjects as any)?.filter((subject: any) =>
-    subject.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    subject.code.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  // const filteredSubjects = (subjects as any)?.filter((subject: any) =>
+  //   subject?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   subject?.code.toLowerCase().includes(searchTerm.toLowerCase())
+  // ) || [];
 
   if (isLoading) {
     return (
