@@ -267,10 +267,10 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                             key={option.key}
                             className={`p-3 rounded-lg border ${
                               isCorrectAnswer
-                                ? 'bg-green-100 border-green-500 text-green-800'
+                                ? 'bg-green-100 dark:bg-green-900/30 border-green-500 text-green-800 dark:text-green-200'
                                 : isUserAnswer
-                                ? 'bg-red-100 border-red-500 text-red-800'
-                                : 'bg-gray-50 border-gray-200'
+                                ? 'bg-red-100 dark:bg-red-900/30 border-red-500 text-red-800 dark:text-red-200'
+                                : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300'
                             }`}
                           >
                             {option.key}. {option.text}
