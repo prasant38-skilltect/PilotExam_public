@@ -281,9 +281,9 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                       })}
                     </div>
                     {(question.explanation_text || question.explanation) && (
-                      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                        <h4 className="font-semibold mb-2">Explanation:</h4>
-                        <div dangerouslySetInnerHTML={{ __html: question.explanation_text }} />
+                      <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <h4 className="font-semibold mb-2 text-blue-800 dark:text-blue-200">Explanation:</h4>
+                        <div className="text-gray-800 dark:text-gray-200" dangerouslySetInnerHTML={{ __html: question.explanation_text }} />
                         {/* <p className="text-sm">{question.explanation_text || question.explanation}</p> */}
                       </div>
                     )}
@@ -474,9 +474,9 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
 
                       {/* Show explanation immediately when answer is selected */}
                       {currentQuestion.id in selectedAnswers && (currentQuestion.explanation_text || currentQuestion.explanation) && (
-                        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                          <h4 className="font-semibold mb-2 text-blue-800">Explanation:</h4>
-                          <div dangerouslySetInnerHTML={{ __html: currentQuestion.explanation_text }} />
+                        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <h4 className="font-semibold mb-2 text-blue-800 dark:text-blue-200">Explanation:</h4>
+                          <div className="text-gray-800 dark:text-gray-200" dangerouslySetInnerHTML={{ __html: currentQuestion.explanation_text }} />
                         </div>
                       )}
 
@@ -502,9 +502,9 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold">Explanation</h3>
                       {(currentQuestion.explanation_text || currentQuestion.explanation) ? (
-                        <div className="p-4 bg-blue-50 rounded-lg">
+                        <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
                           {/* <p>{currentQuestion.explanation_text || currentQuestion.explanation}</p> */}
-                          <div dangerouslySetInnerHTML={{ __html: currentQuestion.explanation_text }} />
+                          <div className="text-gray-800 dark:text-gray-200" dangerouslySetInnerHTML={{ __html: currentQuestion.explanation_text }} />
                         </div>
                       ) : (
                         <p className="text-gray-500">No explanation available for this question.</p>
