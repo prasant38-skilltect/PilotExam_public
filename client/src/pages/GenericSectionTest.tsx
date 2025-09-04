@@ -78,7 +78,7 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
           acc[curr.id].featured_img = curr.featured_img;
           
 
-          if (curr.isCorrect) {
+          if (curr.isCorrect || (acc[curr.id].correct_answer === undefined && curr.optionOrder === 3)) {
             let rawHTML = curr.explaination;
             rawHTML = rawHTML
               .replace(/\\n/g, "<br/>")
@@ -267,10 +267,10 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                             key={option.key}
                             className={`p-3 rounded-lg border ${
                               isCorrectAnswer
-                                ? 'bg-green-100 border-green-500 text-green-800'
+                                ? 'bg-green-100 dark:bg-green-900/30 border-green-500 text-green-800 dark:text-green-200'
                                 : isUserAnswer
-                                ? 'bg-red-100 border-red-500 text-red-800'
-                                : 'bg-gray-50 border-gray-200'
+                                ? 'bg-red-100 dark:bg-red-900/30 border-red-500 text-red-800 dark:text-red-200'
+                                : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300'
                             }`}
                           >
                             {option.key}. {option.text}
@@ -281,9 +281,9 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                       })}
                     </div>
                     {(question.explanation_text || question.explanation) && (
-                      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                        <h4 className="font-semibold mb-2">Explanation:</h4>
-                        <div dangerouslySetInnerHTML={{ __html: question.explanation_text }} />
+                       <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <h4 className="font-semibold mb-2 text-blue-800 dark:text-blue-200">Explanation:</h4>
+                        <div className="text-gray-800 dark:text-gray-200" dangerouslySetInnerHTML={{ __html: question.explanation_text }} />
                         {/* <p className="text-sm">{question.explanation_text || question.explanation}</p> */}
                       </div>
                     )}
@@ -474,9 +474,9 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
 
                       {/* Show explanation immediately when answer is selected */}
                       {currentQuestion.id in selectedAnswers && (currentQuestion.explanation_text || currentQuestion.explanation) && (
-                        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                          <h4 className="font-semibold mb-2 text-blue-800">Explanation:</h4>
-                          <div dangerouslySetInnerHTML={{ __html: currentQuestion.explanation_text }} />
+                        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <h4 className="font-semibold mb-2 text-blue-800 dark:text-blue-200">Explanation:</h4>
+                          <div className="text-gray-800 dark:text-gray-200" dangerouslySetInnerHTML={{ __html: currentQuestion.explanation_text }} />
                         </div>
                       )}
 
@@ -502,9 +502,9 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold">Explanation</h3>
                       {(currentQuestion.explanation_text || currentQuestion.explanation) ? (
-                        <div className="p-4 bg-blue-50 rounded-lg">
+                        <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
                           {/* <p>{currentQuestion.explanation_text || currentQuestion.explanation}</p> */}
-                          <div dangerouslySetInnerHTML={{ __html: currentQuestion.explanation_text }} />
+                          <div className="text-gray-800 dark:text-gray-200" dangerouslySetInnerHTML={{ __html: currentQuestion.explanation_text }} />
                         </div>
                       ) : (
                         <p className="text-gray-500">No explanation available for this question.</p>
