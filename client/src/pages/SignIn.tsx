@@ -136,7 +136,14 @@ export default function SignIn() {
               disabled={signInMutation.isPending}
               className="w-full h-10 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50"
             >
-              {signInMutation.isPending ? 'Signing In...' : 'Sign In'}
+              {signInMutation.isPending ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 mr-2 border-2 border-white border-t-transparent"></div>
+                  Signing In...
+                </div>
+              ) : (
+                'Sign In'
+              )}
             </Button>
           </form>
 

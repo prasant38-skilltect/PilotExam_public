@@ -7,7 +7,7 @@ import { LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { apiRequest } from '@/lib/queryClient';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,14 +37,21 @@ export function Header() {
     setLocation('/sign-in');
   };
 
-  const handleLogout = async () => {
-    try {
-      await apiRequest('POST', '/api/auth/logout');
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('POST', '/api/auth/logout');
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       setLocation('/');
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error('Logout failed:', error);
     }
+  });
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
   };
 
   return (
@@ -153,10 +160,20 @@ export function Header() {
                   <DropdownMenuItem 
                     className="cursor-pointer text-red-600 focus:text-red-600"
                     onClick={handleLogout}
+                    disabled={logoutMutation.isPending}
                     data-testid="menu-logout"
                   >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log Out
+                    {logoutMutation.isPending ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 mr-2 border-2 border-red-600 border-t-transparent"></div>
+                        Logging Out...
+                      </>
+                    ) : (
+                      <>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Log Out
+                      </>
+                    )}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -255,11 +272,21 @@ export function Header() {
                       <Button
                         onClick={handleLogout}
                         variant="outline"
-                        className="w-full justify-start text-red-600 hover:text-red-600 border-red-200 hover:bg-red-50"
+                        className="w-full justify-start text-red-600 hover:text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/20"
+                        disabled={logoutMutation.isPending}
                         data-testid="mobile-button-logout"
                       >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Log Out
+                        {logoutMutation.isPending ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 mr-2 border-2 border-red-600 border-t-transparent"></div>
+                            Logging Out...
+                          </>
+                        ) : (
+                          <>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Log Out
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>
