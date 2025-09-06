@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -176,12 +177,41 @@ export default function GenericSectionTest({
     setReportIssue({ questionId, description: "" });
   };
 
+  const reportIssueMutation = useMutation({
+    mutationFn: async ({ questionId, description }: { questionId: number; description: string }) => {
+      return await apiRequest('POST', '/api/issue-reports', { questionId, description });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Issue Reported",
+        description: "Thank you for reporting this issue. We'll review it soon.",
+      });
+      setReportIssue({ questionId: null, description: "" });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to submit report. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Failed to submit issue report:", error);
+    }
+  });
+
   const submitIssueReport = () => {
-    toast({
-      title: "Issue Reported",
-      description: "Thank you for reporting this issue. We'll review it soon.",
+    if (!reportIssue.questionId || !reportIssue.description.trim()) {
+      toast({
+        title: "Error",
+        description: "Please describe the issue before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    reportIssueMutation.mutate({
+      questionId: reportIssue.questionId,
+      description: reportIssue.description.trim(),
     });
-    setReportIssue({ questionId: null, description: "" });
   };
 
   const formatTime = (seconds: number) => {
@@ -725,7 +755,13 @@ export default function GenericSectionTest({
                 >
                   Cancel
                 </Button>
-                <Button onClick={submitIssueReport}>Submit Report</Button>
+                <Button 
+                  onClick={submitIssueReport}
+                  disabled={reportIssueMutation.isPending}
+                  data-testid="button-submit-report"
+                >
+                  {reportIssueMutation.isPending ? "Submitting..." : "Submit Report"}
+                </Button>
               </div>
             </div>
           </DialogContent>
