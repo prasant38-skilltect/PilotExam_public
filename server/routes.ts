@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { signUpSchema, signInSchema, insertIssueReportSchema } from "../shared/schema";
+import { signUpSchema, signInSchema, insertIssueReportSchema, insertQuestionCommentSchema } from "../shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 // import { setupAuth, isAuthenticated } from "./replitAuth"; // Disabled Replit auth
@@ -216,6 +216,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user issue reports:", error);
       res.status(500).json({ message: "Failed to fetch issue reports" });
+    }
+  });
+
+  // Comment routes
+  app.post('/api/comments', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const { questionId, comment } = req.body;
+
+      if (!questionId || !comment?.trim()) {
+        return res.status(400).json({ message: "Question ID and comment are required" });
+      }
+
+      // Get user details for username
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const username = user.username || user.firstName || user.email?.split('@')[0] || 'Anonymous';
+
+      const validatedData = insertQuestionCommentSchema.parse({
+        questionId: parseInt(questionId),
+        userId,
+        username,
+        comment: comment.trim(),
+      });
+
+      const questionComment = await storage.createComment(validatedData);
+      res.json(questionComment);
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  app.get('/api/comments/:questionId', async (req: any, res) => {
+    try {
+      const questionId = parseInt(req.params.questionId);
+      if (!questionId) {
+        return res.status(400).json({ message: "Invalid question ID" });
+      }
+
+      const comments = await storage.getCommentsByQuestion(questionId);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
     }
   });
 

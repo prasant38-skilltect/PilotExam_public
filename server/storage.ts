@@ -15,6 +15,7 @@ import {
   questionOptions,
   quizQuestions,
   issueReports,
+  questionComments,
   type User,
   type UpsertUser,
   type Subject,
@@ -43,6 +44,8 @@ import {
   type QuizQuestions,
   type IssueReport,
   type InsertIssueReport,
+  type QuestionComment,
+  type InsertQuestionComment,
 } from "../shared/schema";
 import bcrypt from "bcryptjs";
 import { db } from "./db";
@@ -92,6 +95,10 @@ export interface IStorage {
   // Issue Report operations
   createIssueReport(report: InsertIssueReport): Promise<IssueReport>;
   getIssueReportsByUser(userId: string): Promise<IssueReport[]>;
+
+  // Comment operations
+  createComment(comment: InsertQuestionComment): Promise<QuestionComment>;
+  getCommentsByQuestion(questionId: number): Promise<QuestionComment[]>;
 
   // Test session operations
   // createTestSession(session: InsertTestSession): Promise<TestSession>;
@@ -548,6 +555,23 @@ export class DatabaseStorage implements IStorage {
       .from(issueReports)
       .where(eq(issueReports.userId, userId))
       .orderBy(desc(issueReports.createdAt));
+  }
+
+  // Comment operations
+  async createComment(comment: InsertQuestionComment): Promise<QuestionComment> {
+    const [questionComment] = await db
+      .insert(questionComments)
+      .values(comment)
+      .returning();
+    return questionComment;
+  }
+
+  async getCommentsByQuestion(questionId: number): Promise<QuestionComment[]> {
+    return await db
+      .select()
+      .from(questionComments)
+      .where(eq(questionComments.questionId, questionId))
+      .orderBy(desc(questionComments.createdAt));
   }
 }
 
