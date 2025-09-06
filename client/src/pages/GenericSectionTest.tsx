@@ -109,7 +109,7 @@ export default function GenericSectionTest({
               curr.optionOrder === 3)
           ) {
             let rawHTML = curr.explaination;
-            rawHTML = rawHTML.replace(/\\n/g, "<br/>").replace(/\\"/g, '"');
+            rawHTML = rawHTML?.replace(/\\n/g, "<br/>").replace(/\\"/g, '"');
             acc[curr.id].correct_answer =
               optionLabels[curr.optionOrder].toLocaleUpperCase();
             acc[curr.id].explanation_text = DOMPurify.sanitize(rawHTML);
@@ -178,13 +178,23 @@ export default function GenericSectionTest({
   };
 
   const reportIssueMutation = useMutation({
-    mutationFn: async ({ questionId, description }: { questionId: number; description: string }) => {
-      return await apiRequest('POST', '/api/issue-reports', { questionId, description });
+    mutationFn: async ({
+      questionId,
+      description,
+    }: {
+      questionId: number;
+      description: string;
+    }) => {
+      return await apiRequest("POST", "/api/issue-reports", {
+        questionId,
+        description,
+      });
     },
     onSuccess: () => {
       toast({
         title: "Issue Reported",
-        description: "Thank you for reporting this issue. We'll review it soon.",
+        description:
+          "Thank you for reporting this issue. We'll review it soon.",
       });
       setReportIssue({ questionId: null, description: "" });
     },
@@ -195,7 +205,7 @@ export default function GenericSectionTest({
         variant: "destructive",
       });
       console.error("Failed to submit issue report:", error);
-    }
+    },
   });
 
   const submitIssueReport = () => {
@@ -755,12 +765,14 @@ export default function GenericSectionTest({
                 >
                   Cancel
                 </Button>
-                <Button 
+                <Button
                   onClick={submitIssueReport}
                   disabled={reportIssueMutation.isPending}
                   data-testid="button-submit-report"
                 >
-                  {reportIssueMutation.isPending ? "Submitting..." : "Submit Report"}
+                  {reportIssueMutation.isPending
+                    ? "Submitting..."
+                    : "Submit Report"}
                 </Button>
               </div>
             </div>

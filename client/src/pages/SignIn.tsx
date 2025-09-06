@@ -23,9 +23,9 @@ export default function SignIn() {
     mutationFn: async (data: { email: string; password: string }) => {
       return await apiRequest("POST", "/api/auth/signin", data);
     },
-    onSuccess: (user) => {
+    onSuccess: async (user) => {
       // Invalidate and refetch user data
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
 
       // Check if there's a redirect path stored
       const redirectPath = localStorage.getItem("redirectAfterLogin");
