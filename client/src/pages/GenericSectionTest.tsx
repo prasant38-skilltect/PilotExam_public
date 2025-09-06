@@ -57,27 +57,8 @@ export default function GenericSectionTest({
   });
   const [activeTab, setActiveTab] = useState("question");
   const [newComment, setNewComment] = useState("");
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      username: "Handith99",
-      comment: "It appears on easa exam in thai but reworded",
-      likes: 1,
-      dislikes: 0,
-      createdAt: "28 Feb 25 | 12:16",
-    },
-    {
-      id: 2,
-      username: "Svindy",
-      comment:
-        'Guys on the ground singing to the guy in the air.. "Everybooody... Yeeeeeah... Rock your boooooody... Yeeeeeah"',
-      likes: 2,
-      dislikes: 0,
-      createdAt: "13 Jul 24 | 17:24",
-    },
-  ]);
   const { toast } = useToast();
-
+  
   // Get questions for this section
   // const { data: questions, isLoading } = useQuery<Question[]>({
   //   queryKey: [`/api/sections/${sectionId}/questions`],
@@ -125,6 +106,38 @@ export default function GenericSectionTest({
       return [];
     }
   }, [quizData]);
+
+  // Get current question for comments
+  const currentQuestion = questions?.[currentQuestionIndex];
+  
+  // Fetch comments for current question
+  const { data: comments = [], refetch: refetchComments } = useQuery({
+    queryKey: ['/api/comments', currentQuestion?.id],
+    enabled: !!currentQuestion?.id,
+  });
+
+  // Mutation for adding comments
+  const addCommentMutation = useMutation({
+    mutationFn: async ({ questionId, comment }: { questionId: number; comment: string }) => {
+      return await apiRequest('POST', '/api/comments', { questionId, comment });
+    },
+    onSuccess: () => {
+      refetchComments();
+      setNewComment("");
+      toast({
+        title: "Comment Added",
+        description: "Your comment has been posted successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to post comment. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Failed to add comment:", error);
+    }
+  });
 
   // Auto-start test when component mounts
   useEffect(() => {
@@ -221,6 +234,35 @@ export default function GenericSectionTest({
     reportIssueMutation.mutate({
       questionId: reportIssue.questionId,
       description: reportIssue.description.trim(),
+    });
+  };
+
+  const handleAddComment = () => {
+    if (!currentQuestion?.id || !newComment.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a comment before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    addCommentMutation.mutate({
+      questionId: currentQuestion.id,
+      comment: newComment.trim(),
+    });
+  };
+
+  const formatCommentDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: '2-digit'
+    }) + ' | ' + date.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
     });
   };
 
@@ -674,14 +716,24 @@ export default function GenericSectionTest({
                           onChange={(e) => setNewComment(e.target.value)}
                           className="mb-3"
                         />
-                        <Button size="sm">
+                        <Button 
+                          size="sm" 
+                          onClick={handleAddComment}
+                          disabled={addCommentMutation.isPending || !newComment.trim()}
+                          data-testid="button-post-comment"
+                        >
                           <Send className="h-4 w-4 mr-2" />
-                          Post Comment
+                          {addCommentMutation.isPending ? "Posting..." : "Post Comment"}
                         </Button>
                       </div>
 
                       <div className="space-y-4">
-                        {comments.map((comment) => (
+                        {comments.length === 0 ? (
+                          <p className="text-gray-500 text-center py-4">
+                            No comments yet. Be the first to comment!
+                          </p>
+                        ) : (
+                          comments.map((comment: any) => (
                           <div
                             key={comment.id}
                             className="border rounded-lg p-4"
@@ -698,7 +750,7 @@ export default function GenericSectionTest({
                                     {comment.username}
                                   </span>
                                   <span className="text-xs text-gray-500">
-                                    {comment.createdAt}
+                                    {formatCommentDate(comment.createdAt)}
                                   </span>
                                 </div>
                                 <p className="text-sm">{comment.comment}</p>
@@ -723,7 +775,8 @@ export default function GenericSectionTest({
                               </div>
                             </div>
                           </div>
-                        ))}
+                          ))
+                        )}
                       </div>
                     </div>
                   </TabsContent>
