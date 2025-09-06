@@ -706,7 +706,7 @@ export default function GenericSectionTest({
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold flex items-center">
                         <MessageSquare className="h-5 w-5 mr-2" />
-                        Comments
+                        Comments ({comments.length})
                       </h3>
 
                       <div className="border rounded-lg p-4">
