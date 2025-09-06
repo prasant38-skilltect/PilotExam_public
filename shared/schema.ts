@@ -124,6 +124,15 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Issue Reports table
+export const issueReports = pgTable("issue_reports", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  questionId: integer("question_id").notNull(),
+  description: text("description").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Subjects (renamed from atplSubjects for consistency)
 export const subjects = pgTable("subjects", {
   id: serial("id").primaryKey(),
@@ -277,6 +286,7 @@ export const insertQuizzesSchema = createInsertSchema(quizzes);
 export const insertQuestionsSchema = createInsertSchema(questions);
 export const insertQuestionOptionsSchema = createInsertSchema(questionOptions);
 export const insertQuizQuestionsSchema = createInsertSchema(quizQuestions);
+export const insertIssueReportSchema = createInsertSchema(issueReports).omit({ id: true, createdAt: true });
 
 
 
@@ -340,3 +350,5 @@ export type Quizzes = z.infer<typeof insertQuizzesSchema>;
 export type Questions = z.infer<typeof insertQuestionsSchema>;
 export type QuestionOptions = z.infer<typeof insertQuestionOptionsSchema>;
 export type QuizQuestions = z.infer<typeof insertQuizQuestionsSchema>;
+export type IssueReport = typeof issueReports.$inferSelect;
+export type InsertIssueReport = z.infer<typeof insertIssueReportSchema>;
