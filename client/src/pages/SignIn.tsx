@@ -26,7 +26,15 @@ export default function SignIn() {
     onSuccess: (user) => {
       // Invalidate and refetch user data
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      setLocation('/');
+      
+      // Check if there's a redirect path stored
+      const redirectPath = localStorage.getItem('redirectAfterLogin');
+      if (redirectPath) {
+        localStorage.removeItem('redirectAfterLogin');
+        setLocation(redirectPath);
+      } else {
+        setLocation('/');
+      }
     },
     onError: (error: any) => {
       setError(error.message || 'Sign in failed');

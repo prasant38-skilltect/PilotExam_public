@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { getSubjectUrl } from '@/shared/urlMapping';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/hooks/useAuth';
+import { useEffect } from 'react';
 import GenericSectionTest from './GenericSectionTest';
 
 type Subject = {
@@ -18,9 +20,20 @@ type Subject = {
 
 export default function DynamicPage() {
   const link = useLocation();
+  const [, setLocation] = useLocation();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { data: subjects, isLoading } = useQuery<any>({
     queryKey: [`/api${link[0]}`],
   });
+
+  // Check if this is a quiz and user needs authentication
+  useEffect(() => {
+    if (!isLoading && !authLoading && subjects?.type === "quiz" && !isAuthenticated) {
+      // Store current path to redirect back after login
+      localStorage.setItem('redirectAfterLogin', link[0]);
+      setLocation('/sign-in');
+    }
+  }, [subjects, isAuthenticated, authLoading, isLoading, link, setLocation]);
 
   if (isLoading) {
     return (
@@ -73,7 +86,7 @@ export default function DynamicPage() {
             ))}
           </div>
         }
-        {subjects?.type === "quiz" &&
+        {subjects?.type === "quiz" && isAuthenticated &&
           <GenericSectionTest  quizData={subjects.data}/>
         }
       </div>
