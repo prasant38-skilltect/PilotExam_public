@@ -1,53 +1,79 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useLocation, Link } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Clock, Flag, MessageSquare, FileText, ThumbsUp, ThumbsDown, Send, Home, Calendar, Users } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation, Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Clock,
+  Flag,
+  MessageSquare,
+  FileText,
+  ThumbsUp,
+  ThumbsDown,
+  Send,
+  Home,
+  Calendar,
+  Users,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 import DOMPurify from "dompurify";
 
-
 interface GenericSectionTestProps {
-  quizData: any
+  quizData: any;
 }
 
-export default function GenericSectionTest({ quizData }: GenericSectionTestProps) {
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
-  const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
+export default function GenericSectionTest({
+  quizData,
+}: GenericSectionTestProps) {
+  const [selectedAnswers, setSelectedAnswers] = useState<
+    Record<number, string>
+  >({});
+  const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(
+    new Set(),
+  );
   const [showResults, setShowResults] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [testStartTime, setTestStartTime] = useState<number | null>(null);
   const [isTestActive, setIsTestActive] = useState(true);
-  const [reportIssue, setReportIssue] = useState<{ questionId: number | null; description: string }>({
+  const [reportIssue, setReportIssue] = useState<{
+    questionId: number | null;
+    description: string;
+  }>({
     questionId: null,
-    description: ''
+    description: "",
   });
-  const [activeTab, setActiveTab] = useState('question');
-  const [newComment, setNewComment] = useState('');
+  const [activeTab, setActiveTab] = useState("question");
+  const [newComment, setNewComment] = useState("");
   const [comments, setComments] = useState([
     {
       id: 1,
-      username: 'Handith99',
-      comment: 'It appears on easa exam in thai but reworded',
+      username: "Handith99",
+      comment: "It appears on easa exam in thai but reworded",
       likes: 1,
       dislikes: 0,
-      createdAt: '28 Feb 25 | 12:16'
+      createdAt: "28 Feb 25 | 12:16",
     },
     {
       id: 2,
-      username: 'Svindy',
-      comment: 'Guys on the ground singing to the guy in the air.. "Everybooody... Yeeeeeah... Rock your boooooody... Yeeeeeah"',
+      username: "Svindy",
+      comment:
+        'Guys on the ground singing to the guy in the air.. "Everybooody... Yeeeeeah... Rock your boooooody... Yeeeeeah"',
       likes: 2,
       dislikes: 0,
-      createdAt: '13 Jul 24 | 17:24'
-    }
+      createdAt: "13 Jul 24 | 17:24",
+    },
   ]);
   const { toast } = useToast();
 
@@ -57,7 +83,6 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
   // });
 
   const questions = useMemo(() => {
-
     const optionLabels = ["a", "b", "c", "d", "e", "f"];
 
     if (quizData.length > 0) {
@@ -69,35 +94,36 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
               id: curr.id,
               question_text: curr.question_text,
               question_id: curr.question_id,
-              sequence: index
+              sequence: index,
             };
             index++;
           }
           const optionKey = `option_${optionLabels[curr.optionOrder]}`;
           acc[curr.id][optionKey] = curr.option_text;
           acc[curr.id].featured_img = curr.featured_img;
-          
 
-          if (curr.isCorrect) {
+          if (
+            curr.isCorrect ||
+            (acc[curr.id].correct_answer === undefined &&
+              curr.optionOrder === 3)
+          ) {
             let rawHTML = curr.explaination;
-            rawHTML = rawHTML
-              .replace(/\\n/g, "<br/>")
-              .replace(/\\"/g, '"'); 
-            acc[curr.id].correct_answer = optionLabels[curr.optionOrder].toLocaleUpperCase();
+            rawHTML = rawHTML.replace(/\\n/g, "<br/>").replace(/\\"/g, '"');
+            acc[curr.id].correct_answer =
+              optionLabels[curr.optionOrder].toLocaleUpperCase();
             acc[curr.id].explanation_text = DOMPurify.sanitize(rawHTML);
             acc[curr.id].explaination_img = curr.explaination_img;
             acc[curr.id].tooltip = curr.tooltip;
           }
 
           return acc;
-        }, {})
+        }, {}),
       );
       return filteredQuestions;
-
-    } else{
+    } else {
       return [];
     }
-  }, [quizData])
+  }, [quizData]);
 
   // Auto-start test when component mounts
   useEffect(() => {
@@ -123,8 +149,10 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
   };
 
   const handleAnswerSelect = (questionId: number, answer: string) => {
-    setSelectedAnswers(prev => ({ ...prev, [questionId]: answer }));
-    setAnsweredQuestions(prev => new Set(Array.from(prev).concat([questionId])));
+    setSelectedAnswers((prev) => ({ ...prev, [questionId]: answer }));
+    setAnsweredQuestions(
+      (prev) => new Set(Array.from(prev).concat([questionId])),
+    );
   };
 
   const handleNext = () => {
@@ -145,7 +173,7 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
   };
 
   const handleReportIssue = (questionId: number) => {
-    setReportIssue({ questionId, description: '' });
+    setReportIssue({ questionId, description: "" });
   };
 
   const submitIssueReport = () => {
@@ -153,26 +181,26 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
       title: "Issue Reported",
       description: "Thank you for reporting this issue. We'll review it soon.",
     });
-    setReportIssue({ questionId: null, description: '' });
+    setReportIssue({ questionId: null, description: "" });
   };
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
   const calculateScore = () => {
     if (!questions) return { correct: 0, total: 0, percentage: 0 };
-    
-    const correct = questions.filter((q: any) => 
-      selectedAnswers[q.id] === q.correct_answer
+
+    const correct = questions.filter(
+      (q: any) => selectedAnswers[q.id] === q.correct_answer,
     ).length;
-    
+
     return {
       correct,
       total: questions.length,
-      percentage: Math.round((correct / questions.length) * 100)
+      percentage: Math.round((correct / questions.length) * 100),
     };
   };
 
@@ -195,7 +223,10 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
           <div className="text-center text-white">
             <h1 className="text-2xl mb-4">No Questions Available</h1>
             <Link href="/">
-              <Button variant="outline" className="border-cyan-400/40 text-cyan-200">
+              <Button
+                variant="outline"
+                className="border-cyan-400/40 text-cyan-200"
+              >
                 ← Back to Home
               </Button>
             </Link>
@@ -205,7 +236,9 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
     );
   }
 
-  const sortedQuestions = [...questions].sort((a: any, b: any) => a.sequence - b.sequence);
+  const sortedQuestions = [...questions].sort(
+    (a: any, b: any) => a.sequence - b.sequence,
+  );
   const currentQuestion: any = sortedQuestions[currentQuestionIndex] || {};
   const score = calculateScore();
 
@@ -214,9 +247,14 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-4">{"sectionName"} - Results</h1>
+            <h1 className="text-3xl font-bold text-white mb-4">
+              {"sectionName"} - Results
+            </h1>
             <Link href="/">
-              <Button variant="outline" className="border-cyan-400/40 text-cyan-200 mb-6">
+              <Button
+                variant="outline"
+                className="border-cyan-400/40 text-cyan-200 mb-6"
+              >
                 ← Back to Home
               </Button>
             </Link>
@@ -243,9 +281,12 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
             {sortedQuestions.map((question: any, index) => {
               const userAnswer = selectedAnswers[question.id];
               const isCorrect = userAnswer === question.correct_answer;
-              
+
               return (
-                <Card key={question.id} className={`${isCorrect ? 'border-green-500' : 'border-red-500'}`}>
+                <Card
+                  key={question.id}
+                  className={`${isCorrect ? "border-green-500" : "border-red-500"}`}
+                >
                   <CardHeader>
                     <CardTitle className="text-lg">
                       #{question.sequence}. {question.question_text}
@@ -254,36 +295,46 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                   <CardContent>
                     <div className="space-y-2 mb-4">
                       {[
-                        { key: 'A', text: question.option_a },
-                        { key: 'B', text: question.option_b },
-                        { key: 'C', text: question.option_c },
-                        { key: 'D', text: question.option_d }
+                        { key: "A", text: question.option_a },
+                        { key: "B", text: question.option_b },
+                        { key: "C", text: question.option_c },
+                        { key: "D", text: question.option_d },
                       ].map((option) => {
                         const isUserAnswer = userAnswer === option.key;
-                        const isCorrectAnswer = question.correct_answer === option.key;
-                        
+                        const isCorrectAnswer =
+                          question.correct_answer === option.key;
+
                         return (
                           <div
                             key={option.key}
                             className={`p-3 rounded-lg border ${
                               isCorrectAnswer
-                                ? 'bg-green-100 dark:bg-green-900/30 border-green-500 text-green-800 dark:text-green-200'
+                                ? "bg-green-100 dark:bg-green-900/30 border-green-500 text-green-800 dark:text-green-200"
                                 : isUserAnswer
-                                ? 'bg-red-100 dark:bg-red-900/30 border-red-500 text-red-800 dark:text-red-200'
-                                : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300'
+                                  ? "bg-red-100 dark:bg-red-900/30 border-red-500 text-red-800 dark:text-red-200"
+                                  : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300"
                             }`}
                           >
                             {option.key}. {option.text}
-                            {isCorrectAnswer && ' ✓ Correct'}
-                            {isUserAnswer && !isCorrectAnswer && ' ✗ Your answer'}
+                            {isCorrectAnswer && " ✓ Correct"}
+                            {isUserAnswer &&
+                              !isCorrectAnswer &&
+                              " ✗ Your answer"}
                           </div>
                         );
                       })}
                     </div>
                     {(question.explanation_text || question.explanation) && (
                       <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <h4 className="font-semibold mb-2 text-blue-800 dark:text-blue-200">Explanation:</h4>
-                        <div className="text-gray-800 dark:text-gray-200" dangerouslySetInnerHTML={{ __html: question.explanation_text }} />
+                        <h4 className="font-semibold mb-2 text-blue-800 dark:text-blue-200">
+                          Explanation:
+                        </h4>
+                        <div
+                          className="text-gray-800 dark:text-gray-200"
+                          dangerouslySetInnerHTML={{
+                            __html: question.explanation_text,
+                          }}
+                        />
                         {/* <p className="text-sm">{question.explanation_text || question.explanation}</p> */}
                       </div>
                     )}
@@ -302,18 +353,26 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
         <div className="max-w-4xl mx-auto px-4 py-20">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-white mb-6">{"sectionName"}</h1>
+            <h1 className="text-4xl font-bold text-white mb-6">
+              {"sectionName"}
+            </h1>
             <div className="text-white mb-8">
               <p className="text-xl mb-2">Ready to start the test?</p>
               <p>Total Questions: {sortedQuestions.length}</p>
             </div>
             <div className="space-x-4">
               <Link href="/">
-                <Button variant="outline" className="border-cyan-400/40 text-cyan-200">
+                <Button
+                  variant="outline"
+                  className="border-cyan-400/40 text-cyan-200"
+                >
                   ← Back to Home
                 </Button>
               </Link>
-              <Button onClick={startTest} className="bg-green-600 hover:bg-green-700">
+              <Button
+                onClick={startTest}
+                className="bg-green-600 hover:bg-green-700"
+              >
                 Start Test
               </Button>
             </div>
@@ -330,7 +389,11 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center space-x-4">
             <Link href="/">
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-white hover:bg-white/10"
+              >
                 <Home className="h-4 w-4 mr-2" />
                 Back
               </Button>
@@ -357,10 +420,12 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                 <div className="grid grid-cols-5 gap-2">
                   {sortedQuestions.map((q: any, index) => {
                     const isAnswered = answeredQuestions.has(q.id);
-                    const isCorrect = isAnswered && selectedAnswers[q.id] === q.correct_answer;
-                    const isWrong = isAnswered && selectedAnswers[q.id] !== q.correct_answer;
+                    const isCorrect =
+                      isAnswered && selectedAnswers[q.id] === q.correct_answer;
+                    const isWrong =
+                      isAnswered && selectedAnswers[q.id] !== q.correct_answer;
                     const isCurrent = currentQuestionIndex === index;
-                    
+
                     let buttonClass = "";
                     if (isCurrent) {
                       buttonClass = "bg-blue-600 text-white border-blue-600";
@@ -371,16 +436,13 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                     } else {
                       buttonClass = "bg-white text-black border-gray-300";
                     }
-                    
+
                     return (
                       <Button
                         key={q.id}
                         variant="outline"
                         size="sm"
-                        className={cn(
-                          "h-8 w-8 p-0 text-xs",
-                          buttonClass
-                        )}
+                        className={cn("h-8 w-8 p-0 text-xs", buttonClass)}
                         onClick={() => setCurrentQuestionIndex(index)}
                       >
                         {q.sequence}
@@ -405,7 +467,11 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
           <div className="lg:col-span-3">
             <Card className="h-full">
               <CardContent className="p-6">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
+                <Tabs
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className="h-full"
+                >
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="question">Question</TabsTrigger>
                     <TabsTrigger value="explanation">Explanation</TabsTrigger>
@@ -416,7 +482,8 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                     <div className="space-y-6">
                       <div className="flex justify-between items-start">
                         <h2 className="text-xl font-semibold">
-                          #{currentQuestion.sequence}. {currentQuestion.question_text}
+                          #{currentQuestion.sequence}.{" "}
+                          {currentQuestion.question_text}
                         </h2>
                         <Button
                           variant="outline"
@@ -430,55 +497,82 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
 
                       <div className="space-y-3">
                         {[
-                          { key: 'A', text: currentQuestion.option_a },
-                          { key: 'B', text: currentQuestion.option_b },
-                          { key: 'C', text: currentQuestion.option_c },
-                          { key: 'D', text: currentQuestion.option_d }
+                          { key: "A", text: currentQuestion.option_a },
+                          { key: "B", text: currentQuestion.option_b },
+                          { key: "C", text: currentQuestion.option_c },
+                          { key: "D", text: currentQuestion.option_d },
                         ].map((option) => {
-                          const isSelected = selectedAnswers[currentQuestion.id] === option.key;
-                          const isCorrect = currentQuestion.correct_answer === option.key;
-                          const hasAnswered = currentQuestion.id in selectedAnswers;
-                          
+                          const isSelected =
+                            selectedAnswers[currentQuestion.id] === option.key;
+                          const isCorrect =
+                            currentQuestion.correct_answer === option.key;
+                          const hasAnswered =
+                            currentQuestion.id in selectedAnswers;
+
                           let buttonClass = "";
                           if (hasAnswered) {
                             if (isSelected && !isCorrect) {
-                              buttonClass = "bg-red-500 text-white border-red-500";
+                              buttonClass =
+                                "bg-red-500 text-white border-red-500";
                             } else if (isCorrect) {
-                              buttonClass = "bg-green-500 text-white border-green-500";
+                              buttonClass =
+                                "bg-green-500 text-white border-green-500";
                             } else {
                               buttonClass = "bg-gray-100 text-gray-600";
                             }
                           } else {
-                            buttonClass = isSelected ? "bg-blue-600 text-white" : "bg-white text-black hover:bg-gray-50";
+                            buttonClass = isSelected
+                              ? "bg-blue-600 text-white"
+                              : "bg-white text-black hover:bg-gray-50";
                           }
-                          
+
                           return (
                             <Button
                               key={option.key}
                               variant="outline"
                               className={cn(
                                 "w-full text-left justify-start p-4 h-auto",
-                                buttonClass
+                                buttonClass,
                               )}
-                              onClick={() => handleAnswerSelect(currentQuestion.id, option.key)}
+                              onClick={() =>
+                                handleAnswerSelect(
+                                  currentQuestion.id,
+                                  option.key,
+                                )
+                              }
                               disabled={hasAnswered}
                             >
-                              <span className="font-semibold mr-3">{option.key}.</span>
+                              <span className="font-semibold mr-3">
+                                {option.key}.
+                              </span>
                               {option.text}
-                              {hasAnswered && isCorrect && <span className="ml-2">✓</span>}
-                              {hasAnswered && isSelected && !isCorrect && <span className="ml-2">✗</span>}
+                              {hasAnswered && isCorrect && (
+                                <span className="ml-2">✓</span>
+                              )}
+                              {hasAnswered && isSelected && !isCorrect && (
+                                <span className="ml-2">✗</span>
+                              )}
                             </Button>
                           );
                         })}
                       </div>
 
                       {/* Show explanation immediately when answer is selected */}
-                      {currentQuestion.id in selectedAnswers && (currentQuestion.explanation_text || currentQuestion.explanation) && (
-                        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
-                          <h4 className="font-semibold mb-2 text-blue-800 dark:text-blue-200">Explanation:</h4>
-                          <div className="text-gray-800 dark:text-gray-200" dangerouslySetInnerHTML={{ __html: currentQuestion.explanation_text }} />
-                        </div>
-                      )}
+                      {currentQuestion.id in selectedAnswers &&
+                        (currentQuestion.explanation_text ||
+                          currentQuestion.explanation) && (
+                          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <h4 className="font-semibold mb-2 text-blue-800 dark:text-blue-200">
+                              Explanation:
+                            </h4>
+                            <div
+                              className="text-gray-800 dark:text-gray-200"
+                              dangerouslySetInnerHTML={{
+                                __html: currentQuestion.explanation_text,
+                              }}
+                            />
+                          </div>
+                        )}
 
                       <div className="flex justify-between pt-4">
                         <Button
@@ -489,10 +583,16 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                           Previous
                         </Button>
                         <Button
-                          onClick={currentQuestionIndex === sortedQuestions.length - 1 ? handleFinishTest : handleNext}
+                          onClick={
+                            currentQuestionIndex === sortedQuestions.length - 1
+                              ? handleFinishTest
+                              : handleNext
+                          }
                           disabled={false}
                         >
-                          {currentQuestionIndex === sortedQuestions.length - 1 ? "Finish" : "Next"}
+                          {currentQuestionIndex === sortedQuestions.length - 1
+                            ? "Finish"
+                            : "Next"}
                         </Button>
                       </div>
                     </div>
@@ -501,17 +601,24 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                   <TabsContent value="explanation" className="mt-4">
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold">Explanation</h3>
-                      {(currentQuestion.explanation_text || currentQuestion.explanation) ? (
+                      {currentQuestion.explanation_text ||
+                      currentQuestion.explanation ? (
                         <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
                           {/* <p>{currentQuestion.explanation_text || currentQuestion.explanation}</p> */}
-                          <div className="text-gray-800 dark:text-gray-200" dangerouslySetInnerHTML={{ __html: currentQuestion.explanation_text }} />
+                          <div
+                            className="text-gray-800 dark:text-gray-200"
+                            dangerouslySetInnerHTML={{
+                              __html: currentQuestion.explanation_text,
+                            }}
+                          />
                         </div>
                       ) : (
-                        <p className="text-gray-500">No explanation available for this question.</p>
+                        <p className="text-gray-500">
+                          No explanation available for this question.
+                        </p>
                       )}
                     </div>
                   </TabsContent>
-
 
                   <TabsContent value="comments" className="mt-4">
                     <div className="space-y-4">
@@ -519,7 +626,7 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                         <MessageSquare className="h-5 w-5 mr-2" />
                         Comments
                       </h3>
-                      
+
                       <div className="border rounded-lg p-4">
                         <Textarea
                           placeholder="Add a comment..."
@@ -535,7 +642,10 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
 
                       <div className="space-y-4">
                         {comments.map((comment) => (
-                          <div key={comment.id} className="border rounded-lg p-4">
+                          <div
+                            key={comment.id}
+                            className="border rounded-lg p-4"
+                          >
                             <div className="flex items-start space-x-3">
                               <Avatar className="h-8 w-8">
                                 <AvatarFallback className="text-xs">
@@ -544,16 +654,28 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
                               </Avatar>
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2 mb-1">
-                                  <span className="font-semibold text-sm">{comment.username}</span>
-                                  <span className="text-xs text-gray-500">{comment.createdAt}</span>
+                                  <span className="font-semibold text-sm">
+                                    {comment.username}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {comment.createdAt}
+                                  </span>
                                 </div>
                                 <p className="text-sm">{comment.comment}</p>
                                 <div className="flex items-center space-x-4 mt-2">
-                                  <Button variant="ghost" size="sm" className="h-6 text-xs">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 text-xs"
+                                  >
                                     <ThumbsUp className="h-3 w-3 mr-1" />
                                     {comment.likes}
                                   </Button>
-                                  <Button variant="ghost" size="sm" className="h-6 text-xs">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 text-xs"
+                                  >
                                     <ThumbsDown className="h-3 w-3 mr-1" />
                                     {comment.dislikes}
                                   </Button>
@@ -572,7 +694,12 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
         </div>
 
         {/* Report Issue Dialog */}
-        <Dialog open={reportIssue.questionId !== null} onOpenChange={() => setReportIssue({ questionId: null, description: '' })}>
+        <Dialog
+          open={reportIssue.questionId !== null}
+          onOpenChange={() =>
+            setReportIssue({ questionId: null, description: "" })
+          }
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Report Issue</DialogTitle>
@@ -582,10 +709,20 @@ export default function GenericSectionTest({ quizData }: GenericSectionTestProps
               <Textarea
                 placeholder="Describe the issue..."
                 value={reportIssue.description}
-                onChange={(e) => setReportIssue({ ...reportIssue, description: e.target.value })}
+                onChange={(e) =>
+                  setReportIssue({
+                    ...reportIssue,
+                    description: e.target.value,
+                  })
+                }
               />
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setReportIssue({ questionId: null, description: '' })}>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    setReportIssue({ questionId: null, description: "" })
+                  }
+                >
                   Cancel
                 </Button>
                 <Button onClick={submitIssueReport}>Submit Report</Button>

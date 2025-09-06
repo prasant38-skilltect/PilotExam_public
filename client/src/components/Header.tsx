@@ -1,29 +1,29 @@
-import { Link, useLocation } from 'wouter';
-import { useTheme } from '@/contexts/ThemeContext';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { Moon, Sun, Plane, Users } from '@/components/Icons';
-import { LogOut, User } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useState } from 'react';
-import { apiRequest } from '@/lib/queryClient';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { Link, useLocation } from "wouter";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Moon, Sun, Plane, Users } from "@/components/Icons";
+import { LogOut, User } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { apiRequest } from "@/lib/queryClient";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 
 const navigationItems = [
-  { href: '/question-bank', label: 'Question Bank' },
-  { href: '/airline-interviews', label: 'Airline Interviews & Sim Prep' },
-  { href: '/atpl-viva', label: 'ATPL Viva' },
-  { href: '/classes', label: 'Classes' },
-  { href: '/aptitude-test', label: 'Aptitude Test' },
-  { href: '/airbus-320', label: 'Airbus 320' },
-  { href: '/syllabus', label: 'Syllabus' },
-  { href: '/pilot-resume', label: 'Pilot Resume' },
+  { href: "/question-bank", label: "Question Bank" },
+  { href: "/airline-interviews", label: "Airline Interviews & Sim Prep" },
+  { href: "/atpl-viva", label: "ATPL Viva" },
+  { href: "/classes", label: "Classes" },
+  { href: "/aptitude-test", label: "Aptitude Test" },
+  { href: "/airbus-320", label: "Airbus 320" },
+  { href: "/syllabus", label: "Syllabus" },
+  { href: "/pilot-resume", label: "Pilot Resume" },
 ];
 
 export function Header() {
@@ -34,20 +34,20 @@ export function Header() {
   const queryClient = useQueryClient();
 
   const handleLogin = () => {
-    setLocation('/sign-in');
+    setLocation("/sign-in");
   };
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest('POST', '/api/auth/logout');
+      return await apiRequest("POST", "/api/auth/logout");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      setLocation('/');
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      setLocation("/");
     },
     onError: (error) => {
-      console.error('Logout failed:', error);
-    }
+      console.error("Logout failed:", error);
+    },
   });
 
   const handleLogout = () => {
@@ -62,7 +62,10 @@ export function Header() {
           <Link href="/" className="flex items-center flex-shrink-0">
             <div className="flex items-center">
               <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
-                <Plane className="inline-block mr-1 sm:mr-2 text-blue-700" size={18} />
+                <Plane
+                  className="inline-block mr-1 sm:mr-2 text-blue-700"
+                  size={18}
+                />
                 Eatpl.in
               </h1>
             </div>
@@ -75,7 +78,8 @@ export function Header() {
                 <span
                   className={cn(
                     "text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors px-2 xl:px-3 py-2 rounded-md text-xs xl:text-sm font-medium whitespace-nowrap",
-                    location === item.href && "text-purple-600 dark:text-purple-400"
+                    location === item.href &&
+                      "text-purple-600 dark:text-purple-400",
                   )}
                   data-testid={`nav-${item.href.slice(1)}`}
                 >
@@ -94,12 +98,32 @@ export function Header() {
               className="p-2"
             >
               {isMobileMenuOpen ? (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               ) : (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 </svg>
               )}
             </Button>
@@ -114,18 +138,18 @@ export function Header() {
               data-testid="button-theme-toggle"
               className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
             >
-              {theme === 'dark' ? (
+              {theme === "dark" ? (
                 <Sun className="h-4 w-4" />
               ) : (
                 <Moon className="h-4 w-4" />
               )}
             </Button>
-            
+
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-800"
                     data-testid="button-profile-dropdown"
                   >
@@ -141,23 +165,26 @@ export function Header() {
                         <User className="h-4 w-4 text-white" />
                       </div>
                     )}
-                    <span className="text-sm text-gray-700 dark:text-gray-300" data-testid="text-username">
-                      {(user as any)?.firstName && (user as any)?.lastName 
+                    <span
+                      className="text-sm text-gray-700 dark:text-gray-300"
+                      data-testid="text-username"
+                    >
+                      {(user as any)?.firstName && (user as any)?.lastName
                         ? `${(user as any).firstName} ${(user as any).lastName}`
                         : (user as any)?.firstName || (user as any)?.email}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="cursor-pointer"
-                    onClick={() => setLocation('/manage-profile')}
+                    onClick={() => setLocation("/manage-profile")}
                     data-testid="menu-manage-profile"
                   >
                     <User className="mr-2 h-4 w-4" />
                     Manage Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="cursor-pointer text-red-600 focus:text-red-600"
                     onClick={handleLogout}
                     disabled={logoutMutation.isPending}
@@ -200,7 +227,8 @@ export function Header() {
                     <span
                       className={cn(
                         "block text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors px-3 py-2 rounded-md text-sm font-medium",
-                        location === item.href && "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20"
+                        location === item.href &&
+                          "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20",
                       )}
                       onClick={() => setIsMobileMenuOpen(false)}
                       data-testid={`mobile-nav-${item.href.slice(1)}`}
@@ -214,14 +242,16 @@ export function Header() {
               {/* Mobile Theme Toggle and Auth */}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Theme</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Theme
+                  </span>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={toggleTheme}
                     data-testid="mobile-button-theme-toggle"
                   >
-                    {theme === 'dark' ? (
+                    {theme === "dark" ? (
                       <>
                         <Sun className="h-4 w-4 mr-2" />
                         Light
@@ -250,8 +280,11 @@ export function Header() {
                           <User className="h-4 w-4 text-white" />
                         </div>
                       )}
-                      <span className="text-sm text-gray-700 dark:text-gray-300" data-testid="mobile-text-username">
-                        {(user as any)?.firstName && (user as any)?.lastName 
+                      <span
+                        className="text-sm text-gray-700 dark:text-gray-300"
+                        data-testid="mobile-text-username"
+                      >
+                        {(user as any)?.firstName && (user as any)?.lastName
                           ? `${(user as any).firstName} ${(user as any).lastName}`
                           : (user as any)?.firstName || (user as any)?.email}
                       </span>
@@ -261,7 +294,7 @@ export function Header() {
                         variant="outline"
                         className="w-full justify-start"
                         onClick={() => {
-                          setLocation('/manage-profile');
+                          setLocation("/manage-profile");
                           setIsMobileMenuOpen(false);
                         }}
                         data-testid="mobile-menu-manage-profile"

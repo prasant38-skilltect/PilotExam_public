@@ -40,11 +40,10 @@ import {
   type Questions,
   type QuestionOptions,
   type QuizQuestions,
-
 } from "../shared/schema";
-import bcrypt from 'bcryptjs';
+import bcrypt from "bcryptjs";
 import { db } from "./db";
-import { eq, and, desc, avg, max, count, ne,asc } from "drizzle-orm";
+import { eq, and, desc, avg, max, count, ne, asc } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -54,43 +53,49 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   createUser(userData: SignUpData): Promise<User>;
   authenticateUser(credentials: SignInData): Promise<User | null>;
-  updateUserProfile(userId: string, profileData: { firstName?: string; lastName?: string; username?: string }): Promise<User>;
-  updateUserPassword(userId: string, currentPassword: string, newPassword: string): Promise<void>;
-  
+  updateUserProfile(
+    userId: string,
+    profileData: { firstName?: string; lastName?: string; username?: string },
+  ): Promise<User>;
+  updateUserPassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void>;
   // Subject operations
   getAllSubjects(): Promise<Categories[]>;
   getSubject(id: number): Promise<Subject | undefined>;
   createSubject(subject: InsertSubject): Promise<Subject>;
-  
+
   // Chapter operations
   // getChaptersBySubject(subjectId: number): Promise<Chapter[]>;
   // getChapter(id: number): Promise<Chapter | undefined>;
   // createChapter(chapter: InsertChapter): Promise<Chapter>;
-  
+
   // Section operations
   // getSectionsByChapter(chapterId: number): Promise<Section[]>;
   // getSection(id: number): Promise<Section | undefined>;
   // createSection(section: InsertSection): Promise<Section>;
-  
+
   // Answer operations
   // getAnswersByQuestion(questionId: number): Promise<Answer[]>;
   // createAnswer(answer: InsertAnswer): Promise<Answer>;
-  
+
   // Question operations
   // getQuestionsBySubject(subjectId: number): Promise<Question[]>;
   // getRandomQuestions(subjectId: number, count: number): Promise<Question[]>;
   getQuestion(id: number): Promise<Questions | undefined>;
-  
+
   // Test session operations
   // createTestSession(session: InsertTestSession): Promise<TestSession>;
   // getTestSession(id: number): Promise<TestSession | undefined>;
   // updateTestSession(id: number, updates: Partial<TestSession>): Promise<TestSession>;
   // getUserTestSessions(userId: string): Promise<TestSession[]>;
-  
+
   // User answer operations
   // saveUserAnswer(answer: InsertUserAnswer): Promise<UserAnswer>;
   // getSessionAnswers(sessionId: number): Promise<UserAnswer[]>;
-  
+
   // Progress tracking
   // getUserProgress(userId: string): Promise<UserProgress[]>;
   // updateUserProgress(progress: InsertUserProgress): Promise<UserProgress>;
@@ -110,7 +115,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username));
     return user;
   }
 
@@ -133,13 +141,15 @@ export class DatabaseStorage implements IStorage {
     // Check if user already exists
     const existingUserByEmail = await this.getUserByEmail(userData.email);
     if (existingUserByEmail) {
-      throw new Error('User with this email already exists');
+      throw new Error("User with this email already exists");
     }
 
     if (userData.username) {
-      const existingUserByUsername = await this.getUserByUsername(userData.username);
+      const existingUserByUsername = await this.getUserByUsername(
+        userData.username,
+      );
       if (existingUserByUsername) {
-        throw new Error('User with this username already exists');
+        throw new Error("User with this username already exists");
       }
     }
 
@@ -168,7 +178,10 @@ export class DatabaseStorage implements IStorage {
       return null;
     }
 
-    const isPasswordValid = await bcrypt.compare(credentials.password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(
+      credentials.password,
+      user.passwordHash,
+    );
     if (!isPasswordValid) {
       return null;
     }
@@ -176,12 +189,15 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async updateUserProfile(userId: string, profileData: { firstName?: string; lastName?: string; username?: string }): Promise<User> {
+  async updateUserProfile(
+    userId: string,
+    profileData: { firstName?: string; lastName?: string; username?: string },
+  ): Promise<User> {
     // Check if username already exists (if username is being updated)
     if (profileData.username) {
       const existingUser = await this.getUserByUsername(profileData.username);
       if (existingUser && existingUser.id !== userId) {
-        throw new Error('A user with this username already exists');
+        throw new Error("A user with this username already exists");
       }
     }
 
@@ -195,23 +211,30 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     if (!user) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     return user;
   }
 
-  async updateUserPassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+  async updateUserPassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
     // Get the user first to verify current password
-    const user = await this.getUser(userId);
+    const user: any = await this.getUser(userId);
     if (!user) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     // Verify current password
-    const isValidPassword = await bcrypt.compare(currentPassword, user.passwordHash);
+    const isValidPassword = await bcrypt.compare(
+      currentPassword,
+      user.passwordHash,
+    );
     if (!isValidPassword) {
-      throw new Error('Current password is incorrect');
+      throw new Error("Current password is incorrect");
     }
 
     // Hash the new password
@@ -234,28 +257,36 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTopicByName(name: string): Promise<any | []> {
-    const parentTopics = await db.select().from(topics).where(and(eq(topics.categoryName, name), eq(topics.parentId, -1)));
+    const parentTopics = await db
+      .select()
+      .from(topics)
+      .where(and(eq(topics.categoryName, name), eq(topics.parentId, -1)));
     console.log("parentTopics...", parentTopics);
     if (parentTopics.length > 0) {
       return {
         type: "topic",
-        data: parentTopics
+        data: parentTopics,
       };
     }
 
-    const subTopics = await db.select().from(topics).where(and(eq(topics.parentName, name), ne(topics.quizId, -1)));
+    const subTopics = await db
+      .select()
+      .from(topics)
+      .where(and(eq(topics.parentName, name), ne(topics.quizId, -1)));
     console.log("subTopics...", subTopics);
     if (subTopics.length > 0) {
       return {
         type: "topic",
-        data: subTopics
+        data: subTopics,
       };
     }
 
-    const topicQuizId = await db.select({ id: topics.quizId }).from(topics).where(eq(topics.slug, name)).limit(1);
+    const topicQuizId = await db
+      .select({ id: topics.quizId })
+      .from(topics)
+      .where(eq(topics.slug, name))
+      .limit(1);
     console.log("TopicQuizId...", topicQuizId);
-
-
 
     const quiz = await db
       .select({ id: quizzes.id })
@@ -269,44 +300,46 @@ export class DatabaseStorage implements IStorage {
 
     const quizId = quiz[0].id;
     console.log("quizId....", quizId);
-    
-    const result2 = await db
-    .select({
-      id: quizQuestions.id,
-      quiz_id: quizQuestions.quizId,
-      position: quizQuestions.position,
-      questionPk: questions.id,
-      question_id: questions.questionId,
-      question_text: questions.text,
-      explaination: questions.explanation,
-      explaination_img: questions.explanationImage,
-      tooltio: questions.tooltip,
-      featured_img: questions.featuredImage,
-      created_at: questions.createdAt,
-      option_text: questionOptions.optionText,
-      isCorrect: questionOptions.isCorrect,
-      optionOrder: questionOptions.optionOrder
-    })
-    .from(quizQuestions)
-    .innerJoin(questions, eq(quizQuestions.questionId, questions.id))
-    .leftJoin(questionOptions, eq(questions.id, questionOptions.questionId))
-    .where(eq(quizQuestions.quizId, quizId))
-    .orderBy(asc(quizQuestions.id), asc(questionOptions.optionOrder));
 
+    const result2 = await db
+      .select({
+        id: quizQuestions.id,
+        quiz_id: quizQuestions.quizId,
+        position: quizQuestions.position,
+        questionPk: questions.id,
+        question_id: questions.questionId,
+        question_text: questions.text,
+        explaination: questions.explanation,
+        explaination_img: questions.explanationImage,
+        tooltio: questions.tooltip,
+        featured_img: questions.featuredImage,
+        created_at: questions.createdAt,
+        option_text: questionOptions.optionText,
+        isCorrect: questionOptions.isCorrect,
+        optionOrder: questionOptions.optionOrder,
+      })
+      .from(quizQuestions)
+      .innerJoin(questions, eq(quizQuestions.questionId, questions.id))
+      .leftJoin(questionOptions, eq(questions.id, questionOptions.questionId))
+      .where(eq(quizQuestions.quizId, quizId))
+      .orderBy(asc(quizQuestions.id), asc(questionOptions.optionOrder));
 
     // console.log("results quiz......", result2);
     if (result2.length > 0) {
       return {
         type: "quiz",
-        data: result2
-      }
+        data: result2,
+      };
     }
 
     return [];
   }
 
   async getSubject(id: number): Promise<Subject | undefined> {
-    const [subject] = await db.select().from(subjects).where(eq(subjects.id, id));
+    const [subject] = await db
+      .select()
+      .from(subjects)
+      .where(eq(subjects.id, id));
     return subject;
   }
 
@@ -386,7 +419,10 @@ export class DatabaseStorage implements IStorage {
   // }
 
   async getQuestion(id: number): Promise<Questions | undefined> {
-    const [question] = await db.select().from(questions).where(eq(questions.id, id));
+    const [question] = await db
+      .select()
+      .from(questions)
+      .where(eq(questions.id, id));
     return question;
   }
 
