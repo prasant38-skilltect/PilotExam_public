@@ -198,17 +198,17 @@ export const subjects = pgTable("subjects", {
 //   correctAnswers: integer("correct_answers").default(0),
 // });
 
-// // Question Comments
-// export const questionComments = pgTable("question_comments", {
-//   id: serial("id").primaryKey(),
-//   questionId: integer("question_id").references(() => questions.id).notNull(),
-//   userId: varchar("user_id").references(() => users.id),
-//   username: varchar("username", { length: 100 }).notNull(),
-//   comment: text("comment").notNull(),
-//   likes: integer("likes").default(0),
-//   dislikes: integer("dislikes").default(0),
-//   createdAt: timestamp("created_at").defaultNow(),
-// });
+// Question Comments
+export const questionComments = pgTable("question_comments", {
+  id: serial("id").primaryKey(),
+  questionId: integer("question_id").notNull(),
+  userId: varchar("user_id").references(() => users.id),
+  username: varchar("username", { length: 100 }).notNull(),
+  comment: text("comment").notNull(),
+  likes: integer("likes").default(0),
+  dislikes: integer("dislikes").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
 // // Comment Votes
 // export const commentVotes = pgTable("comment_votes", {
@@ -304,12 +304,12 @@ export const insertIssueReportSchema = createInsertSchema(issueReports).omit({ i
 //   id: true,
 // });
 
-// export const insertQuestionCommentSchema = createInsertSchema(questionComments).omit({
-//   id: true,
-//   likes: true,
-//   dislikes: true,
-//   createdAt: true,
-// });
+export const insertQuestionCommentSchema = createInsertSchema(questionComments).omit({
+  id: true,
+  likes: true,
+  dislikes: true,
+  createdAt: true,
+});
 
 // export const insertCommentVoteSchema = createInsertSchema(commentVotes).omit({
 //   id: true,
@@ -352,3 +352,5 @@ export type QuestionOptions = z.infer<typeof insertQuestionOptionsSchema>;
 export type QuizQuestions = z.infer<typeof insertQuizQuestionsSchema>;
 export type IssueReport = typeof issueReports.$inferSelect;
 export type InsertIssueReport = z.infer<typeof insertIssueReportSchema>;
+export type QuestionComment = typeof questionComments.$inferSelect;
+export type InsertQuestionComment = z.infer<typeof insertQuestionCommentSchema>;
