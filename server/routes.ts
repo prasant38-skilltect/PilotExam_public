@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { signUpSchema, signInSchema } from "../shared/schema";
+import { signUpSchema, signInSchema, insertIssueReportSchema } from "../shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 // import { setupAuth, isAuthenticated } from "./replitAuth"; // Disabled Replit auth
@@ -181,6 +181,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating theme:", error);
       res.status(500).json({ message: "Failed to update theme preference" });
+    }
+  });
+
+  // Issue Report routes
+  app.post('/api/issue-reports', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const { questionId, description } = req.body;
+
+      if (!questionId || !description?.trim()) {
+        return res.status(400).json({ message: "Question ID and description are required" });
+      }
+
+      const validatedData = insertIssueReportSchema.parse({
+        userId,
+        questionId: parseInt(questionId),
+        description: description.trim(),
+      });
+
+      const issueReport = await storage.createIssueReport(validatedData);
+      res.json(issueReport);
+    } catch (error) {
+      console.error("Error creating issue report:", error);
+      res.status(500).json({ message: "Failed to create issue report" });
+    }
+  });
+
+  app.get('/api/issue-reports/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const reports = await storage.getIssueReportsByUser(userId);
+      res.json(reports);
+    } catch (error) {
+      console.error("Error fetching user issue reports:", error);
+      res.status(500).json({ message: "Failed to fetch issue reports" });
     }
   });
 

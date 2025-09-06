@@ -14,6 +14,7 @@ import {
   quizzes,
   questionOptions,
   quizQuestions,
+  issueReports,
   type User,
   type UpsertUser,
   type Subject,
@@ -40,6 +41,8 @@ import {
   type Questions,
   type QuestionOptions,
   type QuizQuestions,
+  type IssueReport,
+  type InsertIssueReport,
 } from "../shared/schema";
 import bcrypt from "bcryptjs";
 import { db } from "./db";
@@ -85,6 +88,10 @@ export interface IStorage {
   // getQuestionsBySubject(subjectId: number): Promise<Question[]>;
   // getRandomQuestions(subjectId: number, count: number): Promise<Question[]>;
   getQuestion(id: number): Promise<Questions | undefined>;
+
+  // Issue Report operations
+  createIssueReport(report: InsertIssueReport): Promise<IssueReport>;
+  getIssueReportsByUser(userId: string): Promise<IssueReport[]>;
 
   // Test session operations
   // createTestSession(session: InsertTestSession): Promise<TestSession>;
@@ -525,6 +532,23 @@ export class DatabaseStorage implements IStorage {
   //     );
   //   return progress;
   // }
+
+  // Issue Report operations
+  async createIssueReport(report: InsertIssueReport): Promise<IssueReport> {
+    const [issueReport] = await db
+      .insert(issueReports)
+      .values(report)
+      .returning();
+    return issueReport;
+  }
+
+  async getIssueReportsByUser(userId: string): Promise<IssueReport[]> {
+    return await db
+      .select()
+      .from(issueReports)
+      .where(eq(issueReports.userId, userId))
+      .orderBy(desc(issueReports.createdAt));
+  }
 }
 
 export const storage = new DatabaseStorage();
