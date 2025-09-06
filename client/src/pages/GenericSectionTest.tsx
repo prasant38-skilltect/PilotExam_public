@@ -466,29 +466,29 @@ export default function GenericSectionTest({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="w-full mx-auto px-2 sm:px-4 py-4 sm:py-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <Link href="/">
               <Button
                 variant="ghost"
                 size="sm"
                 className="text-white hover:bg-white/10"
               >
-                <Home className="h-4 w-4 mr-2" />
-                Back
+                <Home className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Back</span>
               </Button>
             </Link>
-            <h1 className="text-xl font-bold text-white">{"sectionName"}</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-white">{"sectionName"}</h1>
           </div>
-          <div className="flex items-center space-x-4 text-white">
-            <Clock className="h-5 w-5" />
-            <span className="font-mono text-lg">{formatTime(elapsedTime)}</span>
+          <div className="flex items-center space-x-2 sm:space-x-4 text-white">
+            <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="font-mono text-base sm:text-lg">{formatTime(elapsedTime)}</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">
           {/* Question Navigator */}
           <div className="lg:col-span-1">
             <Card>
@@ -562,8 +562,8 @@ export default function GenericSectionTest({
 
                   <TabsContent value="question" className="mt-4">
                     <div className="space-y-6">
-                      <div className="flex justify-between items-start">
-                        <h2 className="text-xl font-semibold">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
+                        <h2 className="text-lg sm:text-xl font-semibold leading-relaxed flex-1">
                           #{currentQuestion.sequence}.{" "}
                           {currentQuestion.question_text}
                         </h2>
@@ -571,9 +571,10 @@ export default function GenericSectionTest({
                           variant="outline"
                           size="sm"
                           onClick={() => handleReportIssue(currentQuestion.id)}
+                          className="flex-shrink-0"
                         >
-                          <Flag className="h-4 w-4 mr-2" />
-                          Report
+                          <Flag className="h-4 w-4 mr-1 sm:mr-2" />
+                          <span className="hidden sm:inline">Report</span>
                         </Button>
                       </div>
 
@@ -613,7 +614,7 @@ export default function GenericSectionTest({
                               key={option.key}
                               variant="outline"
                               className={cn(
-                                "w-full text-left justify-start p-4 h-auto",
+                                "w-full text-left justify-start p-3 sm:p-4 h-auto min-h-[3rem] whitespace-normal break-words",
                                 buttonClass,
                               )}
                               onClick={() =>
@@ -624,10 +625,12 @@ export default function GenericSectionTest({
                               }
                               disabled={hasAnswered}
                             >
-                              <span className="font-semibold mr-3">
+                              <span className="font-semibold mr-2 sm:mr-3 flex-shrink-0">
                                 {option.key}.
                               </span>
-                              {option.text}
+                              <span className="flex-1 text-left leading-relaxed">
+                                {option.text}
+                              </span>
                               {hasAnswered && isCorrect && (
                                 <span className="ml-2">✓</span>
                               )}
