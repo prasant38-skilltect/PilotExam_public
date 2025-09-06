@@ -31,7 +31,15 @@ export default function SignUp() {
     onSuccess: (user) => {
       // Invalidate and refetch user data
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      setLocation('/');
+      
+      // Check if there's a redirect path stored
+      const redirectPath = localStorage.getItem('redirectAfterLogin');
+      if (redirectPath) {
+        localStorage.removeItem('redirectAfterLogin');
+        setLocation(redirectPath);
+      } else {
+        setLocation('/');
+      }
     },
     onError: (error: any) => {
       setError(error.message || 'Sign up failed');
@@ -207,7 +215,14 @@ export default function SignUp() {
               disabled={signUpMutation.isPending}
               className="w-full h-9 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50"
             >
-              {signUpMutation.isPending ? 'Creating Account...' : 'Create Account'}
+              {signUpMutation.isPending ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 mr-2 border-2 border-white border-t-transparent"></div>
+                  Creating Account...
+                </div>
+              ) : (
+                'Create Account'
+              )}
             </Button>
           </form>
 
