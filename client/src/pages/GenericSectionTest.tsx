@@ -107,13 +107,13 @@ export default function GenericSectionTest({
     }
   }, [quizData]);
 
-  // Get current question for comments
-  const currentQuestion = questions?.[currentQuestionIndex];
+  // Get current question for comments  
+  const currentQuestionForComments = questions?.[currentQuestionIndex];
   
   // Fetch comments for current question
   const { data: comments = [], refetch: refetchComments } = useQuery({
-    queryKey: ['/api/comments', currentQuestion?.id],
-    enabled: !!currentQuestion?.id,
+    queryKey: ['/api/comments', currentQuestionForComments?.id],
+    enabled: !!currentQuestionForComments?.id,
   });
 
   // Mutation for adding comments
@@ -238,7 +238,7 @@ export default function GenericSectionTest({
   };
 
   const handleAddComment = () => {
-    if (!currentQuestion?.id || !newComment.trim()) {
+    if (!currentQuestionForComments?.id || !newComment.trim()) {
       toast({
         title: "Error",
         description: "Please enter a comment before submitting.",
@@ -248,7 +248,7 @@ export default function GenericSectionTest({
     }
 
     addCommentMutation.mutate({
-      questionId: currentQuestion.id,
+      questionId: currentQuestionForComments.id,
       comment: newComment.trim(),
     });
   };
