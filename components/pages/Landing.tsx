@@ -9,6 +9,8 @@ import { useQuery } from '@tanstack/react-query';
 
 import { Rocket, Database, BarChart3, Clock, Smartphone, GraduationCap, UserCheck, Search, Play, Plane } from '@/components/Icons';
 import { useState } from 'react';
+import Subjects from "./Subjects";
+
 
 export default function Landing() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,40 +30,6 @@ export default function Landing() {
     passRate: '95%',
     students: '50,000+',
   };
-
-  const features = [
-    {
-      icon: UserCheck,
-      title: 'No Registration Required',
-      description: 'Start practicing immediately without creating an account. Perfect for quick study sessions.',
-    },
-    {
-      icon: Database,
-      title: 'EASA Question Bank',
-      description: '10,000+ questions from the official European Central Question Bank (ECQB 2024).',
-    },
-    {
-      icon: BarChart3,
-      title: 'Progress Analytics',
-      description: 'Track your performance across all 14 ATPL subjects with detailed analytics.',
-    },
-    {
-      icon: Clock,
-      title: 'Real Exam Conditions',
-      description: 'Timed tests that simulate actual EASA exam environment and time constraints.',
-    },
-    {
-      icon: Smartphone,
-      title: 'Mobile Responsive',
-      description: 'Study anywhere with our tablet and mobile-optimized interface.',
-    },
-    {
-      icon: GraduationCap,
-      title: 'Detailed Explanations',
-      description: 'Learn from detailed answer explanations and professional commentary.',
-    },
-  ];
-
 
   // Landing page view
   if (isLoading) {
@@ -96,7 +64,7 @@ export default function Landing() {
         </header>
 
         {/* Start Your Flight Prep Button */}
-        <div className="text-center mb-8">
+        {/* <div className="text-center mb-8">
           <Link href="/subjects/">
             <Button 
               size="lg" 
@@ -107,7 +75,7 @@ export default function Landing() {
               Start Your Flight Prep
             </Button>
           </Link>
-        </div>
+        </div> */}
 
         {/* Search */}
         <div className="mb-8 max-w-md mx-auto">
@@ -122,6 +90,8 @@ export default function Landing() {
             />
           </div>
         </div>
+        
+        <Subjects showBackToHome={false}/>
 
         {/* Subject Grid */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

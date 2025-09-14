@@ -125,6 +125,14 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Subscriptions table
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  user_id: varchar("user_id"),
+  plan_duration: varchar("plan_duration"),
+  subscribed_at: timestamp("subscribed_at").defaultNow(),
+});
+
 // Issue Reports table
 export const issueReports = pgTable("issue_reports", {
   id: serial("id").primaryKey(),
@@ -266,6 +274,7 @@ export const signUpSchema = createInsertSchema(users).pick({
 }).extend({
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Password confirmation is required"),
+  planDuration: z.string().optional(), 
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],

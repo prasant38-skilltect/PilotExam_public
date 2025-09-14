@@ -126,6 +126,17 @@ function Router() {
               <Admin />
             </Suspense>
           </Route>
+          {/* <Route path="/question-banks">
+            <Suspense fallback={<PageLoader />}>
+              <QuestionBank />
+            </Suspense>
+          </Route> */}
+
+           <Route path="/question-banks">
+            <Suspense fallback={<PageLoader />}>
+              <Subjects showBackToHome = {false} />
+            </Suspense>
+          </Route>
 
           {/* Public pages - accessible to all users */}
           {/* <Route path="/question-bank">

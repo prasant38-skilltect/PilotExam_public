@@ -1,6 +1,7 @@
 import {
   users,
   subjects,
+  subscriptions,
   // chapters,
   // sections,
   questions,
@@ -190,6 +191,17 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
 
+    
+
+    // Insert subscription if planDuration provided
+    if (userData.planDuration) {
+      await db.insert(subscriptions).values({
+        user_id: user.id,
+        plan_duration: userData.planDuration,
+        subscribed_at: new Date(),
+      });
+    }
+
     return user;
   }
 
@@ -293,7 +305,7 @@ export class DatabaseStorage implements IStorage {
     const subTopics = await db
       .select()
       .from(topics)
-      .where(and(eq(topics.parentName, name), ne(topics.quizId, -1)));
+      .where(and(eq(topics.parentName, name)));
     console.log("subTopics...", subTopics);
     if (subTopics.length > 0) {
       return {

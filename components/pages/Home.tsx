@@ -53,7 +53,7 @@ export default function Home() {
         </div>
 
         {/* Start Your Flight Prep Button */}
-        <div className="text-center mb-8">
+        {/* <div className="text-center mb-8">
           <Link href="/subjects/">
             <Button
               size="lg"
@@ -64,7 +64,7 @@ export default function Home() {
               Start Your Flight Prep
             </Button>
           </Link>
-        </div>
+        </div> */}
 
         {/* Search */}
         <div className="mb-8 max-w-md mx-auto">

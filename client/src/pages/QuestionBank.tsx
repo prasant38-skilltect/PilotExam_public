@@ -4,7 +4,7 @@ import { Link } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Clock, Search, Play } from '@/components/Icons';
+import { Plane } from '@/components/Icons';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function QuestionBank() {
@@ -42,95 +42,23 @@ export default function QuestionBank() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
-            14 ATPL Subject Modules
+          <h1 className="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
+            Master all DGCA subjects with our comprehensive question bank and practice tests
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Master all EASA ATPL subjects with our comprehensive question bank and practice tests
-          </p>
         </div>
 
-        {/* Search */}
-        <div className="mb-8 max-w-md mx-auto">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <Input
-              placeholder="Search subjects..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-              data-testid="input-search-subjects"
-            />
-          </div>
-        </div>
-
-        {/* Subject Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSubjects.map((subject: any) => (
-            <Card key={subject.id} className="hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700">
-              <CardHeader>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="bg-gradient-to-r from-purple-600 to-blue-700 w-12 h-12 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold" data-testid={`text-subject-code-${subject.code}`}>
-                      {subject.code}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Questions</div>
-                    <div className="font-bold text-purple-600 dark:text-purple-400" data-testid={`text-question-count-${subject.id}`}>
-                      {subject.questionCount}
-                    </div>
-                  </div>
-                </div>
-                <CardTitle className="text-lg" data-testid={`text-subject-title-${subject.id}`}>
-                  {subject.title}
-                </CardTitle>
-              </CardHeader>
-              
-              <CardContent>
-                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4" data-testid={`text-subject-description-${subject.id}`}>
-                  {subject.description}
-                </p>
-                
-                <div className="flex justify-between items-center mb-4">
-                  <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                    <Clock className="mr-1" size={16} />
-                    <span data-testid={`text-duration-${subject.id}`}>{subject.duration} min</span>
-                  </div>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Link href={`/test/${subject.id}`} className="flex-1">
-                    <Button 
-                      className="w-full bg-gradient-to-r from-purple-600 to-blue-700 text-white hover:shadow-lg transition-all duration-300"
-                      data-testid={`button-start-test-${subject.id}`}
-                    >
-                      <Play className="mr-2" size={16} />
-                      Start Test
-                    </Button>
-                  </Link>
-                  
-                  <Link href={`/test/${subject.id}?mode=practice`}>
-                    <Button 
-                      variant="outline"
-                      data-testid={`button-practice-${subject.id}`}
-                    >
-                      Practice
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {filteredSubjects.length === 0 && searchTerm && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400 text-lg">
-              No subjects found matching "{searchTerm}"
-            </p>
-          </div>
-        )}
+        {/* <div className="text-center mb-8">
+          <Link href="/subjects/">
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-blue-800 via-blue-700 to-cyan-600 text-white hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border border-cyan-400/20 shadow-lg shadow-cyan-400/20"
+              data-testid="button-start-flight-prep"
+            >
+              <Plane className="mr-2 h-5 w-5" />
+              Start Your Flight Prep
+            </Button>
+          </Link>
+        </div> */}
 
         {/* Info Section */}
         <div className="mt-16 bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-lg">

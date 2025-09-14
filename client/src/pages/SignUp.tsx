@@ -14,6 +14,7 @@ export default function SignUp() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const [showPlanOptions, setShowPlanOptions] = useState(false); 
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -21,6 +22,7 @@ export default function SignUp() {
     confirmPassword: "",
     firstName: "",
     lastName: "",
+    planDuration: "",     
   });
   const [error, setError] = useState("");
 
@@ -32,6 +34,7 @@ export default function SignUp() {
       confirmPassword: string;
       firstName: string;
       lastName: string;
+      planDuration?: string;
     }) => {
       return await apiRequest("POST", "/api/auth/signup", data);
     },
@@ -258,7 +261,48 @@ export default function SignUp() {
                   required
                 />
               </div>
-            </div>
+               </div>
+
+              {/* Paid Subscription Toggle */}
+<div className="space-y-2 mt-3">
+  <label className="flex items-center cursor-pointer space-x-2">
+    <input
+      type="checkbox"
+      checked={showPlanOptions}
+      onChange={(e) => setShowPlanOptions(e.target.checked)}
+      className="accent-purple-600 h-4 w-4"
+    />
+    <span className="flex items-center space-x-1">
+      <img
+        src="/RazorpayIcon.png"
+        alt="Razorpay"
+        className="h-6 w-auto"
+      />
+      <span className="text-black font-semibold">Paid Subscription</span>
+    </span>
+  </label>
+
+  {/* Plan Duration Options */}
+  {showPlanOptions && (
+    <div className="flex space-x-4 mt-2">
+      {["1 Month", "3 Months", "6 Months"].map((plan) => (
+        <label key={plan} className="flex items-center space-x-1 cursor-pointer">
+          <input
+            type="radio"
+            name="planDuration"
+            value={plan}
+            checked={formData.planDuration === plan}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, planDuration: e.target.value }))
+            }
+            className="accent-purple-600 h-4 w-4"
+          />
+          <span className="text-gray-700">{plan}</span>
+        </label>
+      ))}
+    </div>
+  )}
+</div>
 
             <Button
               type="submit"

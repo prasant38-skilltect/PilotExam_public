@@ -149,7 +149,7 @@ export default function GenericSectionTest({
             let rawHTML = curr.explaination;
             rawHTML = rawHTML?.replace(/\\n/g, "<br/>").replace(/\\"/g, '"');
             acc[curr.id].correct_answer =
-              optionLabels[curr.optionOrder].toLocaleUpperCase();
+              optionLabels[curr.optionOrder]?.toLocaleUpperCase();
             acc[curr.id].explanation_text = DOMPurify.sanitize(rawHTML);
             acc[curr.id].explaination_img = curr.explaination_img;
             acc[curr.id].tooltip = curr.tooltip;

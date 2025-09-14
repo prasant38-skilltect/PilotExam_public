@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const navigationItems = [
-  { href: "/question-bank", label: "Question Bank" },
+  { href: "/question-banks", label: "Question Bank" },
   { href: "/airline-interviews", label: "Airline Interviews & Sim Prep" },
   { href: "/atpl-viva", label: "ATPL Viva" },
   { href: "/classes", label: "Classes" },
@@ -62,10 +62,10 @@ export function Header() {
           <Link href="/" className="flex items-center flex-shrink-0">
             <div className="flex items-center">
               <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
-                <Plane
+                {/* <Plane
                   className="inline-block mr-1 sm:mr-2 text-blue-700"
                   size={18}
-                />
+                /> */}
                 Eatpl.in
               </h1>
             </div>

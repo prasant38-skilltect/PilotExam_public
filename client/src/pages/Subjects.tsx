@@ -10,7 +10,7 @@ type Subject = {
   text: string;
 };
 
-export default function Subjects() {
+export default function Subjects({ showBackToHome = true }: { showBackToHome?: boolean }) {
   const { data: subjects, isLoading } = useQuery<Subject[]>({
     queryKey: ['/api/subjects'],
   });
@@ -40,7 +40,7 @@ export default function Subjects() {
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-6">
             Choose Your Flight Training Module
           </h1>
-          <Link href="/">
+          {showBackToHome && (<Link href="/">
             <Button
               variant="outline"
               className="mb-8 border-cyan-400/40 text-cyan-200 hover:bg-cyan-400/10"
@@ -48,7 +48,7 @@ export default function Subjects() {
             >
               ← Back to Home
             </Button>
-          </Link>
+          </Link>)}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -85,16 +85,13 @@ export default function Landing() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
-            14 ATPL Subject Modules
+          <h1 className="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
+            Master all DGCA subjects with our comprehensive question bank and practice tests
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Master all EASA ATPL subjects with our comprehensive question bank and practice tests
-          </p>
         </header>
 
         {/* Start Your Flight Prep Button */}
-        <div className="text-center mb-8">
+        {/* <div className="text-center mb-8">
           <Link href="/subjects/">
             <Button 
               size="lg" 
@@ -105,7 +102,7 @@ export default function Landing() {
               Start Your Flight Prep
             </Button>
           </Link>
-        </div>
+        </div> */}
 
         {/* Search */}
         <div className="mb-8 max-w-md mx-auto">
