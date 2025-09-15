@@ -77,9 +77,15 @@ export default function GenericSectionTest({
     explanation_text: ''
   });
   const [currentTestSession, setCurrentTestSession] = useState<any>(null);
+  const [resumedSession, setResumedSession] = useState<any>(null);
   const { toast } = useToast();
   const { user, isAdmin, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
+  const [location] = useLocation();
+  
+  // Parse URL parameters to check for resume session
+  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  const resumeSessionId = urlParams.get('resumeSession');
 
   // Mutation for updating questions (admin only)
   const updateQuestionMutation = useMutation({
@@ -273,20 +279,74 @@ export default function GenericSectionTest({
     }
   });
 
-  // Auto-start test when component mounts and create test session
+  // Fetch existing session if resuming
+  const { data: existingSession, isLoading: isLoadingSession, isError: isSessionError } = useQuery({
+    queryKey: ['/api/test-sessions', resumeSessionId, 'details'],
+    enabled: !!resumeSessionId && isAuthenticated,
+  });
+
+  // Auto-start test when component mounts and create or resume test session
   useEffect(() => {
-    if (!testStartTime) {
-      setTestStartTime(Date.now());
-      
-      // Create test session if user is authenticated
-      if (isAuthenticated && questions.length > 0) {
-        createTestSessionMutation.mutate({
-          sectionName: sectionName,
-          totalQuestions: questions.length
-        });
+    if (!testStartTime && isAuthenticated && questions.length > 0) {
+      // If we're trying to resume a session, wait for the query to complete
+      if (resumeSessionId) {
+        if (isLoadingSession) {
+          return; // Wait for the session to load
+        }
+        
+        if (existingSession && !isSessionError) {
+          // Resume existing session
+          setCurrentTestSession(existingSession.session);
+          setResumedSession(existingSession.session);
+          setTestStartTime(new Date(existingSession.session.startTime).getTime());
+          
+          // Restore user answers from existing session
+          const existingAnswers: Record<number, string> = {};
+          const existingAnsweredQuestions = new Set<number>();
+          
+          existingSession.answers.forEach((answer: any) => {
+            existingAnswers[answer.questionId] = answer.selectedAnswer;
+            existingAnsweredQuestions.add(answer.questionId);
+          });
+          
+          setSelectedAnswers(existingAnswers);
+          setAnsweredQuestions(existingAnsweredQuestions);
+          
+          // Set current question index to first unanswered question or last answered + 1
+          const answeredQuestionIds = Array.from(existingAnsweredQuestions);
+          let resumeIndex = 0;
+          
+          if (answeredQuestionIds.length > 0) {
+            // Find first unanswered question
+            const firstUnansweredIndex = questions.findIndex(q => !existingAnsweredQuestions.has(q.id));
+            resumeIndex = firstUnansweredIndex !== -1 ? firstUnansweredIndex : Math.max(0, questions.length - 1);
+          }
+          
+          setCurrentQuestionIndex(resumeIndex);
+          
+          toast({
+            title: "Session Resumed",
+            description: `Your previous test session has been restored. Continuing from question ${resumeIndex + 1}.`,
+          });
+          return;
+        } else {
+          // Session not found or error - fall through to create new session
+          toast({
+            title: "Session Not Found",
+            description: "Could not resume the session. Starting a new test.",
+            variant: "destructive",
+          });
+        }
       }
+      
+      // Start new session (no resume ID or session not found)
+      setTestStartTime(Date.now());
+      createTestSessionMutation.mutate({
+        sectionName: sectionName,
+        totalQuestions: questions.length
+      });
     }
-  }, [isAuthenticated, questions.length, sectionName]);
+  }, [isAuthenticated, questions.length, sectionName, resumeSessionId, existingSession, isLoadingSession, isSessionError]);
 
   // Timer effect
   useEffect(() => {

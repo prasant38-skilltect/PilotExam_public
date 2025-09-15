@@ -579,6 +579,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/test-sessions/:id/details', isAuthenticated, async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const userId = req.session.userId;
+      
+      // Get the test session
+      const session = await storage.getTestSession(sessionId);
+      if (!session || session.userId !== userId) {
+        return res.status(404).json({ message: "Test session not found" });
+      }
+      
+      // Get all user answers for this session
+      const answers = await storage.getSessionAnswers(sessionId);
+      
+      // Get questions with answers for this session
+      const questionIds = answers.map(answer => answer.questionId);
+      const questions = [];
+      
+      for (const questionId of questionIds) {
+        const question = await storage.getQuestion(questionId);
+        if (question) {
+          questions.push(question);
+        }
+      }
+      
+      // Combine session, answers, and questions
+      const sessionDetails = {
+        session,
+        answers,
+        questions,
+        questionsWithAnswers: questions.map(question => {
+          const userAnswer = answers.find(answer => answer.questionId === question.id);
+          return {
+            ...question,
+            userAnswer: userAnswer?.selectedAnswer,
+            isCorrect: userAnswer?.isCorrect,
+            timeSpent: userAnswer?.timeSpent
+          };
+        })
+      };
+      
+      res.json(sessionDetails);
+    } catch (error) {
+      console.error("Error fetching test session details:", error);
+      res.status(500).json({ message: "Failed to fetch test session details" });
+    }
+  });
+
   // User answer routes
   app.post('/api/user-answers', isAuthenticated, async (req: any, res) => {
     try {

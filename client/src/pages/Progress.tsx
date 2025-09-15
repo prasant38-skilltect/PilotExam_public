@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { 
   Home, 
   TrendingUp, 
@@ -14,12 +14,18 @@ import {
   BookOpen, 
   Clock,
   Target,
-  BarChart3
+  BarChart3,
+  Play,
+  Eye
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { TestSessionDetails } from "@/components/TestSessionDetails";
 
 export default function ProgressPage() {
   const { user, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
+  const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
+  const [showSessionDetails, setShowSessionDetails] = useState(false);
 
   // Fetch user test sessions
   const { data: testSessions = [], isLoading: loadingSessions } = useQuery({
@@ -184,7 +190,7 @@ export default function ProgressPage() {
             ) : (
               <div className="space-y-4">
                 {testSessions.slice(0, 10).map((session: any) => (
-                  <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     <div className="flex-1">
                       <h3 className="font-medium">{session.sectionName}</h3>
                       <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
@@ -216,6 +222,40 @@ export default function ProgressPage() {
                       >
                         {session.isCompleted ? "Completed" : "In Progress"}
                       </Badge>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 ml-2">
+                        {!session.isCompleted ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              // Navigate to resume test with session ID
+                              const sectionPath = session.sectionName.toLowerCase().replace(/\s+/g, '-');
+                              setLocation(`/${sectionPath}?resumeSession=${session.id}`);
+                            }}
+                            className="flex items-center gap-1"
+                            data-testid={`button-resume-${session.id}`}
+                          >
+                            <Play className="h-3 w-3" />
+                            Resume
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedSessionId(session.id);
+                              setShowSessionDetails(true);
+                            }}
+                            className="flex items-center gap-1"
+                            data-testid={`button-view-details-${session.id}`}
+                          >
+                            <Eye className="h-3 w-3" />
+                            View Details
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -274,6 +314,13 @@ export default function ProgressPage() {
             )}
           </CardContent>
         </Card>
+        
+        {/* Test Session Details Modal */}
+        <TestSessionDetails
+          sessionId={selectedSessionId}
+          open={showSessionDetails}
+          onOpenChange={setShowSessionDetails}
+        />
       </div>
     </div>
   );
