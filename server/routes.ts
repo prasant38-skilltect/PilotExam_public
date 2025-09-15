@@ -538,6 +538,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test session routes
+  app.post('/api/test-sessions', isAuthenticated, async (req: any, res) => {
+    try {
+      const sessionData = {
+        userId: req.session.userId,
+        sectionName: req.body.sectionName,
+        totalQuestions: req.body.totalQuestions,
+      };
+      
+      const testSession = await storage.createTestSession(sessionData);
+      res.json(testSession);
+    } catch (error) {
+      console.error("Error creating test session:", error);
+      res.status(500).json({ message: "Failed to create test session" });
+    }
+  });
+
+  app.put('/api/test-sessions/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const updatedSession = await storage.updateTestSession(sessionId, updates);
+      res.json(updatedSession);
+    } catch (error) {
+      console.error("Error updating test session:", error);
+      res.status(500).json({ message: "Failed to update test session" });
+    }
+  });
+
+  app.get('/api/user/test-sessions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const sessions = await storage.getUserTestSessions(userId);
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching user test sessions:", error);
+      res.status(500).json({ message: "Failed to fetch test sessions" });
+    }
+  });
+
+  // User answer routes
+  app.post('/api/user-answers', isAuthenticated, async (req: any, res) => {
+    try {
+      const answerData = req.body;
+      const savedAnswer = await storage.saveUserAnswer(answerData);
+      res.json(savedAnswer);
+    } catch (error) {
+      console.error("Error saving user answer:", error);
+      res.status(500).json({ message: "Failed to save answer" });
+    }
+  });
+
+  // User progress routes
+  app.get('/api/user/progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const progress = await storage.getUserProgress(userId);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error fetching user progress:", error);
+      res.status(500).json({ message: "Failed to fetch progress" });
+    }
+  });
+
+  app.get('/api/user/progress/:sectionName', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const sectionName = req.params.sectionName;
+      const progress = await storage.getSectionProgress(userId, sectionName);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error fetching section progress:", error);
+      res.status(500).json({ message: "Failed to fetch section progress" });
+    }
+  });
+
+  app.post('/api/user/progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const { sectionName, averageScore, bestScore } = req.body;
+      
+      // Get existing progress
+      const existingProgress = await storage.getSectionProgress(userId, sectionName);
+      
+      let progressData;
+      if (existingProgress) {
+        // Update existing progress
+        const newTotalTests = existingProgress.totalTests + 1;
+        const newAverageScore = Math.round(
+          ((existingProgress.averageScore * existingProgress.totalTests) + averageScore) / newTotalTests
+        );
+        const newBestScore = Math.max(existingProgress.bestScore, bestScore);
+        
+        progressData = {
+          userId,
+          sectionName,
+          totalTests: newTotalTests,
+          averageScore: newAverageScore,
+          bestScore: newBestScore,
+          lastTestDate: new Date()
+        };
+      } else {
+        // Create new progress
+        progressData = {
+          userId,
+          sectionName,
+          totalTests: 1,
+          averageScore: averageScore,
+          bestScore: bestScore,
+          lastTestDate: new Date()
+        };
+      }
+      
+      const updatedProgress = await storage.updateUserProgress(progressData);
+      res.json(updatedProgress);
+    } catch (error) {
+      console.error("Error updating user progress:", error);
+      res.status(500).json({ message: "Failed to update user progress" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

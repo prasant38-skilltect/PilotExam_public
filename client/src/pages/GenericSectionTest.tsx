@@ -76,8 +76,9 @@ export default function GenericSectionTest({
     correct_answer: '',
     explanation_text: ''
   });
+  const [currentTestSession, setCurrentTestSession] = useState<any>(null);
   const { toast } = useToast();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
   // Mutation for updating questions (admin only)
@@ -99,6 +100,45 @@ export default function GenericSectionTest({
         description: error.message || "Failed to update question",
         variant: "destructive",
       });
+    }
+  });
+
+  // Mutation for creating test session
+  const createTestSessionMutation = useMutation({
+    mutationFn: async (sessionData: { sectionName: string; totalQuestions: number }) => {
+      return await apiRequest('POST', '/api/test-sessions', sessionData);
+    },
+    onSuccess: (session) => {
+      setCurrentTestSession(session);
+    },
+    onError: (error: any) => {
+      console.error("Failed to create test session:", error);
+    }
+  });
+
+  // Mutation for updating test session
+  const updateTestSessionMutation = useMutation({
+    mutationFn: async ({ sessionId, updates }: { sessionId: number; updates: any }) => {
+      return await apiRequest('PUT', `/api/test-sessions/${sessionId}`, updates);
+    },
+    onError: (error: any) => {
+      console.error("Failed to update test session:", error);
+    }
+  });
+
+  // Mutation for saving user answers
+  const saveAnswerMutation = useMutation({
+    mutationFn: async (answerData: {
+      sessionId: number;
+      questionId: number;
+      selectedAnswer: string;
+      isCorrect: boolean;
+      timeSpent: number;
+    }) => {
+      return await apiRequest('POST', '/api/user-answers', answerData);
+    },
+    onError: (error: any) => {
+      console.error("Failed to save answer:", error);
     }
   });
   
@@ -233,12 +273,20 @@ export default function GenericSectionTest({
     }
   });
 
-  // Auto-start test when component mounts
+  // Auto-start test when component mounts and create test session
   useEffect(() => {
     if (!testStartTime) {
       setTestStartTime(Date.now());
+      
+      // Create test session if user is authenticated
+      if (isAuthenticated && questions.length > 0) {
+        createTestSessionMutation.mutate({
+          sectionName: sectionName,
+          totalQuestions: questions.length
+        });
+      }
     }
-  }, []);
+  }, [isAuthenticated, questions.length, sectionName]);
 
   // Timer effect
   useEffect(() => {
@@ -257,10 +305,25 @@ export default function GenericSectionTest({
   };
 
   const handleAnswerSelect = (questionId: number, answer: string) => {
+    const currentQuestion = questions.find(q => q.id === questionId);
+    const isCorrect = currentQuestion?.correct_answer === answer;
+    
     setSelectedAnswers((prev) => ({ ...prev, [questionId]: answer }));
     setAnsweredQuestions(
       (prev) => new Set(Array.from(prev).concat([questionId])),
     );
+
+    // Save answer to database if user is authenticated and test session exists
+    if (isAuthenticated && currentTestSession) {
+      const timeSpent = Math.floor((Date.now() - testStartTime!) / 1000); // Time in seconds
+      saveAnswerMutation.mutate({
+        sessionId: currentTestSession.id,
+        questionId: questionId,
+        selectedAnswer: answer,
+        isCorrect: isCorrect,
+        timeSpent: timeSpent
+      });
+    }
   };
 
   const handleNext = () => {
@@ -278,6 +341,42 @@ export default function GenericSectionTest({
   const handleFinishTest = () => {
     setIsTestActive(false);
     setShowResults(true);
+
+    // Calculate final results and update test session
+    if (isAuthenticated && currentTestSession) {
+      const totalQuestions = questions.length;
+      const correctAnswers = Object.entries(selectedAnswers).reduce((count, [questionId, answer]) => {
+        const question = questions.find(q => q.id === parseInt(questionId));
+        return question?.correct_answer === answer ? count + 1 : count;
+      }, 0);
+      
+      const score = Math.round((correctAnswers / totalQuestions) * 100);
+      const timeSpent = Math.floor((Date.now() - testStartTime!) / 1000);
+
+      // Update test session with final results
+      updateTestSessionMutation.mutate({
+        sessionId: currentTestSession.id,
+        updates: {
+          endTime: new Date(),
+          isCompleted: true,
+          score: score,
+          correctAnswers: correctAnswers,
+          timeSpent: timeSpent
+        }
+      });
+
+      // Update user progress statistics
+      const progressData = {
+        sectionName: sectionName,
+        averageScore: score,
+        bestScore: score
+      };
+
+      // Call progress update API
+      apiRequest('POST', '/api/user/progress', progressData).catch((error) => {
+        console.error("Failed to update user progress:", error);
+      });
+    }
   };
 
   const handleReportIssue = (questionId: number) => {

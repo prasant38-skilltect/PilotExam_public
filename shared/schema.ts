@@ -194,18 +194,19 @@ export const subjects = pgTable("subjects", {
 //   isCorrect: boolean("is_correct").default(false),
 // });
 
-// // Test Sessions
-// export const testSessions = pgTable("test_sessions", {
-//   id: serial("id").primaryKey(),
-//   userId: varchar("user_id").references(() => users.id),
-//   subjectId: integer("subject_id").references(() => subjects.id).notNull(),
-//   startTime: timestamp("start_time").defaultNow(),
-//   endTime: timestamp("end_time"),
-//   isCompleted: boolean("is_completed").default(false),
-//   score: integer("score"),
-//   totalQuestions: integer("total_questions").notNull(),
-//   correctAnswers: integer("correct_answers").default(0),
-// });
+// Test Sessions
+export const testSessions = pgTable("test_sessions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id),
+  sectionName: varchar("section_name", { length: 255 }).notNull(),
+  startTime: timestamp("start_time").defaultNow(),
+  endTime: timestamp("end_time"),
+  isCompleted: boolean("is_completed").default(false),
+  score: integer("score"),
+  totalQuestions: integer("total_questions").notNull(),
+  correctAnswers: integer("correct_answers").default(0),
+  timeSpent: integer("time_spent"), // in seconds
+});
 
 // Question Comments
 export const questionComments = pgTable("question_comments", {
@@ -228,26 +229,26 @@ export const questionComments = pgTable("question_comments", {
 //   createdAt: timestamp("created_at").defaultNow(),
 // });
 
-// // User Answers
-// export const userAnswers = pgTable("user_answers", {
-//   id: serial("id").primaryKey(),
-//   sessionId: integer("session_id").references(() => testSessions.id).notNull(),
-//   questionId: integer("question_id").references(() => questions.id).notNull(),
-//   selectedAnswer: varchar("selected_answer", { length: 1 }),
-//   isCorrect: boolean("is_correct"),
-//   timeSpent: integer("time_spent"), // in seconds
-// });
+// User Answers
+export const userAnswers = pgTable("user_answers", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => testSessions.id, { onDelete: 'cascade' }).notNull(),
+  questionId: integer("question_id").notNull(),
+  selectedAnswer: varchar("selected_answer", { length: 1 }),
+  isCorrect: boolean("is_correct"),
+  timeSpent: integer("time_spent"), // in seconds
+});
 
-// // User Progress
-// export const userProgress = pgTable("user_progress", {
-//   id: serial("id").primaryKey(),
-//   userId: varchar("user_id").references(() => users.id).notNull(),
-//   subjectId: integer("subject_id").references(() => subjects.id).notNull(),
-//   totalTests: integer("total_tests").default(0),
-//   averageScore: integer("average_score").default(0),
-//   bestScore: integer("best_score").default(0),
-//   lastTestDate: timestamp("last_test_date"),
-// });
+// User Progress
+export const userProgress = pgTable("user_progress", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  sectionName: varchar("section_name", { length: 255 }).notNull(),
+  totalTests: integer("total_tests").default(0),
+  averageScore: integer("average_score").default(0),
+  bestScore: integer("best_score").default(0),
+  lastTestDate: timestamp("last_test_date"),
+});
 
 // // Question-Section Mapping Table (matches actual database)
 // export const questionSections = pgTable("question_sections", {
@@ -300,19 +301,19 @@ export const insertIssueReportSchema = createInsertSchema(issueReports).omit({ i
 
 
 
-// export const insertTestSessionSchema = createInsertSchema(testSessions).omit({
-//   id: true,
-//   startTime: true,
-//   endTime: true,
-// });
+export const insertTestSessionSchema = createInsertSchema(testSessions).omit({
+  id: true,
+  startTime: true,
+  endTime: true,
+});
 
-// export const insertUserAnswerSchema = createInsertSchema(userAnswers).omit({
-//   id: true,
-// });
+export const insertUserAnswerSchema = createInsertSchema(userAnswers).omit({
+  id: true,
+});
 
-// export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
-//   id: true,
-// });
+export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
+  id: true,
+});
 
 export const insertQuestionCommentSchema = createInsertSchema(questionComments).omit({
   id: true,
@@ -341,12 +342,12 @@ export type Question = typeof questions.$inferSelect;
 export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
 // export type Answer = typeof answers.$inferSelect;
 // export type InsertAnswer = z.infer<typeof insertAnswerSchema>;
-// export type TestSession = typeof testSessions.$inferSelect;
-// export type InsertTestSession = z.infer<typeof insertTestSessionSchema>;
-// export type UserAnswer = typeof userAnswers.$inferSelect;
-// export type InsertUserAnswer = z.infer<typeof insertUserAnswerSchema>;
-// export type UserProgress = typeof userProgress.$inferSelect;
-// export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
+export type TestSession = typeof testSessions.$inferSelect;
+export type InsertTestSession = z.infer<typeof insertTestSessionSchema>;
+export type UserAnswer = typeof userAnswers.$inferSelect;
+export type InsertUserAnswer = z.infer<typeof insertUserAnswerSchema>;
+export type UserProgress = typeof userProgress.$inferSelect;
+export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
 // export type QuestionComment = typeof questionComments.$inferSelect;
 // export type InsertQuestionComment = z.infer<typeof insertQuestionCommentSchema>;
 // export type CommentVote = typeof commentVotes.$inferSelect;

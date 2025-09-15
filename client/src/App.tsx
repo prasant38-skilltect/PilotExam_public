@@ -30,6 +30,7 @@ const SignUp = lazy(() => import("@/pages/SignUp"));
 const ManageProfile = lazy(() => import("@/pages/ManageProfile"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const Admin = lazy(() => import("@/pages/Admin"));
+const Progress = lazy(() => import("@/pages/Progress"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Loading component for lazy loaded pages
@@ -124,6 +125,11 @@ function Router() {
           <Route path="/admin">
             <Suspense fallback={<PageLoader />}>
               <Admin />
+            </Suspense>
+          </Route>
+          <Route path="/progress">
+            <Suspense fallback={<PageLoader />}>
+              <Progress />
             </Suspense>
           </Route>
           {/* <Route path="/question-banks">
