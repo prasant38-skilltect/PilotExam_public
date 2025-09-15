@@ -112,7 +112,17 @@ export default function GenericSectionTest({
   // Mutation for creating test session
   const createTestSessionMutation = useMutation({
     mutationFn: async (sessionData: { sectionName: string; totalQuestions: number }) => {
-      return await apiRequest('POST', '/api/test-sessions', sessionData);
+       const response = await apiRequest('POST', '/api/test-sessions', sessionData);
+
+      // ✅ Manually parse if it's a Response object
+      if (response instanceof Response) {
+        if (!response.ok) {
+          throw new Error(`Failed: ${response.status}`);
+        }
+        return await response.json(); // convert ReadableStream → JSON
+      }
+
+      return response; // already parsed, just return
     },
     onSuccess: (session) => {
       setCurrentTestSession(session);
@@ -125,7 +135,8 @@ export default function GenericSectionTest({
   // Mutation for updating test session
   const updateTestSessionMutation = useMutation({
     mutationFn: async ({ sessionId, updates }: { sessionId: number; updates: any }) => {
-      return await apiRequest('PUT', `/api/test-sessions/${sessionId}`, updates);
+      // ✅ Send { updates } as body, so backend can destructure it
+      return await apiRequest('PUT', `/api/test-sessions/${sessionId}`, { updates });
     },
     onError: (error: any) => {
       console.error("Failed to update test session:", error);

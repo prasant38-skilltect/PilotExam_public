@@ -195,6 +195,14 @@ export function Header() {
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => setLocation("/progress")}
+                      data-testid="menu-admin"
+                    >
+                      <Shield className="mr-2 h-4 w-4" />
+                      Progress
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
                     className="cursor-pointer text-red-600 focus:text-red-600"
                     onClick={handleLogout}
                     disabled={logoutMutation.isPending}

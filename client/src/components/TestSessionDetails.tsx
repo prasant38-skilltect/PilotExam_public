@@ -152,7 +152,7 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
                           )}
                           <div className="flex-1 text-left">
                             <div className="text-xs truncate">
-                              {question.question_text.substring(0, 40)}...
+                              {question.text?.substring(0, 40)}...
                             </div>
                             {question.timeSpent && (
                               <div className="text-xs text-gray-500">
@@ -217,7 +217,7 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
                           </CardHeader>
                           <CardContent>
                             <p className="text-gray-800 dark:text-gray-200 leading-relaxed">
-                              {currentQuestion.question_text}
+                              {currentQuestion.text}
                             </p>
                           </CardContent>
                         </Card>

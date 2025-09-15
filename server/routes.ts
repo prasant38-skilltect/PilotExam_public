@@ -557,10 +557,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/test-sessions/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const sessionId = parseInt(req.params.id);
-      const updates = req.body;
       
-      const updatedSession = await storage.updateTestSession(sessionId, updates);
+      const sessionId = parseInt(req.params.id);
+      const { updates } = req.body;
+      console.log("Received updates for session:", sessionId, updates);
+      // ✅ Ensure endTime is a Date before calling Drizzle
+      const dataToUpdate = {
+        ...updates,
+        endTime: updates.endTime ? new Date(updates.endTime) : null,
+      };
+      
+      const updatedSession = await storage.updateTestSession(sessionId, dataToUpdate);
       res.json(updatedSession);
     } catch (error) {
       console.error("Error updating test session:", error);
