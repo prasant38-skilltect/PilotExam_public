@@ -75,10 +75,10 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[95vh] p-0">
+      <DialogContent className="max-w-5xl h-[95vh] p-0 flex flex-col">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <DialogHeader className="p-6 border-b">
+          <DialogHeader className="p-6 border-b shrink-0">
             <DialogTitle className="text-xl font-bold">Test Session Details</DialogTitle>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
               <div className="text-center">
@@ -116,7 +116,7 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
             <div className="grid grid-cols-1 lg:grid-cols-3 h-full">
               {/* Question List Sidebar */}
               <div className="border-r bg-gray-50 dark:bg-gray-900">
-                <div className="p-4 border-b">
+                <div className="p-4 border-b shrink-0">
                   <h3 className="font-medium mb-2">Questions ({questionsWithAnswers.length})</h3>
                   <Progress 
                     value={(correctAnswers / questionsWithAnswers.length) * 100} 
@@ -168,11 +168,11 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
               </div>
 
               {/* Main Question Display */}
-              <div className="lg:col-span-2 flex flex-col">
+              <div className="lg:col-span-2 flex flex-col h-full">
                 {currentQuestion && (
                   <>
                     {/* Question Header */}
-                    <div className="p-4 border-b bg-white dark:bg-gray-800">
+                    <div className="p-4 border-b bg-white dark:bg-gray-800 shrink-0">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
@@ -296,7 +296,7 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
                     </ScrollArea>
 
                     {/* Navigation Footer */}
-                    <div className="p-4 border-t bg-gray-50 dark:bg-gray-900">
+                    <div className="p-4 border-t bg-gray-50 dark:bg-gray-900 shrink-0">
                       <div className="flex justify-between items-center">
                         <Button
                           variant="outline"
