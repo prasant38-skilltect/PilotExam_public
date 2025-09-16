@@ -205,7 +205,7 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
                     </div>
 
                     {/* Question Content */}
-                    <ScrollArea className="flex-1 p-4">
+                    <ScrollArea className="flex-1 p-4 max-h-[calc(100vh-200px)]">
                       <div className="space-y-6">
                         {/* Question Text */}
                         <Card>
@@ -284,7 +284,7 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
                             <CardHeader>
                               <CardTitle className="text-lg">Explanation</CardTitle>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="max-h-96 overflow-y-auto">
                               <div 
                                 className="prose prose-sm max-w-none dark:prose-invert"
                                 dangerouslySetInnerHTML={{ __html: currentQuestion.explanation }}

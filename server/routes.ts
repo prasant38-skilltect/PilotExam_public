@@ -600,14 +600,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all user answers for this session
       const answers = await storage.getSessionAnswers(sessionId);
       
-      // Get questions with answers for this session
+      // Get questions with options for this session
       const questionIds = answers.map(answer => answer.questionId);
-      const questions = [];
+      const questionsWithOptions = [];
       
       for (const questionId of questionIds) {
         const question = await storage.getQuestion(questionId);
         if (question) {
-          questions.push(question);
+          // Get options for this question
+          const options = await storage.getQuestionOptions(questionId);
+          
+          // Format options as A, B, C, D
+          const formattedQuestion = {
+            ...question,
+            option_a: '',
+            option_b: '',
+            option_c: '',
+            option_d: '',
+            correct_answer: ''
+          };
+          
+          // Map options to A, B, C, D format
+          options.forEach(option => {
+            const optionLetter = String.fromCharCode(65 + option.optionOrder); // 0=A, 1=B, etc.
+            formattedQuestion[`option_${optionLetter.toLowerCase()}`] = option.optionText;
+            if (option.isCorrect) {
+              formattedQuestion.correct_answer = optionLetter;
+            }
+          });
+          
+          questionsWithOptions.push(formattedQuestion);
         }
       }
       
@@ -615,8 +637,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sessionDetails = {
         session,
         answers,
-        questions,
-        questionsWithAnswers: questions.map(question => {
+        questions: questionsWithOptions,
+        questionsWithAnswers: questionsWithOptions.map(question => {
           const userAnswer = answers.find(answer => answer.questionId === question.id);
           return {
             ...question,

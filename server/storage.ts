@@ -460,6 +460,14 @@ export class DatabaseStorage implements IStorage {
     return question;
   }
 
+  async getQuestionOptions(questionId: number): Promise<any[]> {
+    return await db
+      .select()
+      .from(questionOptions)
+      .where(eq(questionOptions.questionId, questionId))
+      .orderBy(asc(questionOptions.optionOrder));
+  }
+
   // Test session operations
   async createTestSession(session: InsertTestSession): Promise<TestSession> {
     const [newSession] = await db
