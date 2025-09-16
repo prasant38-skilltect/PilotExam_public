@@ -648,20 +648,53 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateQuestion(questionId: number, questionData: any): Promise<any> {
-    const [updatedQuestion] = await db
-      .update(questions)
-      .set({
-        question_text: questionData.question_text,
-        option_a: questionData.option_a,
-        option_b: questionData.option_b,
-        option_c: questionData.option_c,
-        option_d: questionData.option_d,
-        correct_answer: questionData.correct_answer,
-        explanation_text: questionData.explanation_text,
-      })
-      .where(eq(questions.id, questionId))
-      .returning();
-    return updatedQuestion;
+    return await db.transaction(async (tx) => {
+      // Update the main question data
+      const [updatedQuestion] = await tx
+        .update(questions)
+        .set({
+          text: questionData.question_text,
+          explanation: questionData.explanation_text,
+        })
+        .where(eq(questions.id, questionId))
+        .returning();
+
+      // Get existing options for this question
+      const existingOptions = await tx
+        .select()
+        .from(questionOptions)
+        .where(eq(questionOptions.questionId, questionId))
+        .orderBy(asc(questionOptions.optionOrder));
+
+      // Prepare new options data
+      const newOptions = [
+        { text: questionData.option_a, order: 0 },
+        { text: questionData.option_b, order: 1 },
+        { text: questionData.option_c, order: 2 },
+        { text: questionData.option_d, order: 3 },
+      ].filter(option => option.text && option.text.trim() !== '');
+
+      // Delete existing options
+      await tx
+        .delete(questionOptions)
+        .where(eq(questionOptions.questionId, questionId));
+
+      // Insert new options
+      for (const option of newOptions) {
+        const isCorrect = questionData.correct_answer?.toUpperCase() === String.fromCharCode(65 + option.order); // A=0, B=1, etc.
+        
+        await tx
+          .insert(questionOptions)
+          .values({
+            questionId: questionId,
+            optionText: option.text,
+            isCorrect: isCorrect,
+            optionOrder: option.order,
+          });
+      }
+
+      return updatedQuestion;
+    });
   }
 }
 
