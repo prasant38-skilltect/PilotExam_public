@@ -81,10 +81,9 @@ export default function GenericSectionTest({
   const { toast } = useToast();
   const { user, isAdmin, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
-  const [location] = useLocation();
   
-  // Parse URL parameters to check for resume session
-  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  // Parse URL parameters to check for resume session from browser's search params
+  const urlParams = new URLSearchParams(window.location.search);
   const resumeSessionId = urlParams.get('resumeSession');
 
   // Mutation for updating questions (admin only)
