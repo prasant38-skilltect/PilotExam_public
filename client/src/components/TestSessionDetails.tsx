@@ -75,10 +75,10 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[95vh] p-0 flex flex-col">
+      <DialogContent className="max-w-5xl h-[95vh] p-0">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <DialogHeader className="p-6 border-b shrink-0">
+          <DialogHeader className="p-6 border-b flex-shrink-0">
             <DialogTitle className="text-xl font-bold">Test Session Details</DialogTitle>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
               <div className="text-center">
@@ -112,11 +112,11 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
           </DialogHeader>
 
           {/* Content */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 min-h-0">
             <div className="grid grid-cols-1 lg:grid-cols-3 h-full">
               {/* Question List Sidebar */}
-              <div className="border-r bg-gray-50 dark:bg-gray-900">
-                <div className="p-4 border-b shrink-0">
+              <div className="border-r bg-gray-50 dark:bg-gray-900 flex flex-col">
+                <div className="p-4 border-b flex-shrink-0">
                   <h3 className="font-medium mb-2">Questions ({questionsWithAnswers.length})</h3>
                   <Progress 
                     value={(correctAnswers / questionsWithAnswers.length) * 100} 
@@ -126,7 +126,7 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
                     {correctAnswers} correct out of {questionsWithAnswers.length}
                   </div>
                 </div>
-                <ScrollArea className="h-[calc(100vh-320px)]">
+                <ScrollArea className="flex-1">
                   <div className="p-2 space-y-1">
                     {questionsWithAnswers.map((question, index) => (
                       <Button
@@ -205,7 +205,7 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
                     </div>
 
                     {/* Question Content */}
-                    <ScrollArea className="flex-1 p-4 max-h-[calc(100vh-200px)]">
+                    <div className="flex-1 overflow-auto p-4">
                       <div className="space-y-6">
                         {/* Question Text */}
                         <Card>
@@ -284,7 +284,7 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
                             <CardHeader>
                               <CardTitle className="text-lg">Explanation</CardTitle>
                             </CardHeader>
-                            <CardContent className="max-h-96 overflow-y-auto">
+                            <CardContent className="max-h-64 overflow-y-auto">
                               <div 
                                 className="prose prose-sm max-w-none dark:prose-invert"
                                 dangerouslySetInnerHTML={{ __html: currentQuestion.explanation }}
@@ -293,7 +293,7 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
                           </Card>
                         )}
                       </div>
-                    </ScrollArea>
+                    </div>
 
                     {/* Navigation Footer */}
                     <div className="p-4 border-t bg-gray-50 dark:bg-gray-900 shrink-0">
