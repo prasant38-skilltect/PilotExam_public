@@ -59,7 +59,7 @@ export default function Landing() {
             14 ATPL Subject Modules
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Master all EASA ATPL subjects with our comprehensive question bank and practice tests
+            Master all DGCA subjects with our comprehensive question bank and practice tests
           </p>
         </header>
 

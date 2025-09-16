@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Clock, Search, Play, Plane } from "@/components/Icons";
 import { Skeleton } from "@/components/ui/skeleton";
+import Subjects from "./Subjects";
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -46,7 +47,7 @@ export default function Home() {
             14 ATPL Subject Modules
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Master all EASA ATPL subjects with our comprehensive question bank
+            Master all DGCA subjects with our comprehensive question bank
             and practice tests
           </p>
         </div>
@@ -81,6 +82,7 @@ export default function Home() {
             />
           </div>
         </div>
+        <Subjects showBackToHome={false}/>
 
         {/* Subject Grid */}
         {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
