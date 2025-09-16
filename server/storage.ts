@@ -649,50 +649,78 @@ export class DatabaseStorage implements IStorage {
 
   async updateQuestion(questionId: number, questionData: any): Promise<any> {
     return await db.transaction(async (tx) => {
-      // Update the main question data
-      const [updatedQuestion] = await tx
-        .update(questions)
-        .set({
-          text: questionData.question_text,
-          explanation: questionData.explanation_text,
-        })
-        .where(eq(questions.id, questionId))
-        .returning();
-
-      // Get existing options for this question
-      const existingOptions = await tx
+      // Get current question data
+      const [currentQuestion] = await tx
+        .select()
+        .from(questions)
+        .where(eq(questions.id, questionId));
+      // Update question only if fields have changed
+      const questionUpdates: any = {};
+      if (currentQuestion.text !== questionData.question_text) {
+        questionUpdates.text = questionData.question_text;
+      }
+      if (currentQuestion.explanation !== questionData.explanation_text) {
+        questionUpdates.explanation = questionData.explanation_text;
+      }
+      let updatedQuestion = currentQuestion;
+      if (Object.keys(questionUpdates).length > 0) {
+        [updatedQuestion] = await tx
+          .update(questions)
+          .set(questionUpdates)
+          .where(eq(questions.id, questionId))
+          .returning();
+      }
+      // Get current options
+      const currentOptions = await tx
         .select()
         .from(questionOptions)
         .where(eq(questionOptions.questionId, questionId))
         .orderBy(asc(questionOptions.optionOrder));
-
       // Prepare new options data
-      const newOptions = [
+      const newOptionsData = [
         { text: questionData.option_a, order: 0 },
         { text: questionData.option_b, order: 1 },
         { text: questionData.option_c, order: 2 },
         { text: questionData.option_d, order: 3 },
       ].filter(option => option.text && option.text.trim() !== '');
-
-      // Delete existing options
-      await tx
-        .delete(questionOptions)
-        .where(eq(questionOptions.questionId, questionId));
-
-      // Insert new options
-      for (const option of newOptions) {
-        const isCorrect = questionData.correct_answer?.toUpperCase() === String.fromCharCode(65 + option.order); // A=0, B=1, etc.
-        
-        await tx
-          .insert(questionOptions)
-          .values({
-            questionId: questionId,
-            optionText: option.text,
-            isCorrect: isCorrect,
-            optionOrder: option.order,
-          });
+      // Update, insert, or delete options as needed
+      for (let i = 0; i < Math.max(currentOptions.length, newOptionsData.length); i++) {
+        const currentOption = currentOptions[i];
+        const newOption = newOptionsData[i];
+        if (currentOption && newOption) {
+          // Update existing option if changed
+          const isCorrect = questionData.correct_answer?.toUpperCase() === String.fromCharCode(65 + newOption.order);
+          
+          if (currentOption.optionText !== newOption.text || 
+              currentOption.isCorrect !== isCorrect || 
+              currentOption.optionOrder !== newOption.order) {
+            await tx
+              .update(questionOptions)
+              .set({
+                optionText: newOption.text,
+                isCorrect: isCorrect,
+                optionOrder: newOption.order,
+              })
+              .where(eq(questionOptions.id, currentOption.id));
+          }
+        } else if (newOption) {
+          // Insert new option
+          const isCorrect = questionData.correct_answer?.toUpperCase() === String.fromCharCode(65 + newOption.order);
+          await tx
+            .insert(questionOptions)
+            .values({
+              questionId: questionId,
+              optionText: newOption.text,
+              isCorrect: isCorrect,
+              optionOrder: newOption.order,
+            });
+        } else if (currentOption) {
+          // Delete removed option
+          await tx
+            .delete(questionOptions)
+            .where(eq(questionOptions.id, currentOption.id));
+        }
       }
-
       return updatedQuestion;
     });
   }
