@@ -654,7 +654,6 @@ export class DatabaseStorage implements IStorage {
         .select()
         .from(questions)
         .where(eq(questions.id, questionId));
-
       // Update question only if fields have changed
       const questionUpdates: any = {};
       if (currentQuestion.text !== questionData.question_text) {
@@ -663,7 +662,6 @@ export class DatabaseStorage implements IStorage {
       if (currentQuestion.explanation !== questionData.explanation_text) {
         questionUpdates.explanation = questionData.explanation_text;
       }
-
       let updatedQuestion = currentQuestion;
       if (Object.keys(questionUpdates).length > 0) {
         [updatedQuestion] = await tx
@@ -672,14 +670,12 @@ export class DatabaseStorage implements IStorage {
           .where(eq(questions.id, questionId))
           .returning();
       }
-
       // Get current options
       const currentOptions = await tx
         .select()
         .from(questionOptions)
         .where(eq(questionOptions.questionId, questionId))
         .orderBy(asc(questionOptions.optionOrder));
-
       // Prepare new options data
       const newOptionsData = [
         { text: questionData.option_a, order: 0 },
@@ -687,16 +683,14 @@ export class DatabaseStorage implements IStorage {
         { text: questionData.option_c, order: 2 },
         { text: questionData.option_d, order: 3 },
       ].filter(option => option.text && option.text.trim() !== '');
-
       // Update, insert, or delete options as needed
       for (let i = 0; i < Math.max(currentOptions.length, newOptionsData.length); i++) {
         const currentOption = currentOptions[i];
         const newOption = newOptionsData[i];
-
         if (currentOption && newOption) {
           // Update existing option if changed
           const isCorrect = questionData.correct_answer?.toUpperCase() === String.fromCharCode(65 + newOption.order);
-          
+
           if (currentOption.optionText !== newOption.text || 
               currentOption.isCorrect !== isCorrect || 
               currentOption.optionOrder !== newOption.order) {
@@ -727,7 +721,6 @@ export class DatabaseStorage implements IStorage {
             .where(eq(questionOptions.id, currentOption.id));
         }
       }
-
       return updatedQuestion;
     });
   }
