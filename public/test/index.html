@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -450,15 +449,19 @@
                 </li>
                 <li id="stat-n2o2" class="trace">
                     <span class="gas-name">N₂ + O₂</span>
-                    <span class="percent">99.03%</span>
+                    <span class="percent">~99%</span>
                 </li>
                 <li id="stat-argon" class="argon">
                     <span class="gas-name">Argon</span>
                     <span class="percent">0.93%</span>
                 </li>
                 <li id="stat-trace" class="trace">
-                    <span class="gas-name">Trace gases</span>
-                    <span class="percent">0.04%</span>
+                    <span class="gas-name">Trace Gases</span>
+                    <span class="percent">&lt; 0.04%</span>
+                </li>
+                 <li id="stat-additions" class="trace">
+                    <span class="gas-name">Other</span>
+                    <span class="percent">Water Vapour, Dust</span>
                 </li>
             </ul>
         </div>
@@ -466,54 +469,34 @@
         <div id="greenhouse-gas-info">
             <h3>Major Greenhouse Gases</h3>
             <ul>
-                <li>
-                    <strong>Carbon Dioxide (CO₂)</strong>
-                    The most significant greenhouse gas from human activities, primarily from burning fossil fuels.
-                </li>
-                <li>
-                    <strong>Methane (CH₄)</strong>
-                    About 25 times more potent than CO₂, emitted from agriculture, landfills, and energy production.
-                </li>
-                <li>
-                    <strong>Nitrous Oxide (N₂O)</strong>
-                    Nearly 300 times more potent than CO₂, mainly from agriculture and fossil fuel combustion.
-                </li>
-                <li>
-                    <strong>Ozone (O₃)</strong>
-                    A greenhouse gas in the troposphere, but protective in the stratosphere.
-                </li>
-                <li>
-                    <strong>Water Vapor (H₂O)</strong>
-                    The most abundant greenhouse gas, amplifying warming caused by other gases.
-                </li>
-                <li>
-                    <strong>Fluorinated Gases</strong>
-                    Including CFCs, extremely potent but less abundant greenhouse gases.
-                </li>
+                <li><strong>Carbon Dioxide (CO₂):</strong> From burning fossil fuels, deforestation.</li>
+                <li><strong>Methane (CH₄):</strong> From livestock, wetlands, and landfills.</li>
+                <li><strong>Nitrous Oxide (N₂O):</strong> From fertilizers and industrial activities.</li>
+                <li><strong>Ozone (O₃):</strong> Found in the lower atmosphere (troposphere).</li>
+                <li><strong>Water Vapor (H₂O):</strong> Naturally present, amplifies warming.</li>
+                <li><strong>Chlorofluorocarbons (CFCs):</strong> Man-made, also damage ozone layer.</li>
             </ul>
         </div>
-
-        <div id="ozone-info">
-            <p><strong>The Ozone Layer</strong><br>
-            Protects Earth from harmful UV radiation by absorbing it in the stratosphere.</p>
-        </div>
-
+        <div id="ozone-info"></div>
+        
         <div id="vertical-distribution-info">
-            <h3>Atmospheric Mass Distribution</h3>
-            <p><strong>50%</strong> of atmospheric mass is below <strong>6 km</strong></p>
-            <p><strong>75%</strong> of atmospheric mass is below <strong>10 km</strong></p>
-            <p><strong>99%</strong> of atmospheric mass is below <strong>35 km</strong></p>
-            <p>This shows how thin our atmosphere really is compared to Earth's size.</p>
+            <h3>Vertical Distribution of Air Mass</h3>
+            <p>Due to gravitational attraction, most atmospheric mass is concentrated near Earth's surface.</p>
         </div>
-
-        <div id="temp-gradient-overlay">
-            <div id="temp-gradient-title">Temperature</div>
-            <div class="label-top">Hot</div>
-            <div id="temp-gradient-bar"></div>
-            <div class="label-bottom">Cold</div>
-        </div>
+        <div id="layer-labels-container"></div>
     </div>
 
-    <script type="module" src="/test/main.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/",
+            "nipplejs": "https://esm.sh/nipplejs@0.10.1",
+            "@tweenjs/tween.js": "https://esm.sh/@tweenjs/tween.js@21.0.0"
+        }
+    }
+    </script>
+    
+    <script type="module" src="main.js"></script>
 </body>
 </html>
