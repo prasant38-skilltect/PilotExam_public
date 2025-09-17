@@ -60,6 +60,9 @@ app.use((req, _res, next) => {
   // Note: Authentication pages are now handled by React components
   // in client/src/pages/SignIn.tsx, SignUp.tsx, and ForgotPassword.tsx
 
+  // Serve static test files from public/test directory
+  app.use('/test', express.static('public/test'));
+
   // Setup Vite for development or static files for production
   if (app.get("env") === "development") {
     await setupVite(app, server);

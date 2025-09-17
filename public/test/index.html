@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earth's Atmosphere</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: 'Space Mono', monospace;
+        }
+        
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #css-renderer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Let clicks pass through to the canvas */
+        }
+        
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            z-index: 100;
+            font-size: 14px;
+            line-height: 1.4;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 200px;
+        }
+        
+        #info h3 {
+            margin-top: 0;
+        }
+
+        #info p {
+            font-size: 12px;
+            color: #ccc;
+            margin: 5px 0 0;
+        }
+
+        #stats-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 240px;
+            font-family: 'Space Mono', monospace;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        #stats-overlay h3 {
+            margin-top: 0;
+            color: #aaa;
+            font-size: 16px;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        
+        #stats-overlay ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        #stats-overlay li {
+            margin-bottom: 8px;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        #stats-overlay li.visible {
+             opacity: 1;
+             transform: translateX(0);
+        }
+
+        #stats-overlay li .gas-name {
+            display: inline-block;
+            width: 100px;
+        }
+        
+        #stats-overlay li .percent {
+            font-weight: bold;
+        }
+        
+        #stats-overlay li .nitrogen { color: #00dd00; }
+        #stats-overlay li .oxygen { color: #87ceeb; }
+        #stats-overlay li .argon { color: #da70d6; }
+        #stats-overlay li .trace { color: #ffd700; }
+
+        #greenhouse-gas-halo {
+            pointer-events: none;
+        }
+
+        #greenhouse-gas-info {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%) translateX(-120%);
+            color: white;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 320px;
+            font-family: 'Space Mono', monospace;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.8s ease-in-out;
+        }
+
+        #greenhouse-gas-info.visible {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+        }
+
+        #greenhouse-gas-info h3 {
+            margin-top: 0;
+            color: #aaa;
+            font-size: 16px;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        #greenhouse-gas-info ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #greenhouse-gas-info li {
+            margin-bottom: 12px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        #greenhouse-gas-info li strong {
+            color: #87ceeb; /* Light blue for gas names */
+            display: block;
+            margin-bottom: 3px;
+        }
+        
+        #ozone-info {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 400px;
+            font-family: 'Space Mono', monospace;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            pointer-events: none;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        #ozone-info.visible {
+            opacity: 1;
+        }
+
+        #vertical-distribution-info {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%) translateX(120%);
+            color: white;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 320px;
+            font-family: 'Space Mono', monospace;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.8s ease-in-out;
+        }
+
+        #vertical-distribution-info.visible {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+        }
+
+        #vertical-distribution-info h3 {
+            margin-top: 0;
+            color: #aaa;
+            font-size: 16px;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        #vertical-distribution-info p {
+            margin-bottom: 10px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        #mobile-controls {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 120px;
+            height: 120px;
+            z-index: 200;
+        }
+        
+        @media (max-width: 768px) {
+            #mobile-controls {
+                display: block;
+            }
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            z-index: 100;
+        }
+        
+        #media-controls {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #slide-counter {
+            color: white;
+            font-size: 14px;
+            font-family: 'Space Mono', monospace;
+            padding: 0 5px;
+            min-width: 55px;
+            text-align: center;
+        }
+        
+        #subtitles {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            color: white;
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 400px;
+            display: none;
+            z-index: 200;
+            line-height: 1.4;
+            text-align: center;
+        }
+        
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+        }
+        
+        .control-btn.hidden {
+            display: none;
+        }
+        
+        #text-overlay {
+            display: none;
+        }
+        
+        .narration-text h2 {
+            display: none;
+        }
+        
+        .text-line {
+            display: none;
+        }
+
+        #temp-gradient-overlay {
+            position: fixed;
+            top: 50%;
+            left: 30px;
+            transform: translateY(-50%) translateX(-120%);
+            width: 100px;
+            height: 300px;
+            z-index: 250;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-family: 'Space Mono', monospace;
+            color: white;
+            font-size: 14px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.8s ease-in-out;
+        }
+
+        #temp-gradient-bar {
+            width: 20px;
+            height: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        #temp-gradient-title {
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 10px;
+        }
+
+        #temp-gradient-overlay .label-top, #temp-gradient-overlay .label-bottom {
+            padding: 0 5px;
+        }
+
+        .layer-label {
+            pointer-events: none;
+        }
+        
+        .rising-temp-text {
+            color: white;
+            font-family: 'Space Mono', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 1), 0 0 3px rgba(255, 255, 255, 0.9);
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 0;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            #mobile-controls {
+                display: block;
+            }
+            
+            #text-overlay {
+                display: none;
+            }
+            
+            .narration-text h2 {
+                display: none;
+            }
+            
+            .text-line {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <div id="css-renderer"></div>
+        <div class="loading" id="loading">Loading Earth...</div>
+        
+        <div id="info">
+            <h3 id="info-title">Earth's Atmosphere</h3>
+            <p id="info-status">Ready to explore. Press play to begin.</p>
+        </div>
+        
+        <div id="media-controls">
+            <button class="control-btn" id="play-btn" title="Play">▶️</button>
+            <button class="control-btn hidden" id="back-btn" title="Previous">⏮️</button>
+            <button class="control-btn hidden" id="pause-btn" title="Pause">⏸️</button>
+            <button class="control-btn hidden" id="next-btn" title="Next">⏭️</button>
+            <div id="slide-counter" class="hidden"></div>
+            <button class="control-btn hidden" id="mute-btn" title="Mute">🔊</button>
+            <button class="control-btn hidden" id="subtitles-btn" title="Subtitles">💬</button>
+        </div>
+        
+        <div id="subtitles"></div>
+        <div id="stats-overlay">
+            <h3>Atmosphere Composition</h3>
+            <ul>
+                <li id="stat-nitrogen" class="nitrogen">
+                    <span class="gas-name">Nitrogen</span>
+                    <span class="percent">78.08%</span>
+                </li>
+                <li id="stat-oxygen" class="oxygen">
+                    <span class="gas-name">Oxygen</span>
+                    <span class="percent">20.95%</span>
+                </li>
+                <li id="stat-n2o2" class="trace">
+                    <span class="gas-name">N₂ + O₂</span>
+                    <span class="percent">99.03%</span>
+                </li>
+                <li id="stat-argon" class="argon">
+                    <span class="gas-name">Argon</span>
+                    <span class="percent">0.93%</span>
+                </li>
+                <li id="stat-trace" class="trace">
+                    <span class="gas-name">Trace gases</span>
+                    <span class="percent">0.04%</span>
+                </li>
+            </ul>
+        </div>
+
+        <div id="greenhouse-gas-info">
+            <h3>Major Greenhouse Gases</h3>
+            <ul>
+                <li>
+                    <strong>Carbon Dioxide (CO₂)</strong>
+                    The most significant greenhouse gas from human activities, primarily from burning fossil fuels.
+                </li>
+                <li>
+                    <strong>Methane (CH₄)</strong>
+                    About 25 times more potent than CO₂, emitted from agriculture, landfills, and energy production.
+                </li>
+                <li>
+                    <strong>Nitrous Oxide (N₂O)</strong>
+                    Nearly 300 times more potent than CO₂, mainly from agriculture and fossil fuel combustion.
+                </li>
+                <li>
+                    <strong>Ozone (O₃)</strong>
+                    A greenhouse gas in the troposphere, but protective in the stratosphere.
+                </li>
+                <li>
+                    <strong>Water Vapor (H₂O)</strong>
+                    The most abundant greenhouse gas, amplifying warming caused by other gases.
+                </li>
+                <li>
+                    <strong>Fluorinated Gases</strong>
+                    Including CFCs, extremely potent but less abundant greenhouse gases.
+                </li>
+            </ul>
+        </div>
+
+        <div id="ozone-info">
+            <p><strong>The Ozone Layer</strong><br>
+            Protects Earth from harmful UV radiation by absorbing it in the stratosphere.</p>
+        </div>
+
+        <div id="vertical-distribution-info">
+            <h3>Atmospheric Mass Distribution</h3>
+            <p><strong>50%</strong> of atmospheric mass is below <strong>6 km</strong></p>
+            <p><strong>75%</strong> of atmospheric mass is below <strong>10 km</strong></p>
+            <p><strong>99%</strong> of atmospheric mass is below <strong>35 km</strong></p>
+            <p>This shows how thin our atmosphere really is compared to Earth's size.</p>
+        </div>
+
+        <div id="temp-gradient-overlay">
+            <div id="temp-gradient-title">Temperature</div>
+            <div class="label-top">Hot</div>
+            <div id="temp-gradient-bar"></div>
+            <div class="label-bottom">Cold</div>
+        </div>
+    </div>
+
+    <script type="module" src="/test/main.js"></script>
+</body>
+</html>
