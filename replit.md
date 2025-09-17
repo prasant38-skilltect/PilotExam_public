@@ -83,6 +83,17 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+**September 17, 2025:**
+- **NEW FEATURE**: Added "Pilot Aptitude Test" navigation link and comprehensive test page at `/air-speed-indicator`
+- Created interactive pilot aptitude testing interface with 4 test categories:
+  - Short Term Memory Test: Memory and recall sequences for aviation communications
+  - Spatial Awareness Test: Mental rotation and spatial relationships for navigation
+  - Multitasking Test: Multiple system monitoring and simultaneous task management
+  - Advanced Flight Control Test: Precision control abilities and flight dynamics response
+- Implemented Google authentication integration using existing Replit Auth
+- Fixed post-authentication redirect flow to properly return users to their intended destination
+- Enhanced authentication flow with localStorage-based redirect management
+
 **January 25, 2025:**
 - **MAJOR MIGRATION**: Migrated entire application from Vite + React to Next.js with SSR
 - Improved SEO capabilities with server-side rendering and proper meta tags

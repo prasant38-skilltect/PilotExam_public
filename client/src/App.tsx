@@ -33,6 +33,7 @@ const ManageProfile = lazy(() => import("@/pages/ManageProfile"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const Progress = lazy(() => import("@/pages/Progress"));
+const AirSpeedIndicator = lazy(() => import("@/pages/AirSpeedIndicator"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Loading component for lazy loaded pages
@@ -144,6 +145,13 @@ function Router() {
           <Route path="/progress">
             <Suspense fallback={<PageLoader />}>
               <Progress />
+            </Suspense>
+          </Route>
+
+          {/* Pilot Aptitude Test Route */}
+          <Route path="/air-speed-indicator">
+            <Suspense fallback={<PageLoader />}>
+              <AirSpeedIndicator />
             </Suspense>
           </Route>
           {/* <Route path="/question-banks">
