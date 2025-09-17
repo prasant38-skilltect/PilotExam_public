@@ -222,6 +222,12 @@ export default function AirSpeedIndicator() {
 
   const currentTest = tests.find(test => test.id === activeTest)!;
 
+  const handleStartTest = () => {
+    // Open the test in a new tab
+    const testUrl = `/test/${activeTest}`;
+    window.open(testUrl, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="flex">
@@ -269,6 +275,7 @@ export default function AirSpeedIndicator() {
                     size="lg" 
                     className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg font-semibold"
                     data-testid="start-test-button"
+                    onClick={handleStartTest}
                   >
                     START TEST
                   </Button>
