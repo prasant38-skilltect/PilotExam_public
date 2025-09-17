@@ -8,6 +8,8 @@ import { Header } from "@/components/Header";
 import { WhatsAppChat } from "@/components/WhatsAppChat";
 import { useAuth } from "@/hooks/useAuth";
 import { SEOHead, StructuredData } from "@/components/SEOHead";
+import { useLocation } from "wouter";
+import { useEffect } from "react";
 
 // Pages - Lazy loaded for optimal performance
 import { lazy, Suspense } from 'react';
@@ -45,6 +47,18 @@ const PageLoader = () => (
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+
+  // Handle post-authentication redirect
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      const redirectPath = localStorage.getItem("redirectAfterLogin");
+      if (redirectPath && redirectPath !== "/") {
+        localStorage.removeItem("redirectAfterLogin");
+        setLocation(redirectPath);
+      }
+    }
+  }, [isAuthenticated, isLoading, setLocation]);
 
   return (
     <div className="min-h-screen flex flex-col">

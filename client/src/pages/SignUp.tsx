@@ -74,8 +74,16 @@ export default function SignUp() {
   };
 
   const handleGoogleSignUp = () => {
-    // Handle Google sign up
-    console.log("Google sign up");
+    // Store the current path to come back to after authentication
+    const currentPath = window.location.pathname + window.location.search;
+    if (currentPath !== "/sign-up" && currentPath !== "/") {
+      localStorage.setItem("redirectAfterLogin", currentPath);
+    } else {
+      localStorage.setItem("redirectAfterLogin", "/");
+    }
+    
+    // Redirect to Replit Auth login which supports Google authentication
+    window.location.href = "/api/login";
   };
 
   return (
