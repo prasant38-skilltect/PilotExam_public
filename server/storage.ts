@@ -735,7 +735,7 @@ export class DatabaseStorage implements IStorage {
 
   async getCategoryHierarchy() {
     // Get all categories
-    const categoriesData = await this.db
+    const categoriesData = await db
       .select({
         id: categories.id,
         name: categories.name,
@@ -745,7 +745,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(categories.name));
 
     // Get all topics with their quiz information
-    const topicsData = await this.db
+    const topicsData = await db
       .select({
         id: topics.id,
         categoryId: topics.categoryId,
