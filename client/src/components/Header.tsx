@@ -58,117 +58,109 @@ export function Header() {
   return (
     <header className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center flex-shrink-0">
-            <div className="flex items-center">
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
-                {/* <Plane
-                  className="inline-block mr-1 sm:mr-2 text-blue-700"
-                  size={18}
-                /> */}
-                Eatpl.in
-              </h1>
+        <div className="flex items-center h-16">
+          {/* Left side: Logo and Navigation Menu */}
+          <div className="flex items-center flex-1">
+            {/* Logo */}
+            <Link href="/" className="flex items-center flex-shrink-0 mr-4 lg:mr-8">
+              <div className="flex items-center">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
+                  {/* <Plane
+                    className="inline-block mr-1 sm:mr-2 text-blue-700"
+                    size={18}
+                  /> */}
+                  Eatpl.in
+                </h1>
+              </div>
+            </Link>
+
+            {/* Desktop Navigation Menu */}
+            <nav className="hidden lg:flex space-x-1 xl:space-x-3">
+              {navigationItems.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  <span
+                    className={cn(
+                      "text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors px-2 xl:px-3 py-2 rounded-md text-xs xl:text-sm font-medium whitespace-nowrap",
+                      location === item.href &&
+                        "text-purple-600 dark:text-purple-400",
+                    )}
+                    data-testid={`nav-${item.href.slice(1)}`}
+                  >
+                    {item.label}
+                  </span>
+                </Link>
+              ))}
+            </nav>
+
+            {/* Mobile Menu Button */}
+            <div className="lg:hidden ml-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2"
+              >
+                {isMobileMenuOpen ? (
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                )}
+              </Button>
             </div>
-          </Link>
-
-          {/* Desktop Navigation Menu */}
-          <nav className="hidden lg:flex space-x-1 xl:space-x-3">
-            {navigationItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <span
-                  className={cn(
-                    "text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors px-2 xl:px-3 py-2 rounded-md text-xs xl:text-sm font-medium whitespace-nowrap",
-                    location === item.href &&
-                      "text-purple-600 dark:text-purple-400",
-                  )}
-                  data-testid={`nav-${item.href.slice(1)}`}
-                >
-                  {item.label}
-                </span>
-              </Link>
-            ))}
-          </nav>
-
-          {/* Mobile Menu Button */}
-          <div className="lg:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2"
-            >
-              {isMobileMenuOpen ? (
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              )}
-            </Button>
           </div>
 
-          {/* Desktop Theme Toggle and Auth */}
-          <div className="hidden lg:flex items-center space-x-2 xl:space-x-4 ml-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={toggleTheme}
-              data-testid="button-theme-toggle"
-              className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
-            >
-              {theme === "dark" ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </Button>
-
+          {/* Right side: Auth section only */}
+          <div className="flex items-center space-x-2 xl:space-x-4 flex-shrink-0">
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-800 min-w-0"
                     data-testid="button-profile-dropdown"
                   >
                     {(user as any)?.profileImageUrl ? (
                       <img
                         src={(user as any).profileImageUrl}
                         alt="Profile"
-                        className="w-8 h-8 rounded-full object-cover"
+                        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                         data-testid="img-profile"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-blue-700 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-blue-700 flex items-center justify-center flex-shrink-0">
                         <User className="h-4 w-4 text-white" />
                       </div>
                     )}
                     <span
-                      className="text-sm text-gray-700 dark:text-gray-300"
+                      className="text-sm text-gray-700 dark:text-gray-300 truncate max-w-[120px] sm:max-w-[150px] lg:max-w-[200px]"
                       data-testid="text-username"
+                      title={(user as any)?.firstName && (user as any)?.lastName
+                        ? `${(user as any).firstName} ${(user as any).lastName}`
+                        : (user as any)?.firstName || (user as any)?.email}
                     >
                       {(user as any)?.firstName && (user as any)?.lastName
                         ? `${(user as any).firstName} ${(user as any).lastName}`
@@ -177,6 +169,23 @@ export function Header() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={toggleTheme}
+                    data-testid="menu-theme-toggle"
+                  >
+                    {theme === "dark" ? (
+                      <>
+                        <Sun className="mr-2 h-4 w-4" />
+                        Switch to Light
+                      </>
+                    ) : (
+                      <>
+                        <Moon className="mr-2 h-4 w-4" />
+                        Switch to Dark
+                      </>
+                    )}
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     className="cursor-pointer"
                     onClick={() => setLocation("/manage-profile")}
@@ -198,7 +207,7 @@ export function Header() {
                   <DropdownMenuItem
                       className="cursor-pointer"
                       onClick={() => setLocation("/progress")}
-                      data-testid="menu-admin"
+                      data-testid="menu-progress"
                     >
                       <Shield className="mr-2 h-4 w-4" />
                       Progress
@@ -226,7 +235,7 @@ export function Header() {
             ) : (
               <Button
                 onClick={handleLogin}
-                className="bg-gradient-to-r from-purple-600 to-blue-700 text-white hover:shadow-lg transition-all duration-300 font-medium"
+                className="bg-gradient-to-r from-purple-600 to-blue-700 text-white hover:shadow-lg transition-all duration-300 font-medium flex-shrink-0"
                 data-testid="button-signin"
               >
                 Sign In
