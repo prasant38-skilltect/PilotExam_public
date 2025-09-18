@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-type TestType = 'short-term-memory' | 'spatial-awareness' | 'multitasking' | 'advanced-flight-control';
+type TestType = 'short-term-memory' | 'spatial-awareness' | 'multitasking' | 'advanced-flight-control' | 'earth-atmosphere';
 
 interface TestConfig {
   id: TestType;
@@ -13,11 +13,11 @@ interface TestConfig {
 }
 
 export default function AirSpeedIndicator() {
-  const [activeTest, setActiveTest] = useState<TestType>('short-term-memory');
+  const [activeTest, setActiveTest] = useState<TestType>('earth-atmosphere');
 
   const tests: TestConfig[] = [
     {
-      id: 'short-term-memory',
+      id: 'earth-atmosphere',
       title: 'Short Term Memory Test',
       description: 'This test evaluates your ability to quickly memorize and recall sequences - critical for remembering instructions, radio communications, and checklists.',
       content: (

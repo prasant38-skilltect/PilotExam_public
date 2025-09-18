@@ -182,6 +182,13 @@ function Router() {
               <Results />
             </Suspense>
           </Route> */} 
+          <Route path="/test/*">
+            {() => {
+              window.location.replace("/test/earth-atmosphere/index.html");
+              return null;
+            }}
+          </Route>
+
           <Route path="*">
             <Suspense fallback={<PageLoader />}>
               <DynamicPage />
