@@ -803,6 +803,94 @@ export class DatabaseStorage implements IStorage {
 
     return hierarchy;
   }
+
+  async createQuestion(questionData: any): Promise<any> {
+    return await this.db.transaction(async (tx) => {
+      // Create question
+      const [newQuestion] = await tx
+        .insert(questions)
+        .values({
+          questionId: questionData.questionId || Date.now(), // Generate questionId if not provided
+          text: questionData.question_text,
+          explanation: questionData.explanation_text || null,
+          isActive: true
+        })
+        .returning();
+
+      // Add options if provided
+      if (questionData.options && questionData.options.length > 0) {
+        const optionsToInsert = questionData.options.map((option: any, index: number) => ({
+          questionId: newQuestion.id,
+          optionText: option.text,
+          isCorrect: option.isCorrect || false,
+          optionOrder: index
+        }));
+
+        await tx
+          .insert(questionOptions)
+          .values(optionsToInsert);
+      }
+
+      // Link question to quiz if quizId provided
+      if (questionData.quizId) {
+        await tx
+          .insert(quizQuestions)
+          .values({
+            quizId: questionData.quizId,
+            questionId: newQuestion.id,
+            position: questionData.position || 999
+          });
+      }
+
+      return newQuestion;
+    });
+  }
+
+  async softDeleteQuestion(questionId: number): Promise<any> {
+    const [updatedQuestion] = await this.db
+      .update(questions)
+      .set({ isActive: false })
+      .where(eq(questions.id, questionId))
+      .returning();
+    
+    return updatedQuestion;
+  }
+
+  async getActiveQuestions(quizId?: number): Promise<any[]> {
+    let query = this.db
+      .select({
+        id: questions.id,
+        questionId: questions.questionId,
+        text: questions.text,
+        explanation: questions.explanation,
+        isActive: questions.isActive,
+        options: sql`
+          COALESCE(
+            json_agg(
+              json_build_object(
+                'id', ${questionOptions.id},
+                'text', ${questionOptions.optionText},
+                'isCorrect', ${questionOptions.isCorrect},
+                'order', ${questionOptions.optionOrder}
+              ) ORDER BY ${questionOptions.optionOrder}
+            ) FILTER (WHERE ${questionOptions.id} IS NOT NULL),
+            '[]'::json
+          )
+        `.as('options')
+      })
+      .from(questions)
+      .leftJoin(questionOptions, eq(questions.id, questionOptions.questionId))
+      .where(eq(questions.isActive, true))
+      .groupBy(questions.id);
+
+    if (quizId) {
+      query = query
+        .innerJoin(quizQuestions, eq(questions.id, quizQuestions.questionId))
+        .where(and(eq(questions.isActive, true), eq(quizQuestions.quizId, quizId)));
+    }
+
+    return await query;
+  }
 }
 
 export const storage = new DatabaseStorage();

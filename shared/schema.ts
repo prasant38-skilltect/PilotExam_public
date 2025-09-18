@@ -74,6 +74,7 @@ export const questions = pgTable("questions", {
   explanationImage: varchar("explanation_image", { length: 500 }),
   tooltip: text("tooltip"),
   featuredImage: varchar("featured_image", { length: 500 }),
+  isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: false })
     .defaultNow()
     .notNull(),

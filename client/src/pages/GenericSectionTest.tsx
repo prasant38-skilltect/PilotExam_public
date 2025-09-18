@@ -31,6 +31,8 @@ import {
   Edit,
   Save,
   X,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -78,6 +80,13 @@ export default function GenericSectionTest({
   });
   const [currentTestSession, setCurrentTestSession] = useState<any>(null);
   const [resumedSession, setResumedSession] = useState<any>(null);
+  const [showAddQuestionForm, setShowAddQuestionForm] = useState(false);
+  const [newQuestionData, setNewQuestionData] = useState({
+    question_text: '',
+    explanation_text: '',
+    options: [{ text: '', isCorrect: false }],
+    quizId: null
+  });
   const { toast } = useToast();
   const { user, isAdmin, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
@@ -103,6 +112,57 @@ export default function GenericSectionTest({
       toast({
         title: "Error",
         description: error.message || "Failed to update question",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutation for creating new questions (admin only)
+  const createQuestionMutation = useMutation({
+    mutationFn: async (questionData: any) => {
+      await apiRequest('POST', '/api/admin/questions', questionData);
+    },
+    onSuccess: () => {
+      setShowAddQuestionForm(false);
+      setNewQuestionData({
+        question_text: '',
+        explanation_text: '',
+        options: [{ text: '', isCorrect: false }],
+        quizId: null
+      });
+      toast({
+        title: "Success",
+        description: "Question added successfully",
+      });
+      // Refresh the questions data
+      queryClient.invalidateQueries({ queryKey: [`/api/quiz/questions`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add question",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutation for soft deleting questions (admin only)
+  const deleteQuestionMutation = useMutation({
+    mutationFn: async (questionId: number) => {
+      await apiRequest('DELETE', `/api/admin/questions/${questionId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Question deleted successfully",
+      });
+      // Refresh the questions data
+      queryClient.invalidateQueries({ queryKey: [`/api/quiz/questions`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete question",
         variant: "destructive",
       });
     }
@@ -500,6 +560,75 @@ export default function GenericSectionTest({
     });
   };
 
+  // Helper functions for add question form
+  const addNewOption = () => {
+    setNewQuestionData(prev => ({
+      ...prev,
+      options: [...prev.options, { text: '', isCorrect: false }]
+    }));
+  };
+
+  const removeOption = (index: number) => {
+    if (newQuestionData.options.length > 1) {
+      setNewQuestionData(prev => ({
+        ...prev,
+        options: prev.options.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  const updateOption = (index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
+    setNewQuestionData(prev => ({
+      ...prev,
+      options: prev.options.map((opt, i) => 
+        i === index ? { ...opt, [field]: value } : opt
+      )
+    }));
+  };
+
+  const handleSubmitNewQuestion = () => {
+    if (!newQuestionData.question_text.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter question text",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const validOptions = newQuestionData.options.filter(opt => opt.text.trim());
+    if (validOptions.length === 0) {
+      toast({
+        title: "Error", 
+        description: "Please add at least one option",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const hasCorrectAnswer = validOptions.some(opt => opt.isCorrect);
+    if (!hasCorrectAnswer) {
+      toast({
+        title: "Error",
+        description: "Please mark at least one option as correct",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createQuestionMutation.mutate({
+      ...newQuestionData,
+      options: validOptions,
+      quizId: quizData?.id || null
+    });
+  };
+
+  const handleDeleteQuestion = (questionId: number) => {
+    if (window.confirm("Are you sure you want to delete this question? This action cannot be undone.")) {
+      deleteQuestionMutation.mutate(questionId);
+    }
+  };
+
   const handleAddComment = () => {
     if (!currentQuestionForComments?.id || !newComment.trim()) {
       toast({
@@ -746,6 +875,17 @@ export default function GenericSectionTest({
             <h1 className="text-lg sm:text-xl font-bold text-white">{sectionName}</h1>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4 text-white">
+            {isAdmin && (
+              <Button
+                onClick={() => setShowAddQuestionForm(true)}
+                size="sm"
+                className="bg-green-600 hover:bg-green-700"
+                data-testid="button-add-question"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Question
+              </Button>
+            )}
             <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
             <span className="font-mono text-base sm:text-lg">{formatTime(elapsedTime)}</span>
           </div>
@@ -866,14 +1006,27 @@ export default function GenericSectionTest({
                                   </Button>
                                 </>
                               ) : (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => startEditing(currentQuestion)}
-                                >
-                                  <Edit className="h-4 w-4 mr-1 sm:mr-2" />
-                                  <span className="hidden sm:inline">Edit</span>
-                                </Button>
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => startEditing(currentQuestion)}
+                                  >
+                                    <Edit className="h-4 w-4 mr-1 sm:mr-2" />
+                                    <span className="hidden sm:inline">Edit</span>
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDeleteQuestion(currentQuestion.id)}
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    disabled={deleteQuestionMutation.isPending}
+                                    data-testid="button-delete-question"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-1 sm:mr-2" />
+                                    <span className="hidden sm:inline">Delete</span>
+                                  </Button>
+                                </>
                               )}
                             </>
                           )}
@@ -1210,6 +1363,98 @@ export default function GenericSectionTest({
                   {reportIssueMutation.isPending
                     ? "Submitting..."
                     : "Submit Report"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Question Dialog */}
+        <Dialog open={showAddQuestionForm} onOpenChange={setShowAddQuestionForm}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Add New Question</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="new-question-text">Question Text</Label>
+                <Textarea
+                  id="new-question-text"
+                  value={newQuestionData.question_text}
+                  onChange={(e) => setNewQuestionData(prev => ({...prev, question_text: e.target.value}))}
+                  rows={3}
+                  placeholder="Enter the question text..."
+                />
+              </div>
+
+              <div>
+                <Label>Options</Label>
+                <div className="space-y-2">
+                  {newQuestionData.options.map((option, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        value={option.text}
+                        onChange={(e) => updateOption(index, 'text', e.target.value)}
+                        placeholder={`Option ${index + 1}`}
+                        className="flex-1"
+                      />
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={option.isCorrect}
+                          onChange={(e) => updateOption(index, 'isCorrect', e.target.checked)}
+                          className="rounded"
+                        />
+                        <span className="text-sm text-gray-600">Correct</span>
+                      </div>
+                      {newQuestionData.options.length > 1 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeOption(index)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addNewOption}
+                  className="mt-2"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Option
+                </Button>
+              </div>
+
+              <div>
+                <Label htmlFor="new-explanation">Explanation (Optional)</Label>
+                <Textarea
+                  id="new-explanation"
+                  value={newQuestionData.explanation_text}
+                  onChange={(e) => setNewQuestionData(prev => ({...prev, explanation_text: e.target.value}))}
+                  rows={3}
+                  placeholder="Enter explanation for the correct answer..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddQuestionForm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSubmitNewQuestion}
+                  disabled={createQuestionMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {createQuestionMutation.isPending ? "Adding..." : "Add Question"}
                 </Button>
               </div>
             </div>

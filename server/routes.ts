@@ -549,6 +549,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create new question
+  app.post('/api/admin/questions', isAdmin, async (req: any, res) => {
+    try {
+      const questionData = req.body;
+      const newQuestion = await storage.createQuestion(questionData);
+      res.json(newQuestion);
+    } catch (error) {
+      console.error("Error creating question:", error);
+      res.status(500).json({ message: "Failed to create question" });
+    }
+  });
+
+  // Soft delete question
+  app.delete('/api/admin/questions/:id', isAdmin, async (req: any, res) => {
+    try {
+      const questionId = parseInt(req.params.id);
+      const deletedQuestion = await storage.softDeleteQuestion(questionId);
+      res.json({ message: "Question deleted successfully", question: deletedQuestion });
+    } catch (error) {
+      console.error("Error deleting question:", error);
+      res.status(500).json({ message: "Failed to delete question" });
+    }
+  });
+
   // Test session routes
   app.post('/api/test-sessions', isAuthenticated, async (req: any, res) => {
     try {
