@@ -743,6 +743,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(categories)
       .orderBy(asc(categories.name));
+      console.log("categoriesData...", categoriesData);
 
     // Get all topics with their quiz information
     const topicsData = await db
@@ -761,12 +762,13 @@ export class DatabaseStorage implements IStorage {
       .from(topics)
       .leftJoin(quizzes, eq(topics.quizId, quizzes.quizId))
       .orderBy(asc(topics.categoryName), asc(topics.text));
+      console.log("topicsData...", topicsData);
 
     // Build hierarchy structure
     const hierarchy = categoriesData.map(category => {
       // Get top-level topics for this category (no parent)
       const categoryTopics = topicsData.filter(
-        topic => topic.categoryId === category.id && topic.parentId === null
+        topic => topic.categoryId === category.id && topic.parentId === -1
       );
 
       const buildSubtopics = (parentId: number): any[] => {

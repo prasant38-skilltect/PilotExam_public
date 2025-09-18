@@ -428,9 +428,9 @@ export default function Admin() {
                               </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                              <div className="text-xs text-gray-500 mb-2">
+                              {/* <div className="text-xs text-gray-500 mb-2">
                                 Topics: {category.topics?.length || 0} | Debug: {JSON.stringify(category.topics?.slice(0, 2))}
-                              </div>
+                              </div> */}
                               {category.topics && category.topics.length > 0 ? category.topics.map((topic: any) => (
                                 <div key={topic.id} className="ml-4 border-l-2 border-gray-200 dark:border-gray-700 pl-4">
                                   <div className="flex items-center justify-between">
@@ -444,11 +444,11 @@ export default function Admin() {
                                             Quiz ID: {topic.quizId}
                                           </Badge>
                                           <button
-                                            onClick={() => window.open(`/quiz/${topic.quizSlug}`, '_blank', 'noopener,noreferrer')}
+                                            onClick={() => window.open(`/${topic.slug}`, '_blank', 'noopener,noreferrer')}
                                             className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm flex items-center gap-1 hover:underline"
                                             data-testid={`quiz-link-${topic.quizId}`}
                                           >
-                                            {topic.quizTitle || topic.quizSlug}
+                                            {topic.quizTitle || topic.slug}
                                             <ExternalLink className="h-3 w-3" />
                                           </button>
                                         </div>
@@ -472,9 +472,9 @@ export default function Admin() {
                                                     Quiz ID: {subtopic.quizId}
                                                   </Badge>
                                                   <button
-                                                    onClick={() => window.open(`/quiz/${subtopic.quizSlug}`, '_blank', 'noopener,noreferrer')}
+                                                    onClick={() => window.open(`/${subtopic.slug}`, '_blank', 'noopener,noreferrer')}
                                                     className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm flex items-center gap-1 hover:underline"
-                                                    data-testid={`quiz-link-${subtopic.quizId}`}
+                                                    data-testid={`quiz-link-${subtopic.slug}`}
                                                   >
                                                     {subtopic.quizTitle || subtopic.quizSlug}
                                                     <ExternalLink className="h-3 w-3" />
@@ -493,14 +493,14 @@ export default function Admin() {
                                                   {deepSubtopic.quizId && deepSubtopic.quizSlug && (
                                                     <div className="flex items-center gap-1">
                                                       <Badge variant="outline" className="text-xs">
-                                                        Quiz ID: {deepSubtopic.quizId}
+                                                        Quiz ID : {deepSubtopic.quizId} 
                                                       </Badge>
                                                       <button
-                                                        onClick={() => window.open(`/quiz/${deepSubtopic.quizSlug}`, '_blank', 'noopener,noreferrer')}
+                                                        onClick={() => window.open(`/${deepSubtopic.slug}`, '_blank', 'noopener,noreferrer')}
                                                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 hover:underline"
                                                         data-testid={`quiz-link-${deepSubtopic.quizId}`}
                                                       >
-                                                        {deepSubtopic.quizTitle || deepSubtopic.quizSlug}
+                                                        {deepSubtopic.quizTitle || deepSubtopic.slug}
                                                         <ExternalLink className="h-2 w-2" />
                                                       </button>
                                                     </div>
