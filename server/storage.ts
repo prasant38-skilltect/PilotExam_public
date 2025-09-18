@@ -805,12 +805,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createQuestion(questionData: any): Promise<any> {
-    return await this.db.transaction(async (tx) => {
+    return await db.transaction(async (tx) => {
       // Create question
       const [newQuestion] = await tx
         .insert(questions)
         .values({
-          questionId: questionData.questionId || Date.now(), // Generate questionId if not provided
+          questionId: questionData.questionId, // Generate questionId if not provided
           text: questionData.question_text,
           explanation: questionData.explanation_text || null,
           isActive: true
@@ -847,7 +847,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async softDeleteQuestion(questionId: number): Promise<any> {
-    const [updatedQuestion] = await this.db
+    const [updatedQuestion] = await db
       .update(questions)
       .set({ isActive: false })
       .where(eq(questions.id, questionId))
@@ -857,7 +857,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getActiveQuestions(quizId?: number): Promise<any[]> {
-    let query = this.db
+    let query = db
       .select({
         id: questions.id,
         questionId: questions.questionId,

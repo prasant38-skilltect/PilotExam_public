@@ -619,7 +619,7 @@ export default function GenericSectionTest({
     createQuestionMutation.mutate({
       ...newQuestionData,
       options: validOptions,
-      quizId: quizData?.id || null
+      quizId: quizData[0]?.quiz_id || null
     });
   };
 

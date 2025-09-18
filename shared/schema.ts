@@ -68,7 +68,7 @@ export const quizzes = pgTable(
 
 export const questions = pgTable("questions", {
   id: serial("id").primaryKey(), // SERIAL PRIMARY KEY
-  questionId: integer("question_id").notNull(),
+  questionId: integer("question_id"),
   text: text("text").notNull(),
   explanation: text("explanation"),
   explanationImage: varchar("explanation_image", { length: 500 }),
