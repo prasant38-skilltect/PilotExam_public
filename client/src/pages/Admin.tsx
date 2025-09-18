@@ -415,6 +415,8 @@ export default function Admin() {
                     ) : hierarchy.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
                         No categories found.
+                        <br />
+                        <small className="text-xs">Debug: {JSON.stringify(hierarchyData)}</small>
                       </div>
                     ) : (
                       <div className="space-y-6">
@@ -426,7 +428,10 @@ export default function Admin() {
                               </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                              {category.topics.map((topic: any) => (
+                              <div className="text-xs text-gray-500 mb-2">
+                                Topics: {category.topics?.length || 0} | Debug: {JSON.stringify(category.topics?.slice(0, 2))}
+                              </div>
+                              {category.topics && category.topics.length > 0 ? category.topics.map((topic: any) => (
                                 <div key={topic.id} className="ml-4 border-l-2 border-gray-200 dark:border-gray-700 pl-4">
                                   <div className="flex items-center justify-between">
                                     <div className="flex-1">
@@ -509,7 +514,11 @@ export default function Admin() {
                                     </div>
                                   )}
                                 </div>
-                              ))}
+                              )) : (
+                                <div className="text-center py-4 text-gray-500 text-sm">
+                                  No topics found for this category.
+                                </div>
+                              )}
                             </CardContent>
                           </Card>
                         ))}
