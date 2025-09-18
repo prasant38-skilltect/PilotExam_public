@@ -194,6 +194,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get category hierarchy for admin
+  app.get('/api/admin/category-hierarchy', isAdmin, async (req: any, res) => {
+    try {
+      const hierarchy = await storage.getCategoryHierarchy();
+      res.json(hierarchy);
+    } catch (error) {
+      console.error("Error fetching category hierarchy:", error);
+      res.status(500).json({ message: "Failed to fetch category hierarchy" });
+    }
+  });
+
   // Issue Report routes
   app.post('/api/issue-reports', isAuthenticated, async (req: any, res) => {
     try {

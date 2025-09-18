@@ -50,7 +50,7 @@ import {
 } from "../shared/schema";
 import bcrypt from "bcryptjs";
 import { db } from "./db";
-import { eq, and, desc, avg, max, count, ne, asc, sql } from "drizzle-orm";
+import { eq, and, desc, avg, max, count, ne, asc, sql, or, like, isNull } from "drizzle-orm";
 import { text } from "stream/consumers";
 
 export interface IStorage {
@@ -731,6 +731,75 @@ export class DatabaseStorage implements IStorage {
       }
       return updatedQuestion;
     });
+  }
+
+  async getCategoryHierarchy() {
+    // Get all categories
+    const categoriesData = await this.db
+      .select({
+        id: categories.id,
+        name: categories.name,
+        text: categories.text
+      })
+      .from(categories)
+      .orderBy(asc(categories.name));
+
+    // Get all topics with their quiz information
+    const topicsData = await this.db
+      .select({
+        id: topics.id,
+        categoryId: topics.categoryId,
+        categoryName: topics.categoryName,
+        parentId: topics.parentId,
+        parentName: topics.parentName,
+        slug: topics.slug,
+        text: topics.text,
+        quizId: topics.quizId,
+        quizSlug: quizzes.slug,
+        quizTitle: quizzes.title
+      })
+      .from(topics)
+      .leftJoin(quizzes, eq(topics.quizId, quizzes.quizId))
+      .orderBy(asc(topics.categoryName), asc(topics.text));
+
+    // Build hierarchy structure
+    const hierarchy = categoriesData.map(category => {
+      // Get top-level topics for this category (no parent)
+      const categoryTopics = topicsData.filter(
+        topic => topic.categoryId === category.id && topic.parentId === null
+      );
+
+      const buildSubtopics = (parentId: number): any[] => {
+        return topicsData
+          .filter(topic => topic.parentId === parentId)
+          .map(subtopic => ({
+            id: subtopic.id,
+            text: subtopic.text,
+            slug: subtopic.slug,
+            quizId: subtopic.quizId,
+            quizSlug: subtopic.quizSlug,
+            quizTitle: subtopic.quizTitle,
+            subtopics: buildSubtopics(subtopic.id)
+          }));
+      };
+
+      return {
+        id: category.id,
+        name: category.name,
+        text: category.text,
+        topics: categoryTopics.map(topic => ({
+          id: topic.id,
+          text: topic.text,
+          slug: topic.slug,
+          quizId: topic.quizId,
+          quizSlug: topic.quizSlug,
+          quizTitle: topic.quizTitle,
+          subtopics: buildSubtopics(topic.id)
+        }))
+      };
+    });
+
+    return hierarchy;
   }
 }
 

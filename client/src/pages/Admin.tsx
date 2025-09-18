@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "wouter";
-import { Home, Edit, Eye, Calendar, User, MessageSquare, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, Edit, Eye, Calendar, User, MessageSquare, Search, ChevronLeft, ChevronRight, TreePine, ExternalLink } from "lucide-react";
 
 export default function Admin() {
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
@@ -82,6 +82,21 @@ export default function Admin() {
   const issueReportsTotal = issueReportsData?.total || 0;
   const questions = questionsData?.questions || [];
   const questionsTotal = questionsData?.total || 0;
+
+  // Fetch category hierarchy
+  const { data: hierarchyData, isLoading: loadingHierarchy } = useQuery({
+    queryKey: ['/api/admin/category-hierarchy'],
+    queryFn: async ({ queryKey }) => {
+      const res = await apiRequest('GET', '/api/admin/category-hierarchy');
+      // If apiRequest returns a Response, parse it here
+      if (res instanceof Response) {
+        return await res.json();
+      }
+      return res;
+    },
+  });
+
+  const hierarchy = hierarchyData || [];
 
   // Mutation for updating questions
   const updateQuestionMutation = useMutation({
@@ -160,7 +175,7 @@ export default function Admin() {
         <Card>
           <CardContent className="p-6">
             <Tabs defaultValue="reports" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="reports" className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
                   Issue Reports
@@ -168,6 +183,10 @@ export default function Admin() {
                 <TabsTrigger value="questions" className="flex items-center gap-2">
                   <Edit className="h-4 w-4" />
                   Edit Questions
+                </TabsTrigger>
+                <TabsTrigger value="hierarchy" className="flex items-center gap-2">
+                  <TreePine className="h-4 w-4" />
+                  Category Hierarchy
                 </TabsTrigger>
               </TabsList>
 
@@ -375,6 +394,125 @@ export default function Admin() {
                             </Button>
                           </div>
                         )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Category Hierarchy Tab */}
+              <TabsContent value="hierarchy" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TreePine className="h-5 w-5" />
+                      Category Hierarchy
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {loadingHierarchy ? (
+                      <div className="text-center py-8">Loading hierarchy...</div>
+                    ) : hierarchy.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        No categories found.
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {hierarchy.map((category: any) => (
+                          <Card key={category.id} className="border-l-4 border-l-blue-500">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                                {category.name} - {category.text}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              {category.topics.map((topic: any) => (
+                                <div key={topic.id} className="ml-4 border-l-2 border-gray-200 dark:border-gray-700 pl-4">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                      <h4 className="font-medium text-gray-800 dark:text-gray-200">
+                                        {topic.text}
+                                      </h4>
+                                      {topic.quizId && topic.quizSlug && (
+                                        <div className="flex items-center gap-2 mt-1">
+                                          <Badge variant="outline" className="text-xs">
+                                            Quiz ID: {topic.quizId}
+                                          </Badge>
+                                          <button
+                                            onClick={() => window.open(`/quiz/${topic.quizSlug}`, '_blank', 'noopener,noreferrer')}
+                                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm flex items-center gap-1 hover:underline"
+                                            data-testid={`quiz-link-${topic.quizId}`}
+                                          >
+                                            {topic.quizTitle || topic.quizSlug}
+                                            <ExternalLink className="h-3 w-3" />
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Render subtopics recursively */}
+                                  {topic.subtopics && topic.subtopics.length > 0 && (
+                                    <div className="mt-3 space-y-2">
+                                      {topic.subtopics.map((subtopic: any) => (
+                                        <div key={subtopic.id} className="ml-4 border-l-2 border-gray-100 dark:border-gray-800 pl-4">
+                                          <div className="flex items-center justify-between">
+                                            <div className="flex-1">
+                                              <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                {subtopic.text}
+                                              </h5>
+                                              {subtopic.quizId && subtopic.quizSlug && (
+                                                <div className="flex items-center gap-2 mt-1">
+                                                  <Badge variant="outline" className="text-xs">
+                                                    Quiz ID: {subtopic.quizId}
+                                                  </Badge>
+                                                  <button
+                                                    onClick={() => window.open(`/quiz/${subtopic.quizSlug}`, '_blank', 'noopener,noreferrer')}
+                                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm flex items-center gap-1 hover:underline"
+                                                    data-testid={`quiz-link-${subtopic.quizId}`}
+                                                  >
+                                                    {subtopic.quizTitle || subtopic.quizSlug}
+                                                    <ExternalLink className="h-3 w-3" />
+                                                  </button>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Handle deeper nesting if needed */}
+                                          {subtopic.subtopics && subtopic.subtopics.length > 0 && (
+                                            <div className="mt-2 ml-4 space-y-1">
+                                              {subtopic.subtopics.map((deepSubtopic: any) => (
+                                                <div key={deepSubtopic.id} className="text-xs text-gray-600 dark:text-gray-400 flex items-center justify-between">
+                                                  <span>{deepSubtopic.text}</span>
+                                                  {deepSubtopic.quizId && deepSubtopic.quizSlug && (
+                                                    <div className="flex items-center gap-1">
+                                                      <Badge variant="outline" className="text-xs">
+                                                        Quiz ID: {deepSubtopic.quizId}
+                                                      </Badge>
+                                                      <button
+                                                        onClick={() => window.open(`/quiz/${deepSubtopic.quizSlug}`, '_blank', 'noopener,noreferrer')}
+                                                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 hover:underline"
+                                                        data-testid={`quiz-link-${deepSubtopic.quizId}`}
+                                                      >
+                                                        {deepSubtopic.quizTitle || deepSubtopic.quizSlug}
+                                                        <ExternalLink className="h-2 w-2" />
+                                                      </button>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </CardContent>
+                          </Card>
+                        ))}
                       </div>
                     )}
                   </CardContent>
