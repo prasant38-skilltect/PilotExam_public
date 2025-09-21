@@ -20,6 +20,11 @@ export default function Admin() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Comment moderation state
+  const [editingComment, setEditingComment] = useState<any>(null);
+  const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
+  const [adminResponse, setAdminResponse] = useState("");
 
   // Pagination and search state for issue reports
   const [reportsPage, setReportsPage] = useState(1);
@@ -97,6 +102,15 @@ export default function Admin() {
   const issueReportsTotal = issueReportsData?.total || 0;
   const questions = questionsData?.questions || [];
   const questionsTotal = questionsData?.total || 0;
+
+  // Fetch pending comments for moderation
+  const { data: pendingComments = [], isLoading: loadingComments } = useQuery({
+    queryKey: ['/api/admin/comments/pending'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/admin/comments/pending');
+      return res instanceof Response ? await res.json() : res;
+    },
+  });
 
   // Fetch category hierarchy
   const { data: hierarchyData, isLoading: loadingHierarchy } = useQuery({
@@ -206,6 +220,54 @@ export default function Admin() {
     }
   });
 
+  // Mutation for approving comments
+  const approveCommentMutation = useMutation({
+    mutationFn: async ({ commentId, adminResponse }: { commentId: number, adminResponse?: string }) => {
+      return await apiRequest('POST', `/api/admin/comments/${commentId}/approve`, { adminResponse });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/comments/pending'] });
+      setIsCommentDialogOpen(false);
+      setEditingComment(null);
+      setAdminResponse("");
+      toast({
+        title: "Success",
+        description: "Comment approved successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to approve comment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutation for rejecting comments
+  const rejectCommentMutation = useMutation({
+    mutationFn: async ({ commentId, adminResponse }: { commentId: number, adminResponse?: string }) => {
+      return await apiRequest('POST', `/api/admin/comments/${commentId}/reject`, { adminResponse });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/comments/pending'] });
+      setIsCommentDialogOpen(false);
+      setEditingComment(null);
+      setAdminResponse("");
+      toast({
+        title: "Success",
+        description: "Comment rejected successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to reject comment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleEditQuestion = (question: any) => {
     setEditingQuestion({
       id: question.id,
@@ -286,6 +348,29 @@ export default function Admin() {
     document.body.removeChild(link);
   };
 
+  // Helper functions for comment moderation
+  const handleCommentAction = (comment: any) => {
+    setEditingComment(comment);
+    setAdminResponse("");
+    setIsCommentDialogOpen(true);
+  };
+
+  const handleApproveComment = () => {
+    if (!editingComment) return;
+    approveCommentMutation.mutate({ 
+      commentId: editingComment.id, 
+      adminResponse: adminResponse.trim() || undefined 
+    });
+  };
+
+  const handleRejectComment = () => {
+    if (!editingComment) return;
+    rejectCommentMutation.mutate({ 
+      commentId: editingComment.id, 
+      adminResponse: adminResponse.trim() || undefined 
+    });
+  };
+
   const updateNewQuestionOption = (index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
     setNewQuestionData(prev => ({
       ...prev,
@@ -329,7 +414,7 @@ export default function Admin() {
         <Card>
           <CardContent className="p-6">
             <Tabs defaultValue="reports" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="reports" className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
                   Issue Reports
@@ -337,6 +422,10 @@ export default function Admin() {
                 <TabsTrigger value="questions" className="flex items-center gap-2">
                   <Edit className="h-4 w-4" />
                   Manage Questions
+                </TabsTrigger>
+                <TabsTrigger value="comments" className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Comments
                 </TabsTrigger>
                 <TabsTrigger value="hierarchy" className="flex items-center gap-2">
                   <TreePine className="h-4 w-4" />
@@ -579,6 +668,62 @@ export default function Admin() {
                             </Button>
                           </div>
                         )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Comments Moderation Tab */}
+              <TabsContent value="comments" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5" />
+                      Pending Comments ({pendingComments.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {loadingComments ? (
+                      <div className="text-center py-8">Loading pending comments...</div>
+                    ) : pendingComments.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        No pending comments for moderation.
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {pendingComments.map((comment: any) => (
+                          <Card key={comment.id} className="border-l-4 border-l-yellow-500">
+                            <CardContent className="p-4">
+                              <div className="flex justify-between items-start mb-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <User className="h-4 w-4 text-gray-500" />
+                                    <span className="font-medium">{comment.username}</span>
+                                    <Badge variant="outline" className="text-xs">
+                                      Question ID: {comment.questionId}
+                                    </Badge>
+                                  </div>
+                                  <div className="text-sm text-gray-600 mb-3">
+                                    {new Date(comment.createdAt).toLocaleString()}
+                                  </div>
+                                  <div className="bg-gray-50 p-3 rounded-md mb-3">
+                                    <p className="text-sm">{comment.comment}</p>
+                                  </div>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleCommentAction(comment)}
+                                  data-testid={`button-moderate-comment-${comment.id}`}
+                                >
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  Moderate
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
                       </div>
                     )}
                   </CardContent>
@@ -978,6 +1123,79 @@ export default function Admin() {
                 </Button>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Comment Moderation Dialog */}
+        <Dialog open={isCommentDialogOpen} onOpenChange={setIsCommentDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Moderate Comment</DialogTitle>
+            </DialogHeader>
+            {editingComment && (
+              <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <User className="h-4 w-4 text-gray-500" />
+                    <span className="font-medium">{editingComment.username}</span>
+                    <Badge variant="outline" className="text-xs">
+                      Question ID: {editingComment.questionId}
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-gray-600 mb-2">
+                    {new Date(editingComment.createdAt).toLocaleString()}
+                  </div>
+                  <div className="border-l-4 border-l-blue-500 pl-4">
+                    <p className="text-sm">{editingComment.comment}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="admin-response">Admin Response/Explanation (Optional)</Label>
+                  <Textarea
+                    id="admin-response"
+                    value={adminResponse}
+                    onChange={(e) => setAdminResponse(e.target.value)}
+                    placeholder="Provide an explanation or response to the user's comment..."
+                    className="mt-1"
+                    rows={4}
+                    data-testid="textarea-admin-response"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    This response will be visible to the user along with their comment.
+                  </p>
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsCommentDialogOpen(false);
+                      setEditingComment(null);
+                      setAdminResponse("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleRejectComment}
+                    disabled={rejectCommentMutation.isPending}
+                    data-testid="button-reject-comment"
+                  >
+                    {rejectCommentMutation.isPending ? "Rejecting..." : "Reject"}
+                  </Button>
+                  <Button
+                    onClick={handleApproveComment}
+                    disabled={approveCommentMutation.isPending}
+                    className="bg-green-600 hover:bg-green-700"
+                    data-testid="button-approve-comment"
+                  >
+                    {approveCommentMutation.isPending ? "Approving..." : "Approve"}
+                  </Button>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>

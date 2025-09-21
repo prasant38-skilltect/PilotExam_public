@@ -746,7 +746,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Map options to A, B, C, D format
           options.forEach(option => {
             const optionLetter = String.fromCharCode(65 + option.optionOrder); // 0=A, 1=B, etc.
-            formattedQuestion[`option_${optionLetter.toLowerCase()}`] = option.optionText;
+            const optionKey = `option_${optionLetter.toLowerCase()}`;
+            if (optionKey === 'option_a') formattedQuestion.option_a = option.optionText;
+            else if (optionKey === 'option_b') formattedQuestion.option_b = option.optionText;
+            else if (optionKey === 'option_c') formattedQuestion.option_c = option.optionText;
+            else if (optionKey === 'option_d') formattedQuestion.option_d = option.optionText;
+            
             if (option.isCorrect) {
               formattedQuestion.correct_answer = optionLetter;
             }
@@ -826,11 +831,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let progressData;
       if (existingProgress) {
         // Update existing progress
-        const newTotalTests = existingProgress.totalTests + 1;
+        const currentTotalTests = existingProgress.totalTests || 0;
+        const currentAverageScore = existingProgress.averageScore || 0;
+        const currentBestScore = existingProgress.bestScore || 0;
+        
+        const newTotalTests = currentTotalTests + 1;
         const newAverageScore = Math.round(
-          ((existingProgress.averageScore * existingProgress.totalTests) + averageScore) / newTotalTests
+          ((currentAverageScore * currentTotalTests) + averageScore) / newTotalTests
         );
-        const newBestScore = Math.max(existingProgress.bestScore, bestScore);
+        const newBestScore = Math.max(currentBestScore, bestScore);
         
         progressData = {
           userId,

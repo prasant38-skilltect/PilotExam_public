@@ -690,8 +690,19 @@ export class DatabaseStorage implements IStorage {
     // Add empty explanation filter if requested
     if (hasEmptyExplanation) {
       const emptyExplanationCondition = sql`${questions.explanation} IS NULL OR ${questions.explanation} = ''`;
-      query = searchText ? query.and(emptyExplanationCondition) : query.where(emptyExplanationCondition);
-      countQuery = searchText ? countQuery.and(emptyExplanationCondition) : countQuery.where(emptyExplanationCondition);
+      if (searchText) {
+        query = query.where(and(
+          sql`${questions.text} ILIKE ${'%' + searchText + '%'}`,
+          emptyExplanationCondition
+        ));
+        countQuery = countQuery.where(and(
+          sql`${questions.text} ILIKE ${'%' + searchText + '%'}`,
+          emptyExplanationCondition
+        ));
+      } else {
+        query = query.where(emptyExplanationCondition);
+        countQuery = countQuery.where(emptyExplanationCondition);
+      }
     }
     
     const questionsData = await query
@@ -941,9 +952,32 @@ export class DatabaseStorage implements IStorage {
       .groupBy(questions.id);
 
     if (quizId) {
-      query = query
+      query = db
+        .select({
+          id: questions.id,
+          questionId: questions.questionId,
+          text: questions.text,
+          explanation: questions.explanation,
+          isActive: questions.isActive,
+          options: sql`
+            COALESCE(
+              json_agg(
+                json_build_object(
+                  'id', ${questionOptions.id},
+                  'text', ${questionOptions.optionText},
+                  'isCorrect', ${questionOptions.isCorrect},
+                  'order', ${questionOptions.optionOrder}
+                ) ORDER BY ${questionOptions.optionOrder}
+              ) FILTER (WHERE ${questionOptions.id} IS NOT NULL),
+              '[]'::json
+            )
+          `.as('options')
+        })
+        .from(questions)
+        .leftJoin(questionOptions, eq(questions.id, questionOptions.questionId))
         .innerJoin(quizQuestions, eq(questions.id, quizQuestions.questionId))
-        .where(and(eq(questions.isActive, true), eq(quizQuestions.quizId, quizId)));
+        .where(and(eq(questions.isActive, true), eq(quizQuestions.quizId, quizId)))
+        .groupBy(questions.id);
     }
 
     return await query;
