@@ -476,7 +476,7 @@ export default function Admin() {
 
   const handleSelectAllQuestionsInTable = (selectAll: boolean) => {
     if (selectAll) {
-      setSelectedQuestionsInTable(questions.map(q => q.id));
+      setSelectedQuestionsInTable(questions.map((q: any) => q.id));
     } else {
       setSelectedQuestionsInTable([]);
     }
@@ -1420,31 +1420,55 @@ export default function Admin() {
 
               {/* Topic Selection */}
               <div>
-                <Label htmlFor="topic-select" className="text-lg font-medium">Select Topic</Label>
-                <Select 
-                  value={selectedTopic?.id?.toString() || ""} 
-                  onValueChange={(value) => {
-                    const topic = allTopics.find((t: any) => t.id.toString() === value);
-                    setSelectedTopic(topic);
-                  }}
-                >
-                  <SelectTrigger className="mt-2" data-testid="select-topic">
-                    <SelectValue placeholder="Choose a topic to link questions..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {loadingTopics ? (
-                      <SelectItem value="loading" disabled>Loading topics...</SelectItem>
-                    ) : allTopics.length === 0 ? (
-                      <SelectItem value="no-topics" disabled>No topics available</SelectItem>
-                    ) : (
-                      allTopics.map((topic: any) => (
-                        <SelectItem key={topic.id} value={topic.id.toString()}>
-                          {topic.text} ({topic.categoryName})
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                <Label className="text-lg font-medium">Select Topic</Label>
+                <Popover open={topicSearchOpen} onOpenChange={setTopicSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={topicSearchOpen}
+                      className="mt-2 w-full justify-between"
+                      data-testid="button-search-topic"
+                    >
+                      {selectedTopic
+                        ? `${selectedTopic.text} (${selectedTopic.categoryName})`
+                        : "Search and select a topic..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search topics..." className="h-9" />
+                      <CommandList>
+                        <CommandEmpty>
+                          {loadingTopics ? "Loading topics..." : "No topics found."}
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {allTopics.map((topic: any) => (
+                            <CommandItem
+                              key={topic.id}
+                              value={`${topic.text} ${topic.categoryName}`}
+                              onSelect={() => {
+                                setSelectedTopic(topic);
+                                setTopicSearchOpen(false);
+                              }}
+                            >
+                              <div className="flex flex-col">
+                                <span className="font-medium">{topic.text}</span>
+                                <span className="text-sm text-gray-500">{topic.categoryName}</span>
+                              </div>
+                              <Check
+                                className={`ml-auto h-4 w-4 ${
+                                  selectedTopic?.id === topic.id ? "opacity-100" : "opacity-0"
+                                }`}
+                              />
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
                 
                 {selectedTopic && (
                   <div className="mt-2 p-3 bg-blue-50 rounded-md">
@@ -1479,6 +1503,113 @@ export default function Admin() {
                   data-testid="button-link-to-topic"
                 >
                   {linkQuestionsToTopicMutation.isPending ? "Linking..." : `Link ${selectedQuestions.length} Questions`}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Bulk Topic Mapping Dialog */}
+        <Dialog open={showBulkTopicMapping} onOpenChange={setShowBulkTopicMapping}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <LinkIcon className="h-5 w-5" />
+                Map Selected Questions to Topic
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              {/* Selected Questions Summary */}
+              <div>
+                <h3 className="text-lg font-medium mb-4">
+                  Selected Questions ({selectedQuestionsInTable.length})
+                </h3>
+                <div className="bg-gray-50 p-3 rounded-md text-sm text-gray-600">
+                  You have selected {selectedQuestionsInTable.length} question{selectedQuestionsInTable.length > 1 ? 's' : ''} from the questions table to map to a topic.
+                </div>
+              </div>
+
+              {/* Topic Selection */}
+              <div>
+                <Label className="text-lg font-medium">Select Topic</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="mt-2 w-full justify-between"
+                      data-testid="button-bulk-search-topic"
+                    >
+                      {selectedTopic
+                        ? `${selectedTopic.text} (${selectedTopic.categoryName})`
+                        : "Search and select a topic..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search topics..." className="h-9" />
+                      <CommandList>
+                        <CommandEmpty>
+                          {loadingTopics ? "Loading topics..." : "No topics found."}
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {allTopics.map((topic: any) => (
+                            <CommandItem
+                              key={topic.id}
+                              value={`${topic.text} ${topic.categoryName}`}
+                              onSelect={() => {
+                                setSelectedTopic(topic);
+                              }}
+                            >
+                              <div className="flex flex-col">
+                                <span className="font-medium">{topic.text}</span>
+                                <span className="text-sm text-gray-500">{topic.categoryName}</span>
+                              </div>
+                              <Check
+                                className={`ml-auto h-4 w-4 ${
+                                  selectedTopic?.id === topic.id ? "opacity-100" : "opacity-0"
+                                }`}
+                              />
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                
+                {selectedTopic && (
+                  <div className="mt-2 p-3 bg-blue-50 rounded-md">
+                    <div className="text-sm font-medium">Selected Topic: {selectedTopic.text}</div>
+                    <div className="text-sm text-gray-600">Category: {selectedTopic.categoryName}</div>
+                    {selectedTopic.quizId ? (
+                      <div className="text-sm text-green-600">✓ Has existing quiz (ID: {selectedTopic.quizId})</div>
+                    ) : (
+                      <div className="text-sm text-orange-600">⚠ Will create new quiz for this topic</div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowBulkTopicMapping(false);
+                    setSelectedTopic(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleBulkMapToTopic}
+                  disabled={!selectedTopic || selectedQuestionsInTable.length === 0 || linkQuestionsToTopicMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                  data-testid="button-bulk-map-questions"
+                >
+                  {linkQuestionsToTopicMutation.isPending ? "Mapping..." : `Map ${selectedQuestionsInTable.length} Questions`}
                 </Button>
               </div>
             </div>
