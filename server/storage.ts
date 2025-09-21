@@ -109,6 +109,12 @@ export interface IStorage {
   approveComment(commentId: number, adminId: string, adminResponse?: string): Promise<QuestionComment>;
   rejectComment(commentId: number, adminId: string, adminResponse?: string): Promise<QuestionComment>;
   
+  // Topic and quiz management
+  getAllTopics(): Promise<Topics[]>;
+  getTopicById(topicId: number): Promise<Topics | null>;
+  createQuiz(title: string, slug: string): Promise<Quizzes>;
+  linkQuestionsToTopic(questionIds: number[], topicId: number): Promise<void>;
+  
   // Admin operations
   getAllIssueReports(page?: number, limit?: number): Promise<{ reports: IssueReport[], total: number }>;
   getAllQuestionsForAdmin(page?: number, limit?: number, searchText?: string, hasEmptyExplanation?: boolean): Promise<{ questions: any[], total: number }>;
@@ -649,6 +655,113 @@ export class DatabaseStorage implements IStorage {
       .where(eq(questionComments.id, commentId))
       .returning();
     return updatedComment;
+  }
+
+  // Topic and quiz management methods
+  async getAllTopics(): Promise<Topics[]> {
+    return await db
+      .select()
+      .from(topics)
+      .orderBy(topics.categoryName, topics.text);
+  }
+
+  async getTopicById(topicId: number): Promise<Topics | null> {
+    const [topic] = await db
+      .select()
+      .from(topics)
+      .where(eq(topics.id, topicId));
+    return topic || null;
+  }
+
+  async createQuiz(title: string, slug: string): Promise<Quizzes> {
+    // Get the next quizId
+    const [maxQuizResult] = await db
+      .select({ maxQuizId: sql`COALESCE(MAX(quiz_id), 0)` })
+      .from(quizzes);
+    const nextQuizId = (maxQuizResult?.maxQuizId as number || 0) + 1;
+
+    const [newQuiz] = await db
+      .insert(quizzes)
+      .values({
+        quizId: nextQuizId,
+        slug,
+        title,
+      })
+      .returning();
+    return newQuiz;
+  }
+
+  async linkQuestionsToTopic(questionIds: number[], topicId: number): Promise<void> {
+    await db.transaction(async (tx) => {
+      // Get the topic
+      const [topic] = await tx
+        .select()
+        .from(topics)
+        .where(eq(topics.id, topicId));
+
+      if (!topic) {
+        throw new Error('Topic not found');
+      }
+
+      let quizPrimaryKey: number;
+
+      // If topic doesn't have a quiz, create one within the transaction
+      if (!topic.quizId) {
+        const quizTitle = `${topic.categoryName} - ${topic.text}`;
+        const quizSlug = `${topic.slug}-quiz`;
+        
+        // Get the next external quizId within the transaction
+        const [maxQuizResult] = await tx
+          .select({ maxQuizId: sql`COALESCE(MAX(quiz_id), 0)` })
+          .from(quizzes);
+        const nextExternalQuizId = (maxQuizResult?.maxQuizId as number || 0) + 1;
+
+        // Create quiz within the transaction
+        const [newQuiz] = await tx
+          .insert(quizzes)
+          .values({
+            quizId: nextExternalQuizId,
+            slug: quizSlug,
+            title: quizTitle,
+          })
+          .returning();
+
+        // Use the internal primary key for quiz_questions foreign key
+        quizPrimaryKey = newQuiz.id;
+
+        // Update topic with the external quizId
+        await tx
+          .update(topics)
+          .set({ quizId: nextExternalQuizId })
+          .where(eq(topics.id, topicId));
+      } else {
+        // Topic has existing quiz, lookup the internal primary key
+        const [existingQuiz] = await tx
+          .select()
+          .from(quizzes)
+          .where(eq(quizzes.quizId, topic.quizId));
+
+        if (!existingQuiz) {
+          throw new Error(`Quiz with ID ${topic.quizId} not found`);
+        }
+
+        quizPrimaryKey = existingQuiz.id;
+      }
+
+      // Link questions to the quiz using the internal primary key
+      const quizQuestionData = questionIds.map(questionId => ({
+        quizId: quizPrimaryKey, // Use internal PK, not external ID
+        questionId,
+      }));
+
+      if (quizQuestionData.length > 0) {
+        // Use onConflictDoNothing with target to prevent duplicate links
+        await tx
+          .insert(quizQuestions)
+          .values(quizQuestionData)
+          .onConflictDoNothing({ target: [quizQuestions.quizId, quizQuestions.questionId] });
+      }
+    });
   }
 
   // Admin operations implementation

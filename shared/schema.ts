@@ -43,7 +43,7 @@ export const topics = pgTable(
     slug: varchar("slug", { length: 255 }).notNull().unique(),
     text: varchar("text", { length: 255 }).notNull(),
 
-    quizId: integer("quiz_id").notNull(), // NULL = sub-topic, NOT NULL = quiz
+    quizId: integer("quiz_id"), // NULL = sub-topic, NOT NULL = quiz
   },
   (table) => [
     uniqueIndex("uq_topic").on(table.categoryId, table.parentId, table.slug),
@@ -54,7 +54,7 @@ export const quizzes = pgTable(
   "quizzes",
   {
     id: serial("id").primaryKey(), // SERIAL PRIMARY KEY
-    quizId: integer("quiz_id").notNull(),
+    quizId: integer("quiz_id").notNull().unique(), // External unique identifier
     slug: varchar("slug", { length: 255 }).notNull(),
     title: varchar("title", { length: 500 }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: false })
@@ -62,7 +62,8 @@ export const quizzes = pgTable(
       .notNull(),
   },
   (table) => ({
-    slugUnique: uniqueIndex("uq_quizzes_slug").on(table.slug), // UNIQUE constraint on slug
+    slugUnique: uniqueIndex("uq_quizzes_slug").on(table.slug),
+    quizIdUnique: uniqueIndex("uq_quizzes_quiz_id").on(table.quizId),
   })
 );
 
@@ -90,16 +91,22 @@ export const questionOptions = pgTable("question_options", {
   optionOrder: integer("option_order").default(0).notNull(),
 });
 
-export const quizQuestions = pgTable("quiz_questions", {
-  id: serial("id").primaryKey(), // SERIAL PRIMARY KEY
-  quizId: integer("quiz_id")
-    .notNull()
-    .references(() => quizzes.id, { onDelete: "cascade" }),
-  questionId: integer("question_id")
-    .notNull()
-    .references(() => questions.id, { onDelete: "cascade" }),
-  position: integer("position"), // Optional ordering inside quiz
-});
+export const quizQuestions = pgTable(
+  "quiz_questions", 
+  {
+    id: serial("id").primaryKey(), // SERIAL PRIMARY KEY
+    quizId: integer("quiz_id")
+      .notNull()
+      .references(() => quizzes.id, { onDelete: "cascade" }),
+    questionId: integer("question_id")
+      .notNull()
+      .references(() => questions.id, { onDelete: "cascade" }),
+    position: integer("position"), // Optional ordering inside quiz
+  },
+  (table) => ({
+    uniqueQuizQuestion: uniqueIndex("uq_quiz_questions").on(table.quizId, table.questionId),
+  })
+);
 
 export const sessions = pgTable(
   "sessions",

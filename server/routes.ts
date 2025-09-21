@@ -376,6 +376,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Topic management routes
+  app.get('/api/admin/topics', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const topics = await storage.getAllTopics();
+      res.json(topics);
+    } catch (error) {
+      console.error("Error fetching topics:", error);
+      res.status(500).json({ message: "Failed to fetch topics" });
+    }
+  });
+
+  app.post('/api/admin/questions/link-to-topic', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { questionIds, topicId } = req.body;
+
+      if (!questionIds || !Array.isArray(questionIds) || questionIds.length === 0) {
+        return res.status(400).json({ message: "Question IDs are required" });
+      }
+
+      if (!topicId) {
+        return res.status(400).json({ message: "Topic ID is required" });
+      }
+
+      await storage.linkQuestionsToTopic(questionIds, topicId);
+      res.json({ message: "Questions successfully linked to topic" });
+    } catch (error) {
+      console.error("Error linking questions to topic:", error);
+      res.status(500).json({ message: "Failed to link questions to topic" });
+    }
+  });
+
   // Subject routes (public)
   app.get('/api/subjects', async (req, res) => {
     try {
@@ -938,9 +983,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create questions in database
       let successCount = 0;
+      const createdQuestions = [];
       for (const question of questions) {
         try {
-          await storage.createQuestion(question);
+          const result = await storage.createQuestion(question);
+          createdQuestions.push(result);
           successCount++;
         } catch (error) {
           console.error("Error creating question:", error);
@@ -950,7 +997,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         message: `Successfully uploaded ${successCount} questions`,
         count: successCount,
-        total: questions.length
+        total: questions.length,
+        questions: createdQuestions  // Include the created questions for topic linking
       });
     } catch (error) {
       console.error("Error processing bulk upload:", error);

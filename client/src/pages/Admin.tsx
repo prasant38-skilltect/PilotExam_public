@@ -12,8 +12,9 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "wouter";
-import { Home, Edit, Eye, Calendar, User, MessageSquare, Search, ChevronLeft, ChevronRight, TreePine, ExternalLink, Plus, Upload, Download } from "lucide-react";
+import { Home, Edit, Eye, Calendar, User, MessageSquare, Search, ChevronLeft, ChevronRight, TreePine, ExternalLink, Plus, Upload, Download, Link as LinkIcon } from "lucide-react";
 
 export default function Admin() {
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
@@ -49,6 +50,12 @@ export default function Admin() {
       { text: '', isCorrect: false }
     ]
   });
+  
+  // Topic linking state after bulk upload
+  const [showTopicLinking, setShowTopicLinking] = useState(false);
+  const [uploadedQuestions, setUploadedQuestions] = useState<any[]>([]);
+  const [selectedQuestions, setSelectedQuestions] = useState<number[]>([]);
+  const [selectedTopic, setSelectedTopic] = useState<any>(null);
 
   // Debounce search text to avoid too many API calls
   useEffect(() => {
@@ -108,6 +115,15 @@ export default function Admin() {
     queryKey: ['/api/admin/comments/pending'],
     queryFn: async () => {
       const res = await apiRequest('GET', '/api/admin/comments/pending');
+      return res instanceof Response ? await res.json() : res;
+    },
+  });
+
+  // Fetch topics for question linking
+  const { data: allTopics = [], isLoading: loadingTopics } = useQuery({
+    queryKey: ['/api/admin/topics'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/admin/topics');
       return res instanceof Response ? await res.json() : res;
     },
   });
@@ -181,10 +197,22 @@ export default function Admin() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
       setShowBulkUpload(false);
       setSelectedFile(null);
-      toast({
-        title: "Success",
-        description: `Successfully uploaded ${data.count} questions.`,
-      });
+      
+      // Store uploaded questions and show topic linking dialog
+      if (data.questions && data.questions.length > 0) {
+        setUploadedQuestions(data.questions);
+        setSelectedQuestions(data.questions.map((q: any) => q.id)); // Select all by default
+        setShowTopicLinking(true);
+        toast({
+          title: "Upload Complete",
+          description: `${data.count} questions uploaded. Now select a topic to link them.`,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: `Successfully uploaded ${data.count} questions.`,
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -263,6 +291,31 @@ export default function Admin() {
       toast({
         title: "Error",
         description: "Failed to reject comment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutation for linking questions to topics
+  const linkQuestionsToTopicMutation = useMutation({
+    mutationFn: async ({ questionIds, topicId }: { questionIds: number[], topicId: number }) => {
+      return await apiRequest('POST', '/api/admin/questions/link-to-topic', { questionIds, topicId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+      setShowTopicLinking(false);
+      setUploadedQuestions([]);
+      setSelectedQuestions([]);
+      setSelectedTopic(null);
+      toast({
+        title: "Success",
+        description: "Questions successfully linked to topic.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to link questions to topic. Please try again.",
         variant: "destructive",
       });
     }
@@ -368,6 +421,39 @@ export default function Admin() {
     rejectCommentMutation.mutate({ 
       commentId: editingComment.id, 
       adminResponse: adminResponse.trim() || undefined 
+    });
+  };
+
+  // Helper functions for topic linking
+  const handleQuestionSelection = (questionId: number, isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedQuestions(prev => [...prev, questionId]);
+    } else {
+      setSelectedQuestions(prev => prev.filter(id => id !== questionId));
+    }
+  };
+
+  const handleSelectAllQuestions = (selectAll: boolean) => {
+    if (selectAll) {
+      setSelectedQuestions(uploadedQuestions.map(q => q.id));
+    } else {
+      setSelectedQuestions([]);
+    }
+  };
+
+  const handleLinkToTopic = () => {
+    if (!selectedTopic || selectedQuestions.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select a topic and at least one question.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    linkQuestionsToTopicMutation.mutate({
+      questionIds: selectedQuestions,
+      topicId: selectedTopic.id
     });
   };
 
@@ -1196,6 +1282,116 @@ export default function Admin() {
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Topic Linking Dialog */}
+        <Dialog open={showTopicLinking} onOpenChange={setShowTopicLinking}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <LinkIcon className="h-5 w-5" />
+                Link Questions to Topic
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              {/* Question Selection */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium">Select Questions ({selectedQuestions.length} of {uploadedQuestions.length})</h3>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={selectedQuestions.length === uploadedQuestions.length}
+                      onCheckedChange={handleSelectAllQuestions}
+                      data-testid="checkbox-select-all"
+                    />
+                    <Label>Select All</Label>
+                  </div>
+                </div>
+                
+                <div className="max-h-60 overflow-y-auto border rounded-md">
+                  {uploadedQuestions.map((question, index) => (
+                    <div key={question.id} className="flex items-center gap-3 p-3 border-b last:border-b-0 hover:bg-gray-50">
+                      <Checkbox
+                        checked={selectedQuestions.includes(question.id)}
+                        onCheckedChange={(checked) => handleQuestionSelection(question.id, checked as boolean)}
+                        data-testid={`checkbox-question-${question.id}`}
+                      />
+                      <div className="flex-1">
+                        <div className="text-sm font-medium">Question {index + 1}</div>
+                        <div className="text-sm text-gray-600 truncate max-w-lg">
+                          {question.text || question.question_text}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Topic Selection */}
+              <div>
+                <Label htmlFor="topic-select" className="text-lg font-medium">Select Topic</Label>
+                <Select 
+                  value={selectedTopic?.id?.toString() || ""} 
+                  onValueChange={(value) => {
+                    const topic = allTopics.find((t: any) => t.id.toString() === value);
+                    setSelectedTopic(topic);
+                  }}
+                >
+                  <SelectTrigger className="mt-2" data-testid="select-topic">
+                    <SelectValue placeholder="Choose a topic to link questions..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {loadingTopics ? (
+                      <SelectItem value="loading" disabled>Loading topics...</SelectItem>
+                    ) : allTopics.length === 0 ? (
+                      <SelectItem value="no-topics" disabled>No topics available</SelectItem>
+                    ) : (
+                      allTopics.map((topic: any) => (
+                        <SelectItem key={topic.id} value={topic.id.toString()}>
+                          {topic.text} ({topic.categoryName})
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                
+                {selectedTopic && (
+                  <div className="mt-2 p-3 bg-blue-50 rounded-md">
+                    <div className="text-sm font-medium">Selected Topic: {selectedTopic.text}</div>
+                    <div className="text-sm text-gray-600">Category: {selectedTopic.categoryName}</div>
+                    {selectedTopic.quizId ? (
+                      <div className="text-sm text-green-600">✓ Has existing quiz (ID: {selectedTopic.quizId})</div>
+                    ) : (
+                      <div className="text-sm text-orange-600">⚠ Will create new quiz for this topic</div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowTopicLinking(false);
+                    setUploadedQuestions([]);
+                    setSelectedQuestions([]);
+                    setSelectedTopic(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleLinkToTopic}
+                  disabled={!selectedTopic || selectedQuestions.length === 0 || linkQuestionsToTopicMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                  data-testid="button-link-to-topic"
+                >
+                  {linkQuestionsToTopicMutation.isPending ? "Linking..." : `Link ${selectedQuestions.length} Questions`}
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
