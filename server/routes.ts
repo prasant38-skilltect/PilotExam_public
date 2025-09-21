@@ -310,6 +310,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin comment moderation routes
+  app.get('/api/admin/comments/pending', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const pendingComments = await storage.getAllPendingComments();
+      res.json(pendingComments);
+    } catch (error) {
+      console.error("Error fetching pending comments:", error);
+      res.status(500).json({ message: "Failed to fetch pending comments" });
+    }
+  });
+
+  app.post('/api/admin/comments/:commentId/approve', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const commentId = parseInt(req.params.commentId);
+      const { adminResponse } = req.body;
+
+      if (!commentId) {
+        return res.status(400).json({ message: "Invalid comment ID" });
+      }
+
+      const approvedComment = await storage.approveComment(commentId, userId, adminResponse);
+      res.json(approvedComment);
+    } catch (error) {
+      console.error("Error approving comment:", error);
+      res.status(500).json({ message: "Failed to approve comment" });
+    }
+  });
+
+  app.post('/api/admin/comments/:commentId/reject', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const commentId = parseInt(req.params.commentId);
+      const { adminResponse } = req.body;
+
+      if (!commentId) {
+        return res.status(400).json({ message: "Invalid comment ID" });
+      }
+
+      const rejectedComment = await storage.rejectComment(commentId, userId, adminResponse);
+      res.json(rejectedComment);
+    } catch (error) {
+      console.error("Error rejecting comment:", error);
+      res.status(500).json({ message: "Failed to reject comment" });
+    }
+  });
+
   // Subject routes (public)
   app.get('/api/subjects', async (req, res) => {
     try {
