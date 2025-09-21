@@ -218,6 +218,10 @@ export const questionComments = pgTable("question_comments", {
   comment: text("comment").notNull(),
   likes: integer("likes").default(0),
   dislikes: integer("dislikes").default(0),
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, approved, rejected
+  adminResponse: text("admin_response"), // Admin's explanation/response
+  approvedBy: varchar("approved_by").references(() => users.id), // Admin who approved/rejected
+  approvedAt: timestamp("approved_at"), // When approved/rejected
   createdAt: timestamp("created_at").defaultNow(),
 });
 
