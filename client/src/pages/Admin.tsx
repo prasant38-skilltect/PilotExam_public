@@ -13,8 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Link } from "wouter";
-import { Home, Edit, Eye, Calendar, User, MessageSquare, Search, ChevronLeft, ChevronRight, TreePine, ExternalLink, Plus, Upload, Download, Link as LinkIcon } from "lucide-react";
+import { Home, Edit, Eye, Calendar, User, MessageSquare, Search, ChevronLeft, ChevronRight, TreePine, ExternalLink, Plus, Upload, Download, Link as LinkIcon, Check, ChevronsUpDown } from "lucide-react";
 
 export default function Admin() {
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
@@ -56,6 +58,12 @@ export default function Admin() {
   const [uploadedQuestions, setUploadedQuestions] = useState<any[]>([]);
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<any>(null);
+  
+  // Bulk selection state for main questions table
+  const [selectedQuestionsInTable, setSelectedQuestionsInTable] = useState<number[]>([]);
+  const [showBulkTopicMapping, setShowBulkTopicMapping] = useState(false);
+  const [topicSearchOpen, setTopicSearchOpen] = useState(false);
+  const [topicSearchValue, setTopicSearchValue] = useState("");
 
   // Debounce search text to avoid too many API calls
   useEffect(() => {
@@ -457,6 +465,44 @@ export default function Admin() {
     });
   };
 
+  // Helper functions for bulk question selection in main table
+  const handleQuestionSelectionInTable = (questionId: number, isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedQuestionsInTable(prev => [...prev, questionId]);
+    } else {
+      setSelectedQuestionsInTable(prev => prev.filter(id => id !== questionId));
+    }
+  };
+
+  const handleSelectAllQuestionsInTable = (selectAll: boolean) => {
+    if (selectAll) {
+      setSelectedQuestionsInTable(questions.map(q => q.id));
+    } else {
+      setSelectedQuestionsInTable([]);
+    }
+  };
+
+  const handleBulkMapToTopic = () => {
+    if (!selectedTopic || selectedQuestionsInTable.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select a topic and at least one question.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    linkQuestionsToTopicMutation.mutate({
+      questionIds: selectedQuestionsInTable,
+      topicId: selectedTopic.id
+    });
+    
+    // Reset selections
+    setSelectedQuestionsInTable([]);
+    setShowBulkTopicMapping(false);
+    setSelectedTopic(null);
+  };
+
   const updateNewQuestionOption = (index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
     setNewQuestionData(prev => ({
       ...prev,
@@ -691,6 +737,13 @@ export default function Admin() {
                         <Table>
                           <TableHeader>
                             <TableRow>
+                              <TableHead className="w-[50px]">
+                                <Checkbox
+                                  checked={selectedQuestionsInTable.length === questions.length && questions.length > 0}
+                                  onCheckedChange={handleSelectAllQuestionsInTable}
+                                  data-testid="checkbox-select-all-questions"
+                                />
+                              </TableHead>
                               <TableHead>ID</TableHead>
                               <TableHead>Question</TableHead>
                               <TableHead>Has Explanation</TableHead>
@@ -700,6 +753,13 @@ export default function Admin() {
                           <TableBody>
                             {questions.map((question: any) => (
                               <TableRow key={question.id}>
+                                <TableCell>
+                                  <Checkbox
+                                    checked={selectedQuestionsInTable.includes(question.id)}
+                                    onCheckedChange={(checked) => handleQuestionSelectionInTable(question.id, checked as boolean)}
+                                    data-testid={`checkbox-question-table-${question.id}`}
+                                  />
+                                </TableCell>
                                 <TableCell>{question.id}</TableCell>
                                 <TableCell className="max-w-md">
                                   <div className="truncate" title={question.text}>
@@ -727,6 +787,36 @@ export default function Admin() {
                             ))}
                           </TableBody>
                         </Table>
+                        
+                        {/* Bulk Actions for Selected Questions */}
+                        {selectedQuestionsInTable.length > 0 && (
+                          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-blue-900">
+                                  {selectedQuestionsInTable.length} question{selectedQuestionsInTable.length > 1 ? 's' : ''} selected
+                                </span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setSelectedQuestionsInTable([])}
+                                  className="text-xs"
+                                >
+                                  Clear Selection
+                                </Button>
+                              </div>
+                              <Button
+                                onClick={() => setShowBulkTopicMapping(true)}
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
+                                data-testid="button-bulk-map-to-topic"
+                              >
+                                <LinkIcon className="h-4 w-4 mr-1" />
+                                Map to Topic
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                         
                         {/* Pagination for Questions */}
                         {questionsTotal > 50 && (
