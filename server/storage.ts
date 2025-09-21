@@ -104,6 +104,11 @@ export interface IStorage {
   createComment(comment: InsertQuestionComment): Promise<QuestionComment>;
   getCommentsByQuestion(questionId: number): Promise<QuestionComment[]>;
   
+  // Admin comment moderation
+  getAllPendingComments(): Promise<QuestionComment[]>;
+  approveComment(commentId: number, adminId: string, adminResponse?: string): Promise<QuestionComment>;
+  rejectComment(commentId: number, adminId: string, adminResponse?: string): Promise<QuestionComment>;
+  
   // Admin operations
   getAllIssueReports(page?: number, limit?: number): Promise<{ reports: IssueReport[], total: number }>;
   getAllQuestionsForAdmin(page?: number, limit?: number, searchText?: string, hasEmptyExplanation?: boolean): Promise<{ questions: any[], total: number }>;
@@ -596,11 +601,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCommentsByQuestion(questionId: number): Promise<QuestionComment[]> {
+    // Only return approved comments to regular users
     return await db
       .select()
       .from(questionComments)
-      .where(eq(questionComments.questionId, questionId))
+      .where(
+        and(
+          eq(questionComments.questionId, questionId),
+          eq(questionComments.status, 'approved')
+        )
+      )
       .orderBy(desc(questionComments.createdAt));
+  }
+
+  // Admin comment moderation methods
+  async getAllPendingComments(): Promise<QuestionComment[]> {
+    return await db
+      .select()
+      .from(questionComments)
+      .where(eq(questionComments.status, 'pending'))
+      .orderBy(desc(questionComments.createdAt));
+  }
+
+  async approveComment(commentId: number, adminId: string, adminResponse?: string): Promise<QuestionComment> {
+    const [updatedComment] = await db
+      .update(questionComments)
+      .set({
+        status: 'approved',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        adminResponse: adminResponse || null
+      })
+      .where(eq(questionComments.id, commentId))
+      .returning();
+    return updatedComment;
+  }
+
+  async rejectComment(commentId: number, adminId: string, adminResponse?: string): Promise<QuestionComment> {
+    const [updatedComment] = await db
+      .update(questionComments)
+      .set({
+        status: 'rejected',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        adminResponse: adminResponse || null
+      })
+      .where(eq(questionComments.id, commentId))
+      .returning();
+    return updatedComment;
   }
 
   // Admin operations implementation
