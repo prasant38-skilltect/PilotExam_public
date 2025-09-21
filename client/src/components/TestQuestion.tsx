@@ -216,7 +216,7 @@ export function TestQuestion({
           </TabsContent>
 
           {/* Explanation Tab Content */}
-          <TabsContent value="explanation" className="p-6">
+          {/* <TabsContent value="explanation" className="p-6">
             {question.explanation ? (
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Explanation:</h4>
@@ -232,7 +232,7 @@ export function TestQuestion({
                 No explanation available for this question.
               </div>
             )}
-          </TabsContent>
+          </TabsContent> */}
 
           {/* Statistics Tab Content */}
           <TabsContent value="statistics" className="p-6">

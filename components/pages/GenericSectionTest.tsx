@@ -382,7 +382,7 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="question">Question</TabsTrigger>
-                    <TabsTrigger value="explanation">Explanation</TabsTrigger>
+                    {/* <TabsTrigger value="explanation">Explanation</TabsTrigger> */}
                     <TabsTrigger value="comments">Comments</TabsTrigger>
                   </TabsList>
 
@@ -472,7 +472,7 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="explanation" className="mt-4">
+                  {/* <TabsContent value="explanation" className="mt-4">
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold">Explanation</h3>
                       {(currentQuestion.explanation_text || currentQuestion.explanation) ? (
@@ -483,7 +483,7 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl }: 
                         <p className="text-gray-500">No explanation available for this question.</p>
                       )}
                     </div>
-                  </TabsContent>
+                  </TabsContent> */}
 
 
                   <TabsContent value="comments" className="mt-4">

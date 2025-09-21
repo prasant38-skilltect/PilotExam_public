@@ -20,7 +20,7 @@ const navigationItems = [
   { href: "/airline-interviews", label: "Airline Interviews & Sim Prep" },
   { href: "/atpl-viva", label: "ATPL Viva" },
   { href: "/classes", label: "Classes" },
-  { href: "/aptitude-test", label: "Aptitude Test" },
+  // { href: "/aptitude-test", label: "Aptitude Test" },
   { href: "/air-speed-indicator", label: "Pilot Aptitude Test" },
   { href: "/airbus-320", label: "Airbus 320" },
   { href: "/syllabus", label: "Syllabus" },

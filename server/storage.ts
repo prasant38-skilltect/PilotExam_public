@@ -819,7 +819,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     const questionsData = await query
-      .orderBy(asc(questions.id))
+      .orderBy(desc(questions.id))
       .limit(limit)
       .offset(offset);
       
@@ -985,13 +985,13 @@ export class DatabaseStorage implements IStorage {
       // Get the next available ID to avoid sequence conflicts
       const [maxResult] = await tx.select({ maxId: sql`COALESCE(MAX(id), 0)` }).from(questions);
       const nextId = (maxResult?.maxId as number || 0) + 1;
-      
+      console.log("Next available question ID:", nextId);
       // Create question with explicit ID
       const [newQuestion] = await tx
         .insert(questions)
         .values({
           id: nextId,
-          questionId: generatedQuestionId,
+          questionId: nextId,
           text: questionData.question_text,
           explanation: questionData.explanation_text || null,
           isActive: true
@@ -1000,17 +1000,29 @@ export class DatabaseStorage implements IStorage {
 
       // Add options if provided
       if (questionData.options && questionData.options.length > 0) {
-        const optionsToInsert = questionData.options.map((option: any, index: number) => ({
-          questionId: newQuestion.id,
-          optionText: option.text,
-          isCorrect: option.isCorrect || false,
-          optionOrder: index
-        }));
+        // fetch max id from question_options
+        const [maxResult] = await tx
+          .select({ maxId: sql`COALESCE(MAX(id), 0)` })
+          .from(questionOptions);
 
-        await tx
-          .insert(questionOptions)
-          .values(optionsToInsert);
+        let nextId = (maxResult?.maxId as number || 0) + 1;
+
+        const optionsToInsert = questionData.options.map((option: any, index: number) => {
+          const optionRecord = {
+            id: nextId, // manually assign new id
+            questionId: newQuestion.id,
+            optionText: option.text,
+            isCorrect: option.isCorrect || false,
+            optionOrder: index,
+          };
+
+          nextId += 1; // increment for next option
+          return optionRecord;
+        });
+
+        await tx.insert(questionOptions).values(optionsToInsert);
       }
+
 
       // Link question to quiz if quizId provided
       if (questionData.quizId) {

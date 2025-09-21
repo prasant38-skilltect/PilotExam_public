@@ -959,8 +959,8 @@ export default function GenericSectionTest({
                 >
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="question">Question</TabsTrigger>
-                    <TabsTrigger value="explanation">Explanation</TabsTrigger>
-                    <TabsTrigger value="comments">Comments</TabsTrigger>
+                    {/* <TabsTrigger value="explanation">Explanation</TabsTrigger> */}
+                    <TabsTrigger value="comments">Write Your Answer</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="question" className="mt-4">
@@ -1205,7 +1205,7 @@ export default function GenericSectionTest({
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="explanation" className="mt-4">
+                  {/* <TabsContent value="explanation" className="mt-4">
                     <div className="space-y-4">
                       {isAdmin && editingQuestionId === currentQuestion.id ? (
                         <div className="space-y-4">
@@ -1237,7 +1237,7 @@ export default function GenericSectionTest({
                         </>
                       )}
                     </div>
-                  </TabsContent>
+                  </TabsContent> */}
 
                   <TabsContent value="comments" className="mt-4">
                     <div className="space-y-4">
@@ -1291,7 +1291,7 @@ export default function GenericSectionTest({
                                   </span>
                                 </div>
                                 <p className="text-sm">{comment.comment}</p>
-                                <div className="flex items-center space-x-4 mt-2">
+                                {/* <div className="flex items-center space-x-4 mt-2">
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -1308,7 +1308,7 @@ export default function GenericSectionTest({
                                     <ThumbsDown className="h-3 w-3 mr-1" />
                                     {comment.dislikes}
                                   </Button>
-                                </div>
+                                </div> */}
                               </div>
                             </div>
                           </div>
