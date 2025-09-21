@@ -4,6 +4,9 @@ import { storage } from "./storage";
 import { signUpSchema, signInSchema, insertIssueReportSchema, insertQuestionCommentSchema } from "../shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
+import multer from "multer";
+import * as XLSX from "xlsx";
+import path from "path";
 // import { setupAuth, isAuthenticated } from "./replitAuth"; // Disabled Replit auth
 // import { insertTestSessionSchema, insertUserAnswerSchema } from "../shared/schema";
 
@@ -46,6 +49,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     return res.status(403).json({ message: "Admin access required" });
   };
+
+  // Configure multer for file uploads
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedMimes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel'
+      ];
+      if (allowedMimes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only Excel files are allowed'));
+      }
+    }
+  });
 
   // Authentication routes
   app.post('/api/auth/signup', async (req: any, res) => {
@@ -769,6 +791,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating user progress:", error);
       res.status(500).json({ message: "Failed to update user progress" });
+    }
+  });
+
+  // Admin question management routes
+  
+  // Create single question
+  app.post('/api/admin/questions', isAdmin, async (req, res) => {
+    try {
+      const { question_text, explanation_text, options } = req.body;
+      
+      if (!question_text || !Array.isArray(options) || options.length === 0) {
+        return res.status(400).json({ message: "Question text and options are required" });
+      }
+      
+      const hasCorrectAnswer = options.some(opt => opt.isCorrect);
+      if (!hasCorrectAnswer) {
+        return res.status(400).json({ message: "At least one option must be marked as correct" });
+      }
+      
+      const result = await storage.createQuestion({
+        question_text,
+        explanation_text: explanation_text || "",
+        options
+      });
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error creating question:", error);
+      res.status(500).json({ message: "Failed to create question" });
+    }
+  });
+
+  // Bulk upload questions from Excel
+  app.post('/api/admin/questions/bulk-upload', isAdmin, upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      // Parse Excel file
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      // Skip header row and process questions
+      const questions: any[] = [];
+      for (let i = 1; i < data.length; i++) {
+        const row: any = data[i];
+        if (!row[0]) continue; // Skip empty rows
+        
+        const options = [];
+        // Add options A, B, C, D if they exist
+        if (row[1]) options.push({ text: row[1], isCorrect: row[5]?.toString().toLowerCase() === 'a' });
+        if (row[2]) options.push({ text: row[2], isCorrect: row[5]?.toString().toLowerCase() === 'b' });
+        if (row[3]) options.push({ text: row[3], isCorrect: row[5]?.toString().toLowerCase() === 'c' });
+        if (row[4]) options.push({ text: row[4], isCorrect: row[5]?.toString().toLowerCase() === 'd' });
+        
+        if (options.length === 0) continue;
+        
+        questions.push({
+          question_text: row[0],
+          explanation_text: row[6] || "",
+          options
+        });
+      }
+
+      if (questions.length === 0) {
+        return res.status(400).json({ message: "No valid questions found in file" });
+      }
+
+      // Create questions in database
+      let successCount = 0;
+      for (const question of questions) {
+        try {
+          await storage.createQuestion(question);
+          successCount++;
+        } catch (error) {
+          console.error("Error creating question:", error);
+        }
+      }
+
+      res.json({ 
+        message: `Successfully uploaded ${successCount} questions`,
+        count: successCount,
+        total: questions.length
+      });
+    } catch (error) {
+      console.error("Error processing bulk upload:", error);
+      res.status(500).json({ message: "Failed to process file" });
+    }
+  });
+
+  // Download Excel template
+  app.get('/api/admin/questions/template', isAdmin, (req, res) => {
+    try {
+      // Create template data
+      const templateData = [
+        ['Question Text', 'Option A', 'Option B', 'Option C', 'Option D', 'Correct Answer', 'Explanation'],
+        ['What is the capital of France?', 'London', 'Paris', 'Berlin', 'Madrid', 'B', 'Paris is the capital city of France.'],
+        ['Which planet is closest to the Sun?', 'Venus', 'Mercury', 'Earth', 'Mars', 'B', 'Mercury is the closest planet to the Sun.']
+      ];
+
+      // Create workbook and worksheet
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.aoa_to_sheet(templateData);
+      
+      // Set column widths
+      worksheet['!cols'] = [
+        { width: 50 }, // Question Text
+        { width: 20 }, // Option A
+        { width: 20 }, // Option B
+        { width: 20 }, // Option C
+        { width: 20 }, // Option D
+        { width: 15 }, // Correct Answer
+        { width: 40 }  // Explanation
+      ];
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
+
+      // Generate buffer
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      res.setHeader('Content-Disposition', 'attachment; filename=questions_template.xlsx');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(buffer);
+    } catch (error) {
+      console.error("Error generating template:", error);
+      res.status(500).json({ message: "Failed to generate template" });
     }
   });
 

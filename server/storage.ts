@@ -93,6 +93,7 @@ export interface IStorage {
   // getQuestionsBySubject(subjectId: number): Promise<Question[]>;
   // getRandomQuestions(subjectId: number, count: number): Promise<Question[]>;
   getQuestion(id: number): Promise<Questions | undefined>;
+  createQuestion(questionData: any): Promise<any>;
 
   // Issue Report operations
   createIssueReport(report: InsertIssueReport): Promise<IssueReport>;

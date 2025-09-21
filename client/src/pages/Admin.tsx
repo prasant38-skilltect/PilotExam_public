@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "wouter";
-import { Home, Edit, Eye, Calendar, User, MessageSquare, Search, ChevronLeft, ChevronRight, TreePine, ExternalLink } from "lucide-react";
+import { Home, Edit, Eye, Calendar, User, MessageSquare, Search, ChevronLeft, ChevronRight, TreePine, ExternalLink, Plus, Upload, Download } from "lucide-react";
 
 export default function Admin() {
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
@@ -29,6 +29,21 @@ export default function Admin() {
   const [searchText, setSearchText] = useState("");
   const [hasEmptyExplanation, setHasEmptyExplanation] = useState(false);
   const [debouncedSearchText, setDebouncedSearchText] = useState("");
+  
+  // Question management state
+  const [showAddSingleQuestion, setShowAddSingleQuestion] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [newQuestionData, setNewQuestionData] = useState({
+    question_text: '',
+    explanation_text: '',
+    options: [
+      { text: '', isCorrect: false },
+      { text: '', isCorrect: false },
+      { text: '', isCorrect: false },
+      { text: '', isCorrect: false }
+    ]
+  });
 
   // Debounce search text to avoid too many API calls
   useEffect(() => {
@@ -98,6 +113,75 @@ export default function Admin() {
 
   const hierarchy = hierarchyData || [];
 
+  // Mutation for creating single question
+  const createQuestionMutation = useMutation({
+    mutationFn: async (questionData: any) => {
+      return await apiRequest('POST', '/api/admin/questions', questionData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+      setShowAddSingleQuestion(false);
+      setNewQuestionData({
+        question_text: '',
+        explanation_text: '',
+        options: [
+          { text: '', isCorrect: false },
+          { text: '', isCorrect: false },
+          { text: '', isCorrect: false },
+          { text: '', isCorrect: false }
+        ]
+      });
+      toast({
+        title: "Success",
+        description: "Question created successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create question. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Failed to create question:", error);
+    }
+  });
+
+  // Mutation for bulk upload questions
+  const bulkUploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('/api/admin/questions/bulk-upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload questions');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+      setShowBulkUpload(false);
+      setSelectedFile(null);
+      toast({
+        title: "Success",
+        description: `Successfully uploaded ${data.count} questions.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to upload questions. Please check the file format.",
+        variant: "destructive",
+      });
+      console.error("Failed to upload questions:", error);
+    }
+  });
+
   // Mutation for updating questions
   const updateQuestionMutation = useMutation({
     mutationFn: async (questionData: any) => {
@@ -141,6 +225,76 @@ export default function Admin() {
     updateQuestionMutation.mutate(editingQuestion);
   };
 
+  // Helper functions for question management
+  const handleCreateSingleQuestion = () => {
+    if (!newQuestionData.question_text.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter question text",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const validOptions = newQuestionData.options.filter(opt => opt.text.trim());
+    if (validOptions.length === 0) {
+      toast({
+        title: "Error", 
+        description: "Please add at least one option",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const hasCorrectAnswer = validOptions.some(opt => opt.isCorrect);
+    if (!hasCorrectAnswer) {
+      toast({
+        title: "Error",
+        description: "Please mark at least one option as correct",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createQuestionMutation.mutate({
+      question_text: newQuestionData.question_text,
+      explanation_text: newQuestionData.explanation_text,
+      options: validOptions
+    });
+  };
+
+  const handleBulkUpload = () => {
+    if (!selectedFile) {
+      toast({
+        title: "Error",
+        description: "Please select an Excel file to upload",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    bulkUploadMutation.mutate(selectedFile);
+  };
+
+  const handleDownloadTemplate = () => {
+    // Create and download Excel template
+    const link = document.createElement('a');
+    link.href = '/api/admin/questions/template';
+    link.download = 'questions_template.xlsx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const updateNewQuestionOption = (index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
+    setNewQuestionData(prev => ({
+      ...prev,
+      options: prev.options.map((opt, i) => 
+        i === index ? { ...opt, [field]: value } : opt
+      )
+    }));
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB', {
       day: '2-digit',
@@ -182,7 +336,7 @@ export default function Admin() {
                 </TabsTrigger>
                 <TabsTrigger value="questions" className="flex items-center gap-2">
                   <Edit className="h-4 w-4" />
-                  Edit Questions
+                  Manage Questions
                 </TabsTrigger>
                 <TabsTrigger value="hierarchy" className="flex items-center gap-2">
                   <TreePine className="h-4 w-4" />
@@ -265,13 +419,44 @@ export default function Admin() {
                 </Card>
               </TabsContent>
 
-              {/* Edit Questions Tab */}
+              {/* Manage Questions Tab */}
               <TabsContent value="questions" className="mt-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Edit className="h-5 w-5" />
-                      Questions ({questionsTotal})
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Edit className="h-5 w-5" />
+                        Manage Questions ({questionsTotal})
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => setShowAddSingleQuestion(true)}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                          data-testid="button-add-single-question"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add Single Question
+                        </Button>
+                        <Button
+                          onClick={() => setShowBulkUpload(true)}
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700"
+                          data-testid="button-bulk-upload"
+                        >
+                          <Upload className="h-4 w-4 mr-1" />
+                          Bulk Upload
+                        </Button>
+                        <Button
+                          onClick={handleDownloadTemplate}
+                          size="sm"
+                          variant="outline"
+                          data-testid="button-download-template"
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Download Template
+                        </Button>
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -662,6 +847,137 @@ export default function Admin() {
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Single Question Dialog */}
+        <Dialog open={showAddSingleQuestion} onOpenChange={setShowAddSingleQuestion}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Add New Question</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="new-question-text">Question Text</Label>
+                <Textarea
+                  id="new-question-text"
+                  value={newQuestionData.question_text}
+                  onChange={(e) => setNewQuestionData(prev => ({...prev, question_text: e.target.value}))}
+                  rows={3}
+                  placeholder="Enter the question text..."
+                />
+              </div>
+
+              <div>
+                <Label>Options</Label>
+                <div className="space-y-2">
+                  {newQuestionData.options.map((option, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        value={option.text}
+                        onChange={(e) => updateNewQuestionOption(index, 'text', e.target.value)}
+                        placeholder={`Option ${String.fromCharCode(65 + index)}`}
+                        className="flex-1"
+                      />
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={option.isCorrect}
+                          onChange={(e) => updateNewQuestionOption(index, 'isCorrect', e.target.checked)}
+                          className="rounded"
+                        />
+                        <span className="text-sm text-gray-600">Correct</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="new-explanation">Explanation (Optional)</Label>
+                <Textarea
+                  id="new-explanation"
+                  value={newQuestionData.explanation_text}
+                  onChange={(e) => setNewQuestionData(prev => ({...prev, explanation_text: e.target.value}))}
+                  rows={3}
+                  placeholder="Enter explanation for the correct answer..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddSingleQuestion(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateSingleQuestion}
+                  disabled={createQuestionMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {createQuestionMutation.isPending ? "Adding..." : "Add Question"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Bulk Upload Dialog */}
+        <Dialog open={showBulkUpload} onOpenChange={setShowBulkUpload}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Bulk Upload Questions</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="excel-file">Select Excel File</Label>
+                <Input
+                  id="excel-file"
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                  className="mt-1"
+                />
+                <p className="text-sm text-gray-500 mt-2">
+                  Upload an Excel file with questions, options, and explanations.
+                </p>
+              </div>
+
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-sm text-blue-800 mb-2">
+                  Need the correct format? Download our template first:
+                </p>
+                <Button
+                  onClick={handleDownloadTemplate}
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Download Excel Template
+                </Button>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowBulkUpload(false);
+                    setSelectedFile(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleBulkUpload}
+                  disabled={!selectedFile || bulkUploadMutation.isPending}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {bulkUploadMutation.isPending ? "Uploading..." : "Upload Questions"}
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
