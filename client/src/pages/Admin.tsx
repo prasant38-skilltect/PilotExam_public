@@ -677,6 +677,19 @@ export default function Admin() {
                           <Download className="h-4 w-4 mr-1" />
                           Download Template
                         </Button>
+                        <Button
+                          onClick={() => {
+                            setSelectedQuestionsInTable([1, 2, 3]); // Demo selection
+                            setShowBulkTopicMapping(true);
+                          }}
+                          size="sm"
+                          variant="outline"
+                          className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                          data-testid="button-demo-bulk-mapping"
+                        >
+                          <LinkIcon className="h-4 w-4 mr-1" />
+                          Demo: Bulk Map to Topic
+                        </Button>
                       </div>
                     </CardTitle>
                   </CardHeader>
