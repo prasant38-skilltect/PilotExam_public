@@ -807,8 +807,8 @@ export class DatabaseStorage implements IStorage {
 
   async createQuestion(questionData: any): Promise<any> {
     return await db.transaction(async (tx) => {
-      // Generate a unique questionId for new questions (timestamp + random number)
-      const generatedQuestionId = questionData.questionId || Date.now() + Math.floor(Math.random() * 1000);
+      // Generate a unique questionId for new questions (timestamp in seconds + random number)
+      const generatedQuestionId = questionData.questionId || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000);
       
       // Create question
       const [newQuestion] = await tx
