@@ -810,10 +810,15 @@ export class DatabaseStorage implements IStorage {
       // Generate a unique questionId for new questions (timestamp in seconds + random number)
       const generatedQuestionId = questionData.questionId || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000);
       
-      // Create question
+      // Get the next available ID to avoid sequence conflicts
+      const [maxResult] = await tx.select({ maxId: sql`COALESCE(MAX(id), 0)` }).from(questions);
+      const nextId = (maxResult?.maxId as number || 0) + 1;
+      
+      // Create question with explicit ID
       const [newQuestion] = await tx
         .insert(questions)
         .values({
+          id: nextId,
           questionId: generatedQuestionId,
           text: questionData.question_text,
           explanation: questionData.explanation_text || null,
