@@ -1082,6 +1082,27 @@ export class DatabaseStorage implements IStorage {
     return updatedQuestion;
   }
 
+  async getQuizByQuizId(externalQuizId: number): Promise<any> {
+    const [quiz] = await db
+      .select()
+      .from(quizzes)
+      .where(eq(quizzes.quizId, externalQuizId));
+    return quiz || null;
+  }
+
+  async linkQuestionToQuiz(questionId: number, quizPrimaryKey: number): Promise<void> {
+    // Insert into quiz_questions table to link question to quiz
+    // Use onConflictDoNothing to prevent duplicate entries
+    await db
+      .insert(quizQuestions)
+      .values({
+        quizId: quizPrimaryKey,
+        questionId: questionId,
+        position: 999 // Default position
+      })
+      .onConflictDoNothing(); // Prevent duplicates if relationship already exists
+  }
+
   async getActiveQuestions(quizId?: number): Promise<any[]> {
     let query = db
       .select({

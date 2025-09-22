@@ -1077,6 +1077,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Quiz-specific bulk upload questions from Excel (auto-links to quiz)
+  app.post('/api/quizzes/:quizId/questions/bulk-upload', isAdmin, upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const quizId = parseInt(req.params.quizId);
+      if (!quizId) {
+        return res.status(400).json({ message: "Invalid quiz ID" });
+      }
+
+      // Verify quiz exists
+      const quiz = await storage.getQuizByQuizId(quizId);
+      if (!quiz) {
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+
+      // Parse Excel file
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      // Skip header row and process questions
+      const questions: any[] = [];
+      for (let i = 1; i < data.length; i++) {
+        const row: any = data[i];
+        if (!row[0]) continue; // Skip empty rows
+        
+        const options = [];
+        // Add options A, B, C, D if they exist
+        if (row[1]) options.push({ text: row[1], isCorrect: row[5]?.toString().toLowerCase() === 'a' });
+        if (row[2]) options.push({ text: row[2], isCorrect: row[5]?.toString().toLowerCase() === 'b' });
+        if (row[3]) options.push({ text: row[3], isCorrect: row[5]?.toString().toLowerCase() === 'c' });
+        if (row[4]) options.push({ text: row[4], isCorrect: row[5]?.toString().toLowerCase() === 'd' });
+        
+        if (options.length === 0) continue;
+        
+        questions.push({
+          question_text: row[0],
+          explanation_text: row[6] || "",
+          options
+        });
+      }
+
+      if (questions.length === 0) {
+        return res.status(400).json({ message: "No valid questions found in file" });
+      }
+
+      // Create questions in database and link to quiz
+      let successCount = 0;
+      const createdQuestions = [];
+      
+      for (const question of questions) {
+        try {
+          // Create the question
+          const result = await storage.createQuestion(question);
+          
+          // Automatically link to the specific quiz
+          await storage.linkQuestionToQuiz(result.id, quiz.id);
+          
+          createdQuestions.push(result);
+          successCount++;
+        } catch (error) {
+          console.error("Error creating and linking question:", error);
+        }
+      }
+
+      res.json({ 
+        message: `Successfully uploaded ${successCount} questions and linked them to quiz "${quiz.title}"`,
+        count: successCount,
+        total: questions.length,
+        questions: createdQuestions,
+        quizId: quizId,
+        quizTitle: quiz.title
+      });
+    } catch (error) {
+      console.error("Error processing quiz-specific bulk upload:", error);
+      res.status(500).json({ message: "Failed to process file" });
+    }
+  });
+
+  // Download Excel template for quiz-specific upload
+  app.get('/api/quizzes/:quizId/questions/template', isAdmin, async (req, res) => {
+    try {
+      const quizId = parseInt(req.params.quizId);
+      
+      // Get quiz info for template customization
+      const quiz = await storage.getQuizByQuizId(quizId);
+      const quizName = quiz ? quiz.title : 'Quiz';
+      
+      // Create template data
+      const templateData = [
+        ['Question Text', 'Option A', 'Option B', 'Option C', 'Option D', 'Correct Answer', 'Explanation'],
+        ['What is the capital of France?', 'London', 'Paris', 'Berlin', 'Madrid', 'B', 'Paris is the capital city of France.'],
+        ['Which planet is closest to the Sun?', 'Venus', 'Mercury', 'Earth', 'Mars', 'B', 'Mercury is the closest planet to the Sun.']
+      ];
+
+      // Create workbook and worksheet
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.aoa_to_sheet(templateData);
+      
+      // Set column widths
+      worksheet['!cols'] = [
+        { width: 50 }, // Question Text
+        { width: 20 }, // Option A
+        { width: 20 }, // Option B
+        { width: 20 }, // Option C
+        { width: 20 }, // Option D
+        { width: 15 }, // Correct Answer
+        { width: 40 }  // Explanation
+      ];
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
+
+      // Generate buffer
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      const filename = `${quizName.replace(/[^a-zA-Z0-9]/g, '_')}_questions_template.xlsx`;
+      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(buffer);
+    } catch (error) {
+      console.error("Error generating quiz template:", error);
+      res.status(500).json({ message: "Failed to generate template" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
