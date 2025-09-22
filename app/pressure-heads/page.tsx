@@ -28,6 +28,7 @@ export default function PressureHeadsPage() {
       sectionId={7} 
       sectionName="PRESSURE HEADS" 
       backUrl="/oxford-instruments-questions/" 
+      quizId={7} // Enable bulk upload for this quiz
     />
   )
 }

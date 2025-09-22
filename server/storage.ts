@@ -113,6 +113,8 @@ export interface IStorage {
   getAllTopics(): Promise<Topics[]>;
   getTopicById(topicId: number): Promise<Topics | null>;
   createQuiz(title: string, slug: string): Promise<Quizzes>;
+  getQuizByQuizId(externalQuizId: number): Promise<any>;
+  linkQuestionToQuiz(questionId: number, quizPrimaryKey: number): Promise<void>;
   linkQuestionsToTopic(questionIds: number[], topicId: number): Promise<void>;
   
   // Admin operations
