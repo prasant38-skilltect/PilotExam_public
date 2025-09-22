@@ -902,7 +902,7 @@ export default function GenericSectionTest({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-5 gap-4">
                   {sortedQuestions.map((q: any, index) => {
                     const isAnswered = answeredQuestions.has(q.id);
                     const isCorrect =
@@ -959,8 +959,8 @@ export default function GenericSectionTest({
                 >
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="question">Question</TabsTrigger>
-                    {/* <TabsTrigger value="explanation">Explanation</TabsTrigger> */}
-                    <TabsTrigger value="comments">Write Your Answer</TabsTrigger>
+                    {isAdmin && <TabsTrigger value="explanation">Explanation</TabsTrigger>}
+                    <TabsTrigger value="comments">Comments</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="question" className="mt-4">
@@ -1205,7 +1205,7 @@ export default function GenericSectionTest({
                     </div>
                   </TabsContent>
 
-                  {/* <TabsContent value="explanation" className="mt-4">
+                  <TabsContent value="explanation" className="mt-4">
                     <div className="space-y-4">
                       {isAdmin && editingQuestionId === currentQuestion.id ? (
                         <div className="space-y-4">
@@ -1237,7 +1237,7 @@ export default function GenericSectionTest({
                         </>
                       )}
                     </div>
-                  </TabsContent> */}
+                  </TabsContent>
 
                   <TabsContent value="comments" className="mt-4">
                     <div className="space-y-4">

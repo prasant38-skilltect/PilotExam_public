@@ -43,13 +43,9 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
-            14 ATPL Subject Modules
+           <h1 className="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
+            Master all DGCA subjects with our comprehensive question bank and practice tests
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Master all DGCA subjects with our comprehensive question bank
-            and practice tests
-          </p>
         </div>
 
         {/* Start Your Flight Prep Button */}
@@ -67,7 +63,7 @@ export default function Home() {
         </div> */}
 
         {/* Search */}
-        <div className="mb-8 max-w-md mx-auto">
+        <div className="mb-8 max-w-4xl mx-auto">
           <div className="relative">
             <Search
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -82,7 +78,7 @@ export default function Home() {
             />
           </div>
         </div>
-        <Subjects showBackToHome={false}/>
+        {/* <Subjects showBackToHome={false}/> */}
 
         {/* Subject Grid */}
         {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

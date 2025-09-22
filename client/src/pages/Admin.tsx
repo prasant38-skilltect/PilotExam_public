@@ -15,8 +15,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { BulkUpload } from "@/components/BulkUpload";
 import { Link } from "wouter";
 import { Home, Edit, Eye, Calendar, User, MessageSquare, Search, ChevronLeft, ChevronRight, TreePine, ExternalLink, Plus, Upload, Download, Link as LinkIcon, Check, ChevronsUpDown } from "lucide-react";
+import { TopicLinking } from "../components/TopicLinking";
 
 export default function Admin() {
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
@@ -41,7 +43,6 @@ export default function Admin() {
   // Question management state
   const [showAddSingleQuestion, setShowAddSingleQuestion] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [newQuestionData, setNewQuestionData] = useState({
     question_text: '',
     explanation_text: '',
@@ -62,7 +63,6 @@ export default function Admin() {
   // Bulk selection state for main questions table
   const [selectedQuestionsInTable, setSelectedQuestionsInTable] = useState<number[]>([]);
   const [showBulkTopicMapping, setShowBulkTopicMapping] = useState(false);
-  const [topicSearchOpen, setTopicSearchOpen] = useState(false);
   const [topicSearchValue, setTopicSearchValue] = useState("");
 
   // Debounce search text to avoid too many API calls
@@ -181,54 +181,6 @@ export default function Admin() {
         variant: "destructive",
       });
       console.error("Failed to create question:", error);
-    }
-  });
-
-  // Mutation for bulk upload questions
-  const bulkUploadMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const response = await fetch('/api/admin/questions/bulk-upload', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to upload questions');
-      }
-      
-      return await response.json();
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
-      setShowBulkUpload(false);
-      setSelectedFile(null);
-      
-      // Store uploaded questions and show topic linking dialog
-      if (data.questions && data.questions.length > 0) {
-        setUploadedQuestions(data.questions);
-        setSelectedQuestions(data.questions.map((q: any) => q.id)); // Select all by default
-        setShowTopicLinking(true);
-        toast({
-          title: "Upload Complete",
-          description: `${data.count} questions uploaded. Now select a topic to link them.`,
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: `Successfully uploaded ${data.count} questions.`,
-        });
-      }
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to upload questions. Please check the file format.",
-        variant: "destructive",
-      });
-      console.error("Failed to upload questions:", error);
     }
   });
 
@@ -386,19 +338,6 @@ export default function Admin() {
     });
   };
 
-  const handleBulkUpload = () => {
-    if (!selectedFile) {
-      toast({
-        title: "Error",
-        description: "Please select an Excel file to upload",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    bulkUploadMutation.mutate(selectedFile);
-  };
-
   const handleDownloadTemplate = () => {
     // Create and download Excel template
     const link = document.createElement('a');
@@ -429,39 +368,6 @@ export default function Admin() {
     rejectCommentMutation.mutate({ 
       commentId: editingComment.id, 
       adminResponse: adminResponse.trim() || undefined 
-    });
-  };
-
-  // Helper functions for topic linking
-  const handleQuestionSelection = (questionId: number, isSelected: boolean) => {
-    if (isSelected) {
-      setSelectedQuestions(prev => [...prev, questionId]);
-    } else {
-      setSelectedQuestions(prev => prev.filter(id => id !== questionId));
-    }
-  };
-
-  const handleSelectAllQuestions = (selectAll: boolean) => {
-    if (selectAll) {
-      setSelectedQuestions(uploadedQuestions.map(q => q.id));
-    } else {
-      setSelectedQuestions([]);
-    }
-  };
-
-  const handleLinkToTopic = () => {
-    if (!selectedTopic || selectedQuestions.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select a topic and at least one question.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    linkQuestionsToTopicMutation.mutate({
-      questionIds: selectedQuestions,
-      topicId: selectedTopic.id
     });
   };
 
@@ -1267,62 +1173,7 @@ export default function Admin() {
         </Dialog>
 
         {/* Bulk Upload Dialog */}
-        <Dialog open={showBulkUpload} onOpenChange={setShowBulkUpload}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Bulk Upload Questions</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="excel-file">Select Excel File</Label>
-                <Input
-                  id="excel-file"
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                  className="mt-1"
-                />
-                <p className="text-sm text-gray-500 mt-2">
-                  Upload an Excel file with questions, options, and explanations.
-                </p>
-              </div>
-
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <p className="text-sm text-blue-800 mb-2">
-                  Need the correct format? Download our template first:
-                </p>
-                <Button
-                  onClick={handleDownloadTemplate}
-                  size="sm"
-                  variant="outline"
-                  className="w-full"
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  Download Excel Template
-                </Button>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowBulkUpload(false);
-                    setSelectedFile(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleBulkUpload}
-                  disabled={!selectedFile || bulkUploadMutation.isPending}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  {bulkUploadMutation.isPending ? "Uploading..." : "Upload Questions"}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <BulkUpload showBulkUpload={showBulkUpload} setShowBulkUpload={setShowBulkUpload} handleDownloadTemplate={handleDownloadTemplate} setUploadedQuestions={setUploadedQuestions} setShowTopicLinking={setShowTopicLinking} setSelectedQuestions={setSelectedQuestions} />
 
         {/* Comment Moderation Dialog */}
         <Dialog open={isCommentDialogOpen} onOpenChange={setIsCommentDialogOpen}>
@@ -1398,157 +1249,7 @@ export default function Admin() {
         </Dialog>
 
         {/* Topic Linking Dialog - Enhanced */}
-        <Dialog open={showTopicLinking} onOpenChange={setShowTopicLinking}>
-          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader className="pb-6 border-b">
-              <DialogTitle className="flex items-center gap-3 text-xl">
-                <LinkIcon className="h-6 w-6 text-blue-600" />
-                Link Uploaded Questions to Topic
-              </DialogTitle>
-              <p className="text-sm text-gray-600 mt-2">
-                Your questions have been uploaded successfully! Now organize them by assigning to the appropriate topic.
-              </p>
-            </DialogHeader>
-            <div className="space-y-6">
-              {/* Question Selection */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium">Select Questions ({selectedQuestions.length} of {uploadedQuestions.length})</h3>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      checked={selectedQuestions.length === uploadedQuestions.length}
-                      onCheckedChange={handleSelectAllQuestions}
-                      data-testid="checkbox-select-all"
-                    />
-                    <Label>Select All</Label>
-                  </div>
-                </div>
-                
-                <div className="max-h-60 overflow-y-auto border rounded-md">
-                  {uploadedQuestions.map((question, index) => (
-                    <div key={question.id} className="flex items-center gap-3 p-3 border-b last:border-b-0 hover:bg-gray-50">
-                      <Checkbox
-                        checked={selectedQuestions.includes(question.id)}
-                        onCheckedChange={(checked) => handleQuestionSelection(question.id, checked as boolean)}
-                        data-testid={`checkbox-question-${question.id}`}
-                      />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">Question {index + 1}</div>
-                        <div className="text-sm text-gray-600 truncate max-w-lg">
-                          {question.text || question.question_text}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Topic Selection */}
-              <div>
-                <Label className="text-lg font-medium">Select Topic</Label>
-                <Popover open={topicSearchOpen} onOpenChange={setTopicSearchOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={topicSearchOpen}
-                      className="mt-2 w-full justify-between h-12 text-left bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-blue-300"
-                      data-testid="button-search-topic"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Search className="h-4 w-4 text-gray-400" />
-                        <span className={selectedTopic ? "text-gray-900" : "text-gray-500"}>
-                          {selectedTopic
-                            ? `${selectedTopic.text} (${selectedTopic.categoryName})`
-                            : "Search and select a topic..."}
-                        </span>
-                      </div>
-                      <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[500px] p-0" align="start" sideOffset={4}>
-                    <Command className="rounded-lg border shadow-md">
-                      <CommandInput placeholder="Type to search topics..." className="h-12" />
-                      <CommandList className="max-h-[300px] overflow-y-auto">
-                        <CommandEmpty className="py-6 text-center text-sm text-gray-500">
-                          {loadingTopics ? (
-                            <div className="flex items-center justify-center gap-2">
-                              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                              Loading topics...
-                            </div>
-                          ) : (
-                            "No topics found. Try adjusting your search."
-                          )}
-                        </CommandEmpty>
-                        <CommandGroup>
-                          {allTopics.map((topic: any) => (
-                            <CommandItem
-                              key={topic.id}
-                              value={`${topic.text} ${topic.categoryName}`}
-                              onSelect={() => {
-                                setSelectedTopic(topic);
-                                setTopicSearchOpen(false);
-                              }}
-                              className="px-4 py-3 cursor-pointer hover:bg-blue-50"
-                            >
-                              <div className="flex items-center gap-3 flex-1">
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                <div className="flex flex-col">
-                                  <span className="font-medium text-gray-900">{topic.text}</span>
-                                  <span className="text-sm text-gray-500">{topic.categoryName}</span>
-                                </div>
-                              </div>
-                              <Check
-                                className={`h-4 w-4 ${
-                                  selectedTopic?.id === topic.id ? "opacity-100 text-blue-600" : "opacity-0"
-                                }`}
-                              />
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                
-                {selectedTopic && (
-                  <div className="mt-2 p-3 bg-blue-50 rounded-md">
-                    <div className="text-sm font-medium">Selected Topic: {selectedTopic.text}</div>
-                    <div className="text-sm text-gray-600">Category: {selectedTopic.categoryName}</div>
-                    {selectedTopic.quizId ? (
-                      <div className="text-sm text-green-600">✓ Has existing quiz (ID: {selectedTopic.quizId})</div>
-                    ) : (
-                      <div className="text-sm text-orange-600">⚠ Will create new quiz for this topic</div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowTopicLinking(false);
-                    setUploadedQuestions([]);
-                    setSelectedQuestions([]);
-                    setSelectedTopic(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleLinkToTopic}
-                  disabled={!selectedTopic || selectedQuestions.length === 0 || linkQuestionsToTopicMutation.isPending}
-                  className="bg-green-600 hover:bg-green-700"
-                  data-testid="button-link-to-topic"
-                >
-                  {linkQuestionsToTopicMutation.isPending ? "Linking..." : `Link ${selectedQuestions.length} Questions`}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <TopicLinking showTopicLinking={showTopicLinking} linkQuestionsToTopicMutation={linkQuestionsToTopicMutation} allTopics={allTopics} setShowTopicLinking={setShowTopicLinking} selectedQuestions={selectedQuestions} setSelectedQuestions={setSelectedQuestions} uploadedQuestions={uploadedQuestions} setUploadedQuestions={setUploadedQuestions} loadingTopics={loadingTopics} setSelectedTopic={setSelectedTopic}/>
 
         {/* Bulk Topic Mapping Dialog - Enhanced */}
         <Dialog open={showBulkTopicMapping} onOpenChange={setShowBulkTopicMapping}>
