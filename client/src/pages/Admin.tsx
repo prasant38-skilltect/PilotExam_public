@@ -677,6 +677,28 @@ export default function Admin() {
                           <Download className="h-4 w-4 mr-1" />
                           Download Template
                         </Button>
+                        <Button
+                          onClick={() => {
+                            if (selectedQuestionsInTable.length === 0) {
+                              toast({
+                                title: "No Questions Selected",
+                                description: "Please select questions from the table first using the checkboxes.",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                            // Use the actual selected questions and show the same dialog as after upload
+                            setUploadedQuestions(questions.filter((q: any) => selectedQuestionsInTable.includes(q.id)));
+                            setSelectedQuestions(selectedQuestionsInTable);
+                            setShowTopicLinking(true);
+                          }}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                          data-testid="button-map-selected-to-topic"
+                        >
+                          <LinkIcon className="h-4 w-4 mr-1" />
+                          Map Selected to Topic
+                        </Button>
                       </div>
                     </CardTitle>
                   </CardHeader>
