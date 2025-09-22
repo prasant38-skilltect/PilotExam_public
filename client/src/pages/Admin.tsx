@@ -677,19 +677,6 @@ export default function Admin() {
                           <Download className="h-4 w-4 mr-1" />
                           Download Template
                         </Button>
-                        <Button
-                          onClick={() => {
-                            setSelectedQuestionsInTable([1, 2, 3]); // Demo selection
-                            setShowBulkTopicMapping(true);
-                          }}
-                          size="sm"
-                          variant="outline"
-                          className="border-orange-500 text-orange-600 hover:bg-orange-50"
-                          data-testid="button-demo-bulk-mapping"
-                        >
-                          <LinkIcon className="h-4 w-4 mr-1" />
-                          Demo: Bulk Map to Topic
-                        </Button>
                       </div>
                     </CardTitle>
                   </CardHeader>
@@ -1388,14 +1375,17 @@ export default function Admin() {
           </DialogContent>
         </Dialog>
 
-        {/* Topic Linking Dialog */}
+        {/* Topic Linking Dialog - Enhanced */}
         <Dialog open={showTopicLinking} onOpenChange={setShowTopicLinking}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <LinkIcon className="h-5 w-5" />
-                Link Questions to Topic
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="pb-6 border-b">
+              <DialogTitle className="flex items-center gap-3 text-xl">
+                <LinkIcon className="h-6 w-6 text-blue-600" />
+                Link Uploaded Questions to Topic
               </DialogTitle>
+              <p className="text-sm text-gray-600 mt-2">
+                Your questions have been uploaded successfully! Now organize them by assigning to the appropriate topic.
+              </p>
             </DialogHeader>
             <div className="space-y-6">
               {/* Question Selection */}
@@ -1440,21 +1430,33 @@ export default function Admin() {
                       variant="outline"
                       role="combobox"
                       aria-expanded={topicSearchOpen}
-                      className="mt-2 w-full justify-between"
+                      className="mt-2 w-full justify-between h-12 text-left bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-blue-300"
                       data-testid="button-search-topic"
                     >
-                      {selectedTopic
-                        ? `${selectedTopic.text} (${selectedTopic.categoryName})`
-                        : "Search and select a topic..."}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      <div className="flex items-center gap-3">
+                        <Search className="h-4 w-4 text-gray-400" />
+                        <span className={selectedTopic ? "text-gray-900" : "text-gray-500"}>
+                          {selectedTopic
+                            ? `${selectedTopic.text} (${selectedTopic.categoryName})`
+                            : "Search and select a topic..."}
+                        </span>
+                      </div>
+                      <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-full p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search topics..." className="h-9" />
-                      <CommandList>
-                        <CommandEmpty>
-                          {loadingTopics ? "Loading topics..." : "No topics found."}
+                  <PopoverContent className="w-[500px] p-0" align="start" sideOffset={4}>
+                    <Command className="rounded-lg border shadow-md">
+                      <CommandInput placeholder="Type to search topics..." className="h-12" />
+                      <CommandList className="max-h-[300px] overflow-y-auto">
+                        <CommandEmpty className="py-6 text-center text-sm text-gray-500">
+                          {loadingTopics ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                              Loading topics...
+                            </div>
+                          ) : (
+                            "No topics found. Try adjusting your search."
+                          )}
                         </CommandEmpty>
                         <CommandGroup>
                           {allTopics.map((topic: any) => (
@@ -1465,14 +1467,18 @@ export default function Admin() {
                                 setSelectedTopic(topic);
                                 setTopicSearchOpen(false);
                               }}
+                              className="px-4 py-3 cursor-pointer hover:bg-blue-50"
                             >
-                              <div className="flex flex-col">
-                                <span className="font-medium">{topic.text}</span>
-                                <span className="text-sm text-gray-500">{topic.categoryName}</span>
+                              <div className="flex items-center gap-3 flex-1">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <div className="flex flex-col">
+                                  <span className="font-medium text-gray-900">{topic.text}</span>
+                                  <span className="text-sm text-gray-500">{topic.categoryName}</span>
+                                </div>
                               </div>
                               <Check
-                                className={`ml-auto h-4 w-4 ${
-                                  selectedTopic?.id === topic.id ? "opacity-100" : "opacity-0"
+                                className={`h-4 w-4 ${
+                                  selectedTopic?.id === topic.id ? "opacity-100 text-blue-600" : "opacity-0"
                                 }`}
                               />
                             </CommandItem>
@@ -1522,107 +1528,216 @@ export default function Admin() {
           </DialogContent>
         </Dialog>
 
-        {/* Bulk Topic Mapping Dialog */}
+        {/* Bulk Topic Mapping Dialog - Enhanced */}
         <Dialog open={showBulkTopicMapping} onOpenChange={setShowBulkTopicMapping}>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <LinkIcon className="h-5 w-5" />
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="pb-6 border-b">
+              <DialogTitle className="flex items-center gap-3 text-xl">
+                <LinkIcon className="h-6 w-6 text-blue-600" />
                 Map Selected Questions to Topic
               </DialogTitle>
+              <p className="text-sm text-gray-600 mt-2">
+                Organize your questions by assigning them to the appropriate topic. This will automatically create or link them to the corresponding quiz.
+              </p>
             </DialogHeader>
-            <div className="space-y-6">
-              {/* Selected Questions Summary */}
-              <div>
-                <h3 className="text-lg font-medium mb-4">
-                  Selected Questions ({selectedQuestionsInTable.length})
-                </h3>
-                <div className="bg-gray-50 p-3 rounded-md text-sm text-gray-600">
-                  You have selected {selectedQuestionsInTable.length} question{selectedQuestionsInTable.length > 1 ? 's' : ''} from the questions table to map to a topic.
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-6">
+              {/* Left Column - Selected Questions Summary */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-bold text-sm">{selectedQuestionsInTable.length}</span>
+                    </div>
+                    Selected Questions
+                  </h3>
+                  
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                        <Edit className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-blue-900">Ready to Organize</h4>
+                        <p className="text-sm text-blue-700">
+                          {selectedQuestionsInTable.length} question{selectedQuestionsInTable.length > 1 ? 's' : ''} selected from the questions table
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white p-4 rounded-md border border-blue-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">Questions to be mapped:</span>
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                          {selectedQuestionsInTable.length} items
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        These questions will be linked to your selected topic and automatically organized into the appropriate quiz structure.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Instructions */}
+                <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                  <h4 className="font-medium text-amber-900 mb-2 flex items-center gap-2">
+                    <Eye className="h-4 w-4" />
+                    How it works
+                  </h4>
+                  <ul className="text-sm text-amber-800 space-y-1">
+                    <li>• Search and select a topic from the dropdown</li>
+                    <li>• Questions will be linked to that topic</li>
+                    <li>• A quiz will be created automatically if needed</li>
+                    <li>• You can organize questions anytime after upload</li>
+                  </ul>
                 </div>
               </div>
 
-              {/* Topic Selection */}
-              <div>
-                <Label className="text-lg font-medium">Select Topic</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className="mt-2 w-full justify-between"
-                      data-testid="button-bulk-search-topic"
-                    >
-                      {selectedTopic
-                        ? `${selectedTopic.text} (${selectedTopic.categoryName})`
-                        : "Search and select a topic..."}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search topics..." className="h-9" />
-                      <CommandList>
-                        <CommandEmpty>
-                          {loadingTopics ? "Loading topics..." : "No topics found."}
-                        </CommandEmpty>
-                        <CommandGroup>
-                          {allTopics.map((topic: any) => (
-                            <CommandItem
-                              key={topic.id}
-                              value={`${topic.text} ${topic.categoryName}`}
-                              onSelect={() => {
-                                setSelectedTopic(topic);
-                              }}
-                            >
-                              <div className="flex flex-col">
-                                <span className="font-medium">{topic.text}</span>
-                                <span className="text-sm text-gray-500">{topic.categoryName}</span>
-                              </div>
-                              <Check
-                                className={`ml-auto h-4 w-4 ${
-                                  selectedTopic?.id === topic.id ? "opacity-100" : "opacity-0"
-                                }`}
-                              />
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                
-                {selectedTopic && (
-                  <div className="mt-2 p-3 bg-blue-50 rounded-md">
-                    <div className="text-sm font-medium">Selected Topic: {selectedTopic.text}</div>
-                    <div className="text-sm text-gray-600">Category: {selectedTopic.categoryName}</div>
-                    {selectedTopic.quizId ? (
-                      <div className="text-sm text-green-600">✓ Has existing quiz (ID: {selectedTopic.quizId})</div>
-                    ) : (
-                      <div className="text-sm text-orange-600">⚠ Will create new quiz for this topic</div>
+              {/* Right Column - Topic Selection */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                    <TreePine className="h-5 w-5 text-green-600" />
+                    Choose Topic
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-base font-medium text-gray-700 mb-3 block">
+                        Search and select a topic to organize your questions
+                      </Label>
+                      
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between h-12 text-left bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-blue-300"
+                            data-testid="button-bulk-search-topic"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Search className="h-4 w-4 text-gray-400" />
+                              <span className={selectedTopic ? "text-gray-900" : "text-gray-500"}>
+                                {selectedTopic
+                                  ? `${selectedTopic.text} (${selectedTopic.categoryName})`
+                                  : "Search and select a topic..."}
+                              </span>
+                            </div>
+                            <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[500px] p-0" align="start" sideOffset={4}>
+                          <Command className="rounded-lg border shadow-md">
+                            <CommandInput placeholder="Type to search topics..." className="h-12" />
+                            <CommandList className="max-h-[300px] overflow-y-auto">
+                              <CommandEmpty className="py-6 text-center text-sm text-gray-500">
+                                {loadingTopics ? (
+                                  <div className="flex items-center justify-center gap-2">
+                                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                    Loading topics...
+                                  </div>
+                                ) : (
+                                  "No topics found. Try adjusting your search."
+                                )}
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {allTopics.map((topic: any) => (
+                                  <CommandItem
+                                    key={topic.id}
+                                    value={`${topic.text} ${topic.categoryName}`}
+                                    onSelect={() => {
+                                      setSelectedTopic(topic);
+                                    }}
+                                    className="px-4 py-3 cursor-pointer hover:bg-blue-50"
+                                  >
+                                    <div className="flex items-center gap-3 flex-1">
+                                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                      <div className="flex flex-col">
+                                        <span className="font-medium text-gray-900">{topic.text}</span>
+                                        <span className="text-sm text-gray-500">{topic.categoryName}</span>
+                                      </div>
+                                    </div>
+                                    <Check
+                                      className={`h-4 w-4 ${
+                                        selectedTopic?.id === topic.id ? "opacity-100 text-blue-600" : "opacity-0"
+                                      }`}
+                                    />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    
+                    {selectedTopic && (
+                      <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <Check className="h-4 w-4 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-medium text-green-900 mb-1">Selected Topic</h4>
+                            <p className="text-green-800 font-medium">{selectedTopic.text}</p>
+                            <p className="text-sm text-green-700 mb-3">Category: {selectedTopic.categoryName}</p>
+                            
+                            <div className="flex items-center gap-2">
+                              {selectedTopic.quizId ? (
+                                <div className="flex items-center gap-2 text-sm text-green-600">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                  <span>Has existing quiz (ID: {selectedTopic.quizId})</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 text-sm text-orange-600">
+                                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                  <span>Will create new quiz for this topic</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
-                )}
+                </div>
               </div>
+            </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3">
+            {/* Action Buttons */}
+            <div className="flex justify-between items-center pt-6 border-t">
+              <div className="text-sm text-gray-600">
+                {selectedQuestionsInTable.length} question{selectedQuestionsInTable.length > 1 ? 's' : ''} ready to be mapped
+              </div>
+              <div className="flex gap-3">
                 <Button
                   variant="outline"
                   onClick={() => {
                     setShowBulkTopicMapping(false);
                     setSelectedTopic(null);
                   }}
+                  className="px-6"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleBulkMapToTopic}
                   disabled={!selectedTopic || selectedQuestionsInTable.length === 0 || linkQuestionsToTopicMutation.isPending}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-green-600 hover:bg-green-700 px-6"
                   data-testid="button-bulk-map-questions"
                 >
-                  {linkQuestionsToTopicMutation.isPending ? "Mapping..." : `Map ${selectedQuestionsInTable.length} Questions`}
+                  {linkQuestionsToTopicMutation.isPending ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Mapping...
+                    </>
+                  ) : (
+                    <>
+                      <LinkIcon className="h-4 w-4 mr-2" />
+                      Map {selectedQuestionsInTable.length} Questions
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
