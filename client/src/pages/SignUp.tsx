@@ -35,6 +35,8 @@ export default function SignUp() {
       firstName: string;
       lastName: string;
       planDuration?: string;
+      googleId?: string;          // add this
+      profileImageUrl?: string;   // add this
     }) => {
       return await apiRequest("POST", "/api/auth/signup", data);
     },

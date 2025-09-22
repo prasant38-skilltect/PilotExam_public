@@ -7,6 +7,8 @@ import connectPg from "connect-pg-simple";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import path from "path";
+import { OAuth2Client } from "google-auth-library";
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, "postmessage");
 // import { setupAuth, isAuthenticated } from "./replitAuth"; // Disabled Replit auth
 // import { insertTestSessionSchema, insertUserAnswerSchema } from "../shared/schema";
 
@@ -92,6 +94,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create account" });
     }
   });
+
+
+  app.post("/api/auth/google", async (req: any, res) => {
+  try {
+    const { email, firstName, lastName, googleId, profileImageUrl } = req.body;
+
+    if (!email || !googleId) {
+      return res.status(400).json({ message: "Missing Google user data" });
+    }
+
+    // Create or update user
+    const user = await storage.upsertGoogleUser({
+      email,
+      firstName,
+      lastName,
+      googleId,
+      profileImageUrl,
+    });
+
+    // Set session
+    req.session.userId = user.id;
+    req.session.isAdmin = user.isAdmin;
+
+    const { passwordHash, ...userResponse } = user;
+    res.json(userResponse);
+  } catch (error: any) {
+    console.error("Google login error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
 
   app.post('/api/auth/signin', async (req: any, res) => {
     try {

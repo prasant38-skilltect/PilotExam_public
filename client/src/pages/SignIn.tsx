@@ -8,6 +8,7 @@ import { EyeOff, Mail } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useGoogleLogin } from "@react-oauth/google";
 
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
@@ -47,18 +48,38 @@ export default function SignIn() {
     signInMutation.mutate(formData);
   };
 
-  const handleGoogleSignIn = () => {
-    // Store the current path to come back to after authentication  
-    const currentPath = window.location.pathname + window.location.search;
-    if (currentPath !== "/sign-in" && currentPath !== "/") {
-      localStorage.setItem("redirectAfterLogin", currentPath);
-    } else {
-      localStorage.setItem("redirectAfterLogin", "/");
+const googleLogin = useGoogleLogin({
+  onSuccess: async (tokenResponse) => {
+    try {
+      const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+      });
+      const googleUser = await res.json();
+
+      await apiRequest("POST", "/api/auth/google", {
+        email: googleUser.email,
+        firstName: googleUser.given_name,
+        lastName: googleUser.family_name,
+        googleId: googleUser.sub,
+        profileImageUrl: googleUser.picture,
+      });
+
+      const redirectPath = localStorage.getItem("redirectAfterLogin");
+      if (redirectPath) {
+        localStorage.removeItem("redirectAfterLogin");
+        setLocation(redirectPath);
+      } else {
+        setLocation("/");
+      }
+    } catch (err: any) {
+      setError(err.message || "Google login failed");
     }
-    
-    // Redirect to Replit Auth login which supports Google authentication
-    window.location.href = "/api/login";
-  };
+  },
+  onError: () => {
+    setError("Google login failed");
+  },
+});
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-purple-800 flex items-center justify-center p-3 py-6">
@@ -99,7 +120,7 @@ export default function SignIn() {
             type="button"
             variant="outline"
             className="w-full h-10 border-2 hover:bg-gray-50 transition-colors text-sm"
-            onClick={handleGoogleSignIn}
+            onClick={() => googleLogin()} 
           >
             <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
               <path

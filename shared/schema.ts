@@ -131,6 +131,7 @@ export const users = pgTable("users", {
   isAdmin: boolean("is_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  googleId: varchar("google_id").unique(),    
 });
 
 // Subscriptions table
@@ -293,6 +294,17 @@ export const signUpSchema = createInsertSchema(users).pick({
   path: ["confirmPassword"],
 });
 
+export const googleSignUpSchema = createInsertSchema(users).pick({
+  email: true,
+  firstName: true,
+  lastName: true,
+  username: true,
+}).extend({
+  googleId: z.string().min(1), // required for Google signup
+  profileImageUrl: z.string().optional(),
+  planDuration: z.string().optional(),
+});
+
 export const signInSchema = z.object({
   email: z.string().email("Invalid email format"),
   password: z.string().min(1, "Password is required"),
@@ -352,6 +364,7 @@ export type InsertSubject = z.infer<typeof insertSubjectSchema>;
 // export type InsertSection = z.infer<typeof insertSectionSchema>;
 export type Question = typeof questions.$inferSelect;
 export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
+export type GoogleSignUpData = z.infer<typeof googleSignUpSchema>;
 // export type Answer = typeof answers.$inferSelect;
 // export type InsertAnswer = z.infer<typeof insertAnswerSchema>;
 export type TestSession = typeof testSessions.$inferSelect;

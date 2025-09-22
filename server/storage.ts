@@ -296,6 +296,39 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId));
   }
 
+   async upsertGoogleUser(userData: {
+  email: string;
+  firstName: string;
+  lastName: string;
+  googleId: string;
+  profileImageUrl?: string;
+}): Promise<User> {
+  let [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.googleId, userData.googleId));
+
+  if (!user) {
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        username: userData.email.split("@")[0],
+        googleId: userData.googleId,
+        profileImageUrl: userData.profileImageUrl,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    user = newUser;
+  }
+
+  return user;
+}
+
   // Subject operations
   async getAllSubjects(): Promise<Categories[]> {
     return await db.select().from(categories).orderBy(categories.id);
