@@ -1028,7 +1028,6 @@ export default function GenericSectionTest({
               {quizId && (
                 <div className="flex gap-2 justify-center">
                   <Button
-                    variant="outline"
                     onClick={handleDownloadTemplate}
                     className="bg-blue-600 hover:bg-blue-700"
                     data-testid="button-download-quiz-template"
@@ -1037,7 +1036,6 @@ export default function GenericSectionTest({
                     Download Template
                   </Button>
                   <Button
-                    variant="outline"
                     onClick={() => setShowBulkUpload(true)}
                     className="bg-cyan-600 hover:bg-cyan-700"
                     data-testid="button-bulk-upload-quiz"
@@ -1123,7 +1121,7 @@ export default function GenericSectionTest({
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="question">Question</TabsTrigger>
                     {isAdmin && <TabsTrigger value="explanation">Explanation</TabsTrigger>}
-                    <TabsTrigger value="comments">Comments</TabsTrigger>
+                    <TabsTrigger value="comments">Write Your Answer</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="question" className="mt-4">
