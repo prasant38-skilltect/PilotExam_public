@@ -88,7 +88,7 @@ export default function DynamicPage() {
           </div>
         }
         {subjects?.type === "quiz" && isAuthenticated &&
-          <GenericSectionTest  quizData={subjects.data} sectionName={subjects.topicName}/>
+          <GenericSectionTest sectionId={subjects.id} quizData={subjects.data} sectionName={subjects.topicName}/>
         }
       </div>
     </div>

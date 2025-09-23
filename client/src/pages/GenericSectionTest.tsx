@@ -33,6 +33,8 @@ import {
   X,
   Plus,
   Trash2,
+  Upload,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -42,10 +44,12 @@ import DOMPurify from "dompurify";
 interface GenericSectionTestProps {
   quizData: any;
   sectionName: string;
+  sectionId: number;
 }
 
 export default function GenericSectionTest({
   quizData,
+  sectionId,
   sectionName,
 }: GenericSectionTestProps) {
   const [selectedAnswers, setSelectedAnswers] = useState<
@@ -87,6 +91,12 @@ export default function GenericSectionTest({
     options: [{ text: '', isCorrect: false }],
     quizId: null
   });
+
+  // Bulk upload state
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
   const { toast } = useToast();
   const { user, isAdmin, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
@@ -95,6 +105,7 @@ export default function GenericSectionTest({
   const urlParams = new URLSearchParams(window.location.search);
   const resumeSessionId = urlParams.get('resumeSession');
 
+  const quizId = quizData[0]?.quiz_id;
   // Mutation for updating questions (admin only)
   const updateQuestionMutation = useMutation({
     mutationFn: async (questionData: any) => {
@@ -217,6 +228,52 @@ export default function GenericSectionTest({
       console.error("Failed to save answer:", error);
     }
   });
+  
+  
+  // Bulk upload mutation
+  const bulkUploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      if (!quizId) {
+        throw new Error("Quiz ID is required for bulk upload");
+      }
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch(`/api/quizzes/${quizId}/questions/bulk-upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload questions');
+      }
+      
+      return await response.json();
+      // const response = await apiRequest('POST', `/api/quizzes/${quizId}/questions/bulk-upload`, formData);
+      // return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Upload Successful",
+        description: `Successfully uploaded ${data.count} questions to ${sectionName}`,
+      });
+      setShowBulkUpload(false);
+      setUploadFile(null);
+      setIsUploading(false);
+      // Refresh questions
+      queryClient.invalidateQueries({ queryKey: [`/api/sections/${sectionId}/questions`] });
+    },
+    onError: (error: any) => {
+      console.error("Upload error:", error);
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to upload questions. Please try again.",
+        variant: "destructive",
+      });
+      setIsUploading(false);
+    },
+  });
+
   
   // Get questions for this section
   // const { data: questions, isLoading } = useQuery<Question[]>({
@@ -619,7 +676,7 @@ export default function GenericSectionTest({
     createQuestionMutation.mutate({
       ...newQuestionData,
       options: validOptions,
-      quizId: quizData[0]?.quiz_id || null
+      quizId: quizId || null
     });
   };
 
@@ -656,6 +713,88 @@ export default function GenericSectionTest({
       minute: '2-digit',
       hour12: false
     });
+  };
+
+  // Bulk upload handlers
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+        toast({
+          title: "Invalid File Type",
+          description: "Please select an Excel file (.xlsx or .xls)",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "Please select a file smaller than 10MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setUploadFile(file);
+    }
+  };
+
+  const handleBulkUpload = async () => {
+    if (!uploadFile) {
+      toast({
+        title: "No File Selected",
+        description: "Please select an Excel file to upload",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!quizId) {
+      toast({
+        title: "Quiz ID Missing",
+        description: "Cannot upload questions without a quiz ID",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    bulkUploadMutation.mutate(uploadFile);
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      if (!quizId) {
+        toast({
+          title: "Quiz ID Missing",
+          description: "Cannot download template without a quiz ID",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const response = await apiRequest('GET', `/api/quizzes/${quizId}/questions/template`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${sectionName.replace(/[^a-zA-Z0-9]/g, '_')}_questions_template.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Template download error:", error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download template. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -875,7 +1014,7 @@ export default function GenericSectionTest({
             <h1 className="text-lg sm:text-xl font-bold text-white">{sectionName}</h1>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4 text-white">
-            {isAdmin && (
+            {isAdmin && (<>
               <Button
                 onClick={() => setShowAddQuestionForm(true)}
                 size="sm"
@@ -885,6 +1024,30 @@ export default function GenericSectionTest({
                 <Plus className="h-4 w-4 mr-1" />
                 Add Question
               </Button>
+              {/* Admin Bulk Upload Section */}
+              {quizId && (
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={handleDownloadTemplate}
+                    className="bg-blue-600 hover:bg-blue-700"
+                    data-testid="button-download-quiz-template"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Template
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowBulkUpload(true)}
+                    className="bg-cyan-600 hover:bg-cyan-700"
+                    data-testid="button-bulk-upload-quiz"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Bulk Upload
+                  </Button>
+                </div>
+              )}
+              </>
             )}
             <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
             <span className="font-mono text-base sm:text-lg">{formatTime(elapsedTime)}</span>
@@ -1455,6 +1618,75 @@ export default function GenericSectionTest({
                   className="bg-green-600 hover:bg-green-700"
                 >
                   {createQuestionMutation.isPending ? "Adding..." : "Add Question"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+        {/* Bulk Upload Dialog */}
+        <Dialog open={showBulkUpload} onOpenChange={setShowBulkUpload}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                Upload Questions to {sectionName}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Select Excel File
+                </label>
+                <Input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileChange}
+                  className="cursor-pointer"
+                  data-testid="input-bulk-upload-file"
+                />
+                {uploadFile && (
+                  <p className="text-sm text-green-600 mt-2">
+                    Selected: {uploadFile.name}
+                  </p>
+                )}
+              </div>
+              
+              <div className="text-sm text-gray-600">
+                <p className="mb-2">File requirements:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Excel format (.xlsx or .xls)</li>
+                  <li>Maximum size: 10MB</li>
+                  <li>Use the template format</li>
+                </ul>
+              </div>
+
+              <div className="flex justify-between">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowBulkUpload(false);
+                    setUploadFile(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleBulkUpload}
+                  disabled={!uploadFile || isUploading}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  data-testid="button-upload-questions"
+                >
+                  {isUploading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Questions
+                    </>
+                  )}
                 </Button>
               </div>
             </div>

@@ -1134,7 +1134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Create the question
           const result = await storage.createQuestion(question);
-          
+          console.log("Linking question ID", result.id, "to quiz ID", quiz.id);
           // Automatically link to the specific quiz
           await storage.linkQuestionToQuiz(result.id, quiz.id);
           

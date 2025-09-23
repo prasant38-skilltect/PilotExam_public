@@ -401,7 +401,10 @@ export class DatabaseStorage implements IStorage {
       .from(quizQuestions)
       .innerJoin(questions, eq(quizQuestions.questionId, questions.id))
       .leftJoin(questionOptions, eq(questions.id, questionOptions.questionId))
-      .where(eq(quizQuestions.quizId, quizId))
+      .where(and(
+          eq(quizQuestions.quizId, quizId),
+          eq(questions.isActive, true)
+        ))
       .orderBy(asc(quizQuestions.id), asc(questionOptions.optionOrder));
 
     // console.log("results quiz......", result2);
@@ -1088,7 +1091,7 @@ export class DatabaseStorage implements IStorage {
     const [quiz] = await db
       .select()
       .from(quizzes)
-      .where(eq(quizzes.quizId, externalQuizId));
+      .where(eq(quizzes.id, externalQuizId));
     return quiz || null;
   }
 
@@ -1098,11 +1101,11 @@ export class DatabaseStorage implements IStorage {
     await db
       .insert(quizQuestions)
       .values({
+        id: questionId,
         quizId: quizPrimaryKey,
         questionId: questionId,
         position: 999 // Default position
       })
-      .onConflictDoNothing(); // Prevent duplicates if relationship already exists
   }
 
   async getActiveQuestions(quizId?: number): Promise<any[]> {
