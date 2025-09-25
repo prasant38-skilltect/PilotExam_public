@@ -1298,14 +1298,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const quizId = parseInt(req.params.quizId);
-      if (!quizId) {
+      if (!quizId && quizId !== -1) {
         return res.status(400).json({ message: "Invalid quiz ID" });
       }
 
-      // Verify quiz exists
-      const quiz = await storage.getQuizByQuizId(quizId);
-      if (!quiz) {
-        return res.status(404).json({ message: "Quiz not found" });
+      let quiz;
+      if (quizId === -1) {
+        // Create a new quiz
+        const currentDate = new Date().toISOString().split('T')[0];
+        const title = `Quiz Created ${currentDate}`;
+        const slug = `quiz-${Date.now()}`;
+        quiz = await storage.createQuiz(title, slug);
+      } else {
+        // Verify quiz exists
+        quiz = await storage.getQuizByQuizId(quizId);
+        if (!quiz) {
+          return res.status(404).json({ message: "Quiz not found" });
+        }
       }
 
       // Parse Excel file
@@ -1358,13 +1367,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      const isNewQuiz = quizId === -1;
       res.json({ 
-        message: `Successfully uploaded ${successCount} questions and linked them to quiz "${quiz.title}"`,
+        message: isNewQuiz 
+          ? `Successfully created new quiz "${quiz.title}" and uploaded ${successCount} questions`
+          : `Successfully uploaded ${successCount} questions and linked them to quiz "${quiz.title}"`,
         count: successCount,
         total: questions.length,
         questions: createdQuestions,
-        quizId: quizId,
-        quizTitle: quiz.title
+        quizId: quiz.quizId, // Use quiz.quizId from the database object
+        quizTitle: quiz.title,
+        newQuizCreated: isNewQuiz
       });
     } catch (error) {
       console.error("Error processing quiz-specific bulk upload:", error);
