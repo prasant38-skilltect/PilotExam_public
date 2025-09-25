@@ -27,7 +27,8 @@ export default function Instruments() {
   });
 
   // Auth and admin functionality
-  const { isAdmin } = useAuth();
+  const auth = useAuth();
+  const isAdmin = auth.isAdmin;
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -322,7 +323,7 @@ export default function Instruments() {
                   <Input
                     id="edit-chapter-name"
                     value={editingChapter.name}
-                    onChange={(e) => setEditingChapter(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) => setEditingChapter((prev: any) => ({ ...prev, name: e.target.value }))}
                     placeholder="Enter chapter name"
                     className="bg-slate-700 border-slate-600 text-white"
                     data-testid="input-edit-chapter-name"
@@ -333,7 +334,7 @@ export default function Instruments() {
                   <Textarea
                     id="edit-chapter-description"
                     value={editingChapter.description || ''}
-                    onChange={(e) => setEditingChapter(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) => setEditingChapter((prev: any) => ({ ...prev, description: e.target.value }))}
                     placeholder="Enter chapter description"
                     className="bg-slate-700 border-slate-600 text-white"
                     data-testid="textarea-edit-chapter-description"
