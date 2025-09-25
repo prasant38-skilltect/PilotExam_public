@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Clock, Flag, MessageSquare, FileText, ThumbsUp, ThumbsDown, Send, Home, Calendar, Users, Upload, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -75,6 +76,9 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl, qu
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Session ID for progress tracking
+  const [sessionId] = useState(() => `quiz_${sectionId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
   const { toast } = useToast();
 
@@ -536,6 +540,22 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl, qu
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Progress Saving Alert */}
+        <Alert className="mb-6 border-green-500/20 bg-green-500/10">
+          <AlertDescription className="text-green-100">
+            <span className="inline-flex items-center gap-2">
+              <span>✅ Your progress is being saved automatically. Use this link to resume later:</span>
+              <Link 
+                href={`/resume/${sessionId}`} 
+                className="text-green-300 hover:text-green-200 underline font-medium"
+                data-testid="link-resume-quiz"
+              >
+                Resume Quiz
+              </Link>
+            </span>
+          </AlertDescription>
+        </Alert>
+
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center space-x-4">
