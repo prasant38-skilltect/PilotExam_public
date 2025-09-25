@@ -426,6 +426,221 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create Topic
+  app.post('/api/admin/topics', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { text, description, categoryId } = req.body;
+
+      if (!text?.trim()) {
+        return res.status(400).json({ message: "Topic name is required" });
+      }
+
+      if (!categoryId) {
+        return res.status(400).json({ message: "Category ID is required" });
+      }
+
+      // Get category to populate categoryName
+      const category = await storage.getSubject(categoryId);
+      if (!category) {
+        return res.status(400).json({ message: "Category not found" });
+      }
+
+      // Generate slug from text
+      const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+      const newTopic = await storage.createTopic({
+        text: text.trim(),
+        description: description?.trim() || '',
+        categoryId: parseInt(categoryId),
+        categoryName: category.name,
+        slug,
+        parentId: -1,
+        parentName: null
+      });
+
+      res.json(newTopic);
+    } catch (error) {
+      console.error("Error creating topic:", error);
+      res.status(500).json({ message: "Failed to create topic" });
+    }
+  });
+
+  // Update Topic
+  app.put('/api/admin/topics/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const topicId = parseInt(req.params.id);
+      const { text, description, categoryId } = req.body;
+
+      if (!topicId) {
+        return res.status(400).json({ message: "Invalid topic ID" });
+      }
+
+      const updateData: any = {};
+      if (text?.trim()) {
+        updateData.text = text.trim();
+        updateData.slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      }
+      if (description !== undefined) {
+        updateData.description = description?.trim() || '';
+      }
+      if (categoryId) {
+        const category = await storage.getSubject(categoryId);
+        if (!category) {
+          return res.status(400).json({ message: "Category not found" });
+        }
+        updateData.categoryId = parseInt(categoryId);
+        updateData.categoryName = category.name;
+      }
+
+      const updatedTopic = await storage.updateTopic(topicId, updateData);
+      res.json(updatedTopic);
+    } catch (error) {
+      console.error("Error updating topic:", error);
+      res.status(500).json({ message: "Failed to update topic" });
+    }
+  });
+
+  // Delete Topic
+  app.delete('/api/admin/topics/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const topicId = parseInt(req.params.id);
+
+      if (!topicId) {
+        return res.status(400).json({ message: "Invalid topic ID" });
+      }
+
+      await storage.deleteTopic(topicId);
+      res.json({ message: "Topic deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting topic:", error);
+      res.status(500).json({ message: "Failed to delete topic" });
+    }
+  });
+
+  // Category management routes
+  app.get('/api/admin/categories', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const categories = await storage.getAllSubjects();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  // Create Category
+  app.post('/api/admin/categories', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { name, description } = req.body;
+
+      if (!name?.trim()) {
+        return res.status(400).json({ message: "Category name is required" });
+      }
+
+      const newCategory = await storage.createSubject({
+        name: name.trim(),
+        text: description?.trim() || name.trim()
+      });
+
+      res.json(newCategory);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+
+  // Update Category
+  app.put('/api/admin/categories/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const categoryId = parseInt(req.params.id);
+      const { name, description } = req.body;
+
+      if (!categoryId) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+
+      const updateData: any = {};
+      if (name?.trim()) {
+        updateData.name = name.trim();
+      }
+      if (description !== undefined) {
+        updateData.text = description?.trim() || updateData.name || '';
+      }
+
+      const updatedCategory = await storage.updateCategory(categoryId, updateData);
+      res.json(updatedCategory);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+
+  // Delete Category
+  app.delete('/api/admin/categories/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.isAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const categoryId = parseInt(req.params.id);
+
+      if (!categoryId) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+
+      await storage.deleteCategory(categoryId);
+      res.json({ message: "Category deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+
   app.post('/api/admin/questions/link-to-topic', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.session.userId;

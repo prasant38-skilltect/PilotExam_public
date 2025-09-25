@@ -1,11 +1,20 @@
 import { Link, useLocation } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { getSubjectUrl } from '@/shared/urlMapping';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
-import { useEffect } from 'react';
 import GenericSectionTest from './GenericSectionTest';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+import { Plus, Edit, Trash2, Settings, Tag } from 'lucide-react';
 
 type Subject = {
   categoryId: number,
@@ -21,10 +30,129 @@ type Subject = {
 export default function DynamicPage() {
   const link = useLocation();
   const [, setLocation] = useLocation();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const auth = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = auth;
+  const isAdmin = (auth as any)?.isAdmin;
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   const { data: subjects, isLoading } = useQuery<any>({
     queryKey: [`/api${link[0]}`],
   });
+
+  // Topic management state
+  const [showAddTopic, setShowAddTopic] = useState(false);
+  const [editingTopic, setEditingTopic] = useState<any>(null);
+  const [newTopicData, setNewTopicData] = useState({
+    text: '',
+    description: '',
+    categoryId: ''
+  });
+
+  // Fetch categories for topic creation
+  const { data: categories = [] } = useQuery({
+    queryKey: ['/api/admin/categories'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/admin/categories');
+      return res instanceof Response ? await res.json() : res;
+    },
+    enabled: isAdmin && subjects?.type === "topic",
+  });
+
+  // Mutations for topic management
+  const createTopicMutation = useMutation({
+    mutationFn: async (topicData: any) => {
+      return await apiRequest('POST', '/api/admin/topics', topicData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api${link[0]}`] });
+      setShowAddTopic(false);
+      setNewTopicData({ text: '', description: '', categoryId: '' });
+      toast({
+        title: "Success",
+        description: "Topic created successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create topic.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const updateTopicMutation = useMutation({
+    mutationFn: async (topicData: any) => {
+      return await apiRequest('PUT', `/api/admin/topics/${topicData.id}`, topicData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api${link[0]}`] });
+      setEditingTopic(null);
+      toast({
+        title: "Success",
+        description: "Topic updated successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update topic.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteTopicMutation = useMutation({
+    mutationFn: async (topicId: number) => {
+      return await apiRequest('DELETE', `/api/admin/topics/${topicId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api${link[0]}`] });
+      toast({
+        title: "Success",
+        description: "Topic deleted successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete topic.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleCreateTopic = () => {
+    if (!newTopicData.text.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a topic name",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!newTopicData.categoryId) {
+      toast({
+        title: "Error",
+        description: "Please select a category",
+        variant: "destructive",
+      });
+      return;
+    }
+    createTopicMutation.mutate(newTopicData);
+  };
+
+  const handleUpdateTopic = () => {
+    if (!editingTopic) return;
+    updateTopicMutation.mutate(editingTopic);
+  };
+
+  const handleDeleteTopic = (topicId: number) => {
+    if (confirm('Are you sure you want to delete this topic?')) {
+      deleteTopicMutation.mutate(topicId);
+    }
+  };
 
   // Check if this is a quiz and user needs authentication
   useEffect(() => {
@@ -72,6 +200,73 @@ export default function DynamicPage() {
             </Button>
           </Link>
         </div>
+
+        {/* Admin Topic Management */}
+        {isAdmin && subjects?.type === "topic" && (
+          <Card className="mb-8 bg-slate-800/80 backdrop-blur-sm shadow-lg border-cyan-400/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Tag className="h-5 w-5" />
+                Admin: Topic Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2 mb-4">
+                <Button
+                  onClick={() => setShowAddTopic(true)}
+                  className="bg-green-600 hover:bg-green-700"
+                  data-testid="button-add-topic"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Topic
+                </Button>
+              </div>
+              
+              {subjects?.data && subjects.data.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {subjects.data.map((topic: any) => (
+                    <div
+                      key={topic.id}
+                      className="bg-slate-700/60 p-3 rounded-lg border border-cyan-400/20"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-white">{topic.text}</h4>
+                          {topic.categoryName && (
+                            <p className="text-cyan-400 text-xs mt-1">
+                              Category: {topic.categoryName}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-1 ml-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setEditingTopic(topic)}
+                            className="text-blue-400 hover:bg-blue-900/50"
+                            data-testid={`button-edit-topic-${topic.id}`}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteTopic(topic.id)}
+                            className="text-red-400 hover:bg-red-900/50"
+                            data-testid={`button-delete-topic-${topic.id}`}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {subjects?.type === "topic" &&
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {subjects?.data.map((subject: any) => (
@@ -90,6 +285,141 @@ export default function DynamicPage() {
         {subjects?.type === "quiz" && isAuthenticated &&
           <GenericSectionTest sectionId={subjects.id} quizData={subjects.data} sectionName={subjects.topicName}/>
         }
+
+        {/* Add Topic Dialog */}
+        <Dialog open={showAddTopic} onOpenChange={setShowAddTopic}>
+          <DialogContent className="bg-slate-800 border-cyan-400/30">
+            <DialogHeader>
+              <DialogTitle className="text-white">Add New Topic</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="topic-text" className="text-gray-200">Topic Name</Label>
+                <Input
+                  id="topic-text"
+                  value={newTopicData.text}
+                  onChange={(e) => setNewTopicData(prev => ({ ...prev, text: e.target.value }))}
+                  placeholder="Enter topic name"
+                  className="bg-slate-700 border-cyan-400/30 text-white"
+                  data-testid="input-topic-name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="topic-description" className="text-gray-200">Description (Optional)</Label>
+                <Textarea
+                  id="topic-description"
+                  value={newTopicData.description}
+                  onChange={(e) => setNewTopicData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Enter topic description"
+                  className="bg-slate-700 border-cyan-400/30 text-white"
+                  data-testid="textarea-topic-description"
+                />
+              </div>
+              <div>
+                <Label htmlFor="topic-category" className="text-gray-200">Category</Label>
+                <Select value={newTopicData.categoryId} onValueChange={(value) => setNewTopicData(prev => ({ ...prev, categoryId: value }))}>
+                  <SelectTrigger className="bg-slate-700 border-cyan-400/30 text-white" data-testid="select-topic-category">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-cyan-400/30">
+                    {categories.map((category: any) => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddTopic(false);
+                    setNewTopicData({ text: '', description: '', categoryId: '' });
+                  }}
+                  className="border-cyan-400/30 text-gray-200 hover:bg-slate-700"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateTopic}
+                  disabled={createTopicMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                  data-testid="button-create-topic"
+                >
+                  {createTopicMutation.isPending ? "Creating..." : "Create Topic"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Topic Dialog */}
+        <Dialog open={!!editingTopic} onOpenChange={() => setEditingTopic(null)}>
+          <DialogContent className="bg-slate-800 border-cyan-400/30">
+            <DialogHeader>
+              <DialogTitle className="text-white">Edit Topic</DialogTitle>
+            </DialogHeader>
+            {editingTopic && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="edit-topic-text" className="text-gray-200">Topic Name</Label>
+                  <Input
+                    id="edit-topic-text"
+                    value={editingTopic.text}
+                    onChange={(e) => setEditingTopic((prev: any) => ({ ...prev, text: e.target.value }))}
+                    placeholder="Enter topic name"
+                    className="bg-slate-700 border-cyan-400/30 text-white"
+                    data-testid="input-edit-topic-name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-topic-description" className="text-gray-200">Description (Optional)</Label>
+                  <Textarea
+                    id="edit-topic-description"
+                    value={editingTopic.description || ''}
+                    onChange={(e) => setEditingTopic((prev: any) => ({ ...prev, description: e.target.value }))}
+                    placeholder="Enter topic description"
+                    className="bg-slate-700 border-cyan-400/30 text-white"
+                    data-testid="textarea-edit-topic-description"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-topic-category" className="text-gray-200">Category</Label>
+                  <Select value={editingTopic.categoryId?.toString()} onValueChange={(value) => setEditingTopic((prev: any) => ({ ...prev, categoryId: value }))}>
+                    <SelectTrigger className="bg-slate-700 border-cyan-400/30 text-white" data-testid="select-edit-topic-category">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-cyan-400/30">
+                      {categories.map((category: any) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditingTopic(null)}
+                    className="border-cyan-400/30 text-gray-200 hover:bg-slate-700"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleUpdateTopic}
+                    disabled={updateTopicMutation.isPending}
+                    className="bg-blue-600 hover:bg-blue-700"
+                    data-testid="button-update-topic"
+                  >
+                    {updateTopicMutation.isPending ? "Updating..." : "Update Topic"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
