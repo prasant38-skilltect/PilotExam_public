@@ -28,7 +28,7 @@ export default function Instruments() {
 
   // Auth and admin functionality
   const auth = useAuth();
-  const isAdmin = auth.isAdmin;
+  const isAdmin = (auth as any)?.isAdmin;
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

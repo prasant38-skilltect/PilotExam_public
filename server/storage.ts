@@ -70,10 +70,19 @@ export interface IStorage {
     currentPassword: string,
     newPassword: string,
   ): Promise<void>;
-  // Subject operations
+  // Subject/Category operations
   getAllSubjects(): Promise<Categories[]>;
   getSubject(id: number): Promise<Subject | undefined>;
   createSubject(subject: InsertSubject): Promise<Subject>;
+  updateCategory(id: number, data: Partial<Categories>): Promise<Categories>;
+  deleteCategory(id: number): Promise<void>;
+
+  // Topic operations
+  getAllTopics(): Promise<Topics[]>;
+  getTopicById(topicId: number): Promise<Topics | null>;
+  createTopic(data: Partial<Topics>): Promise<Topics>;
+  updateTopic(id: number, data: Partial<Topics>): Promise<Topics>;
+  deleteTopic(id: number): Promise<void>;
 
   // Chapter operations
   // getChaptersBySubject(subjectId: number): Promise<Chapter[]>;
@@ -709,6 +718,48 @@ export class DatabaseStorage implements IStorage {
       .from(topics)
       .where(eq(topics.id, topicId));
     return topic || null;
+  }
+
+  async createTopic(data: Partial<Topics>): Promise<Topics> {
+    const [newTopic] = await db
+      .insert(topics)
+      .values({
+        categoryId: data.categoryId!,
+        categoryName: data.categoryName!,
+        parentId: data.parentId || -1,
+        parentName: data.parentName || null,
+        slug: data.slug!,
+        text: data.text!,
+        quizId: data.quizId || null,
+      })
+      .returning();
+    return newTopic;
+  }
+
+  async updateTopic(id: number, data: Partial<Topics>): Promise<Topics> {
+    const [updatedTopic] = await db
+      .update(topics)
+      .set(data)
+      .where(eq(topics.id, id))
+      .returning();
+    return updatedTopic;
+  }
+
+  async deleteTopic(id: number): Promise<void> {
+    await db.delete(topics).where(eq(topics.id, id));
+  }
+
+  async updateCategory(id: number, data: Partial<Categories>): Promise<Categories> {
+    const [updatedCategory] = await db
+      .update(categories)
+      .set(data)
+      .where(eq(categories.id, id))
+      .returning();
+    return updatedCategory;
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    await db.delete(categories).where(eq(categories.id, id));
   }
 
   async createQuiz(title: string, slug: string): Promise<Quizzes> {
