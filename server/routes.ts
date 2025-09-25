@@ -8,6 +8,7 @@ import multer from "multer";
 import * as XLSX from "xlsx";
 import path from "path";
 import { OAuth2Client } from "google-auth-library";
+import { PathnameContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, "postmessage");
 // import { setupAuth, isAuthenticated } from "./replitAuth"; // Disabled Replit auth
 // import { insertTestSessionSchema, insertUserAnswerSchema } from "../shared/schema";
@@ -436,7 +437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const { text, description, categoryId } = req.body;
+      const { text, slug, categoryId, categoryName, parentId, parentName } = req.body;
 
       if (!text?.trim()) {
         return res.status(400).json({ message: "Topic name is required" });
@@ -447,22 +448,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get category to populate categoryName
-      const category = await storage.getSubject(categoryId);
-      if (!category) {
-        return res.status(400).json({ message: "Category not found" });
-      }
+      // const category = await storage.getCategory(categoryId);
+      // if (!category) {
+      //   return res.status(400).json({ message: "Category not found" });
+      // }
 
       // Generate slug from text
-      const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      // const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
       const newTopic = await storage.createTopic({
         text: text.trim(),
-        description: description?.trim() || '',
         categoryId: parseInt(categoryId),
-        categoryName: category.name,
+        categoryName: categoryName,
         slug,
-        parentId: -1,
-        parentName: null
+        parentId: parentId,
+        parentName: parentName,
+        quizId: -1
       });
 
       res.json(newTopic);
@@ -483,7 +484,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const topicId = parseInt(req.params.id);
-      const { text, description, categoryId } = req.body;
+      const { text, slug, categoryId } = req.body;
 
       if (!topicId) {
         return res.status(400).json({ message: "Invalid topic ID" });
@@ -492,10 +493,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData: any = {};
       if (text?.trim()) {
         updateData.text = text.trim();
-        updateData.slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      }
-      if (description !== undefined) {
-        updateData.description = description?.trim() || '';
+        updateData.slug = slug;
       }
       if (categoryId) {
         const category = await storage.getSubject(categoryId);
@@ -566,15 +564,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const { name, description } = req.body;
+      const { name, slug } = req.body;
 
       if (!name?.trim()) {
         return res.status(400).json({ message: "Category name is required" });
       }
 
-      const newCategory = await storage.createSubject({
+      const newCategory = await storage.createCategories({
         name: name.trim(),
-        text: description?.trim() || name.trim()
+        text: slug
       });
 
       res.json(newCategory);

@@ -35,7 +35,7 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [newCategoryData, setNewCategoryData] = useState({
     name: '',
-    description: ''
+    slug: ''
   });
 
   // Fetch categories for admin
@@ -56,7 +56,7 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/categories'] });
       setShowAddCategory(false);
-      setNewCategoryData({ name: '', description: '' });
+      setNewCategoryData({ name: '', slug: '' });
       toast({
         title: "Success",
         description: "Category created successfully.",
@@ -121,6 +121,14 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
       });
       return;
     }
+     if (!newCategoryData.slug.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a slug name",
+        variant: "destructive",
+      });
+      return;
+    }
     createCategoryMutation.mutate(newCategoryData);
   };
 
@@ -134,6 +142,14 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
       deleteCategoryMutation.mutate(categoryId);
     }
   };
+
+  const setNewName = (name: string) => {
+    setNewCategoryData(prev => ({ ...prev, name }));
+    setNewCategoryData(prev => ({ ...prev, slug: name.trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')   // replace spaces & special chars with _
+      .replace(/^_+|_+$/g, '') }));     // remove leading/trailing _  
+  }
 
   if (isLoading) {
     return (
@@ -158,7 +174,7 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
       <div className="max-w-4xl mx-auto px-4 py-20">
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Choose Your Flight Training Module
+            Choose Your Flight Training Module111
           </h1>
           {showBackToHome && (<Link href="/">
             <Button
@@ -261,17 +277,17 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
                 <Input
                   id="category-name"
                   value={newCategoryData.name}
-                  onChange={(e) => setNewCategoryData(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) => setNewName(e.target.value)}
                   placeholder="Enter category name"
                   data-testid="input-category-name"
                 />
               </div>
               <div>
-                <Label htmlFor="category-description">Description (Optional)</Label>
+                <Label htmlFor="category-description">Slug</Label>
                 <Textarea
                   id="category-description"
-                  value={newCategoryData.description}
-                  onChange={(e) => setNewCategoryData(prev => ({ ...prev, description: e.target.value }))}
+                  value={newCategoryData.slug}
+                  onChange={(e) => setNewCategoryData(prev => ({ ...prev, slug: e.target.value }))}
                   placeholder="Enter category description"
                   data-testid="textarea-category-description"
                 />
@@ -281,7 +297,7 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
                   variant="outline"
                   onClick={() => {
                     setShowAddCategory(false);
-                    setNewCategoryData({ name: '', description: '' });
+                    setNewCategoryData({ name: '', slug: '' });
                   }}
                 >
                   Cancel

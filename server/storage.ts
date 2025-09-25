@@ -47,6 +47,7 @@ import {
   type InsertIssueReport,
   type QuestionComment,
   type InsertQuestionComment,
+  type InsertCategory,
 } from "../shared/schema";
 import bcrypt from "bcryptjs";
 import { db } from "./db";
@@ -73,6 +74,7 @@ export interface IStorage {
   // Subject/Category operations
   getAllSubjects(): Promise<Categories[]>;
   getSubject(id: number): Promise<Subject | undefined>;
+  getCategory(id: number): Promise<Categories | undefined>;
   createSubject(subject: InsertSubject): Promise<Subject>;
   updateCategory(id: number, data: Partial<Categories>): Promise<Categories>;
   deleteCategory(id: number): Promise<void>;
@@ -377,6 +379,29 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
     console.log("TopicQuizId...", topicQuizId);
 
+    if(topicQuizId[0].id === -1) {
+      const topic: any = await db
+        .select()
+        .from(topics)
+        .where(and(eq(topics.slug, name)));
+
+      const newTopic = {
+          ...topic[0],
+          text: "Dummy Topic",
+          parentId: topic[0].id,
+          parentName: topic[0].slug
+        }
+      return {
+        type: "topic",
+        data: [newTopic],
+      };
+    } else if(topicQuizId[0].id === 1) {
+      return {
+        type: "quiz",
+        data: [],
+        topicName: topicQuizId[0].text,
+      };
+    }
     const quiz = await db
       .select({ id: quizzes.id })
       .from(quizzes)
@@ -384,7 +409,7 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
 
     if (quiz.length === 0) {
-      throw new Error(`Quiz with quiz_id=${topicQuizId} not found`);
+      return []
     }
 
     const quizId = quiz[0].id;
@@ -434,6 +459,19 @@ export class DatabaseStorage implements IStorage {
       .from(subjects)
       .where(eq(subjects.id, id));
     return subject;
+  }
+
+  async getCategory(id: number): Promise<Categories | undefined> {
+    const [cateogry] = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.id, id));
+    return cateogry;
+  }
+
+    async createCategories(category: InsertCategory): Promise<Categories> {
+    const [created] = await db.insert(categories).values(category).returning();
+    return created;
   }
 
   async createSubject(subject: InsertSubject): Promise<Subject> {

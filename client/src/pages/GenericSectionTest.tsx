@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import {
@@ -97,6 +98,9 @@ export default function GenericSectionTest({
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Session ID for progress tracking
+  const [sessionId] = useState(() => `quiz_${sectionId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+
   const { toast } = useToast();
   const { user, isAdmin, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
@@ -105,7 +109,7 @@ export default function GenericSectionTest({
   const urlParams = new URLSearchParams(window.location.search);
   const resumeSessionId = urlParams.get('resumeSession');
 
-  const quizId = quizData[0]?.quiz_id;
+  const quizId = quizData[0]?.quiz_id ? quizData[0]?.quiz_id : -1;
   // Mutation for updating questions (admin only)
   const updateQuestionMutation = useMutation({
     mutationFn: async (questionData: any) => {
@@ -233,10 +237,6 @@ export default function GenericSectionTest({
   // Bulk upload mutation
   const bulkUploadMutation = useMutation({
     mutationFn: async (file: File) => {
-      if (!quizId) {
-        throw new Error("Quiz ID is required for bulk upload");
-      }
-      
       const formData = new FormData();
       formData.append('file', file);
       const response = await fetch(`/api/quizzes/${quizId}/questions/bulk-upload`, {
@@ -768,15 +768,6 @@ export default function GenericSectionTest({
 
   const handleDownloadTemplate = async () => {
     try {
-      if (!quizId) {
-        toast({
-          title: "Quiz ID Missing",
-          description: "Cannot download template without a quiz ID",
-          variant: "destructive",
-        });
-        return;
-      }
-
       const response = await apiRequest('GET', `/api/quizzes/${quizId}/questions/template`);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -844,6 +835,38 @@ export default function GenericSectionTest({
               </Button>
             </Link>
           </div>
+            {isAdmin && (<>
+              
+              {/* Admin Bulk Upload Section */}
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    onClick={() => setShowAddQuestionForm(true)}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                    data-testid="button-add-question"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Question
+                  </Button>
+                  <Button
+                    onClick={handleDownloadTemplate}
+                    className="bg-blue-600 hover:bg-blue-700"
+                    data-testid="button-download-quiz-template"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Template
+                  </Button>
+                  <Button
+                    onClick={() => setShowBulkUpload(true)}
+                    className="bg-cyan-600 hover:bg-cyan-700"
+                    data-testid="button-bulk-upload-quiz"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Bulk Upload
+                  </Button>
+                </div>
+              </>
+            )}
         </div>
       </div>
     );
@@ -998,6 +1021,21 @@ export default function GenericSectionTest({
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
       <div className="w-full mx-auto px-2 sm:px-4 py-4 sm:py-8">
+          {/* Progress Saving Alert */}
+          <Alert className="mb-6 border-green-500/20 bg-green-500/10">
+            <AlertDescription className="text-green-100">
+              <span className="inline-flex items-center gap-2">
+                <span>✅ Your progress is being saved automatically. Use progress page in profile section.</span>
+                {/* <Link 
+                  href={`/resume/${sessionId}`} 
+                  className="text-green-300 hover:text-green-200 underline font-medium"
+                  data-testid="link-resume-quiz"
+                >
+                  Resume Quiz
+                </Link> */}
+              </span>
+            </AlertDescription>
+          </Alert>
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3">
           <div className="flex items-center space-x-2 sm:space-x-4">

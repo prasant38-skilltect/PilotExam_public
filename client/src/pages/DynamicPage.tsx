@@ -45,7 +45,7 @@ export default function DynamicPage() {
   const [editingTopic, setEditingTopic] = useState<any>(null);
   const [newTopicData, setNewTopicData] = useState({
     text: '',
-    description: '',
+    slug: '',
     categoryId: ''
   });
 
@@ -62,12 +62,19 @@ export default function DynamicPage() {
   // Mutations for topic management
   const createTopicMutation = useMutation({
     mutationFn: async (topicData: any) => {
+      const data = subjects.data[0];
+      topicData.categoryId = parseInt(data.categoryId, 10);
+      topicData.categoryName = data.categoryName;
+      topicData.parentId = data.parentId;
+      topicData.parentName = data.parentName;
+      topicData.quizId = -1;
+
       return await apiRequest('POST', '/api/admin/topics', topicData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api${link[0]}`] });
       setShowAddTopic(false);
-      setNewTopicData({ text: '', description: '', categoryId: '' });
+      setNewTopicData({ text: '', slug: '', categoryId: '' });
       toast({
         title: "Success",
         description: "Topic created successfully.",
@@ -132,10 +139,10 @@ export default function DynamicPage() {
       });
       return;
     }
-    if (!newTopicData.categoryId) {
+     if (!newTopicData.slug.trim()) {
       toast({
         title: "Error",
-        description: "Please select a category",
+        description: "Please enter a slug name",
         variant: "destructive",
       });
       return;
@@ -163,6 +170,14 @@ export default function DynamicPage() {
     }
   }, [subjects, isAuthenticated, authLoading, isLoading, link, setLocation]);
 
+  const setNewName = (name: string) => {
+    setNewTopicData(prev => ({ ...prev, text: name }));
+    setNewTopicData(prev => ({ ...prev, slug: name.trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')   // replace spaces & special chars with _
+      .replace(/^_+|_+$/g, '') }));     // remove leading/trailing _  
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
@@ -182,6 +197,7 @@ export default function DynamicPage() {
   }
   console.log("link....", link[0])
   console.log("subjects....", subjects)
+  const data = subjects?.data ? subjects?.data[0] : {}
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
@@ -269,7 +285,7 @@ export default function DynamicPage() {
 
         {subjects?.type === "topic" &&
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {subjects?.data.map((subject: any) => (
+            {subjects?.data?.map((subject: any) => (
               <Link key={subject.id} href={`/${subject.slug}/`}>
                 <Button
                   variant="outline"
@@ -298,44 +314,40 @@ export default function DynamicPage() {
                 <Input
                   id="topic-text"
                   value={newTopicData.text}
-                  onChange={(e) => setNewTopicData(prev => ({ ...prev, text: e.target.value }))}
+                  onChange={(e) => setNewName(e.target.value )}
                   placeholder="Enter topic name"
                   className="bg-slate-700 border-cyan-400/30 text-white"
                   data-testid="input-topic-name"
                 />
               </div>
               <div>
-                <Label htmlFor="topic-description" className="text-gray-200">Description (Optional)</Label>
-                <Textarea
+                <Label htmlFor="topic-description" className="text-gray-200">Slug</Label>
+                <Input
                   id="topic-description"
-                  value={newTopicData.description}
-                  onChange={(e) => setNewTopicData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Enter topic description"
+                  value={newTopicData.slug}
+                  onChange={(e) => setNewTopicData(prev => ({ ...prev, slug: e.target.value }))}
+                  placeholder="Enter Topic Slug"
                   className="bg-slate-700 border-cyan-400/30 text-white"
-                  data-testid="textarea-topic-description"
+                  data-testid="input-topic-description"
                 />
               </div>
               <div>
-                <Label htmlFor="topic-category" className="text-gray-200">Category</Label>
-                <Select value={newTopicData.categoryId} onValueChange={(value) => setNewTopicData(prev => ({ ...prev, categoryId: value }))}>
+                <Label htmlFor="topic-category" className="text-gray-200">Patent Topic</Label>
+                {/* <Select value={newTopicData.categoryId} onValueChange={(value) => setNewTopicData(prev => ({ ...prev, categoryId: value }))}>
                   <SelectTrigger className="bg-slate-700 border-cyan-400/30 text-white" data-testid="select-topic-category">
                     <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-cyan-400/30">
-                    {categories.map((category: any) => (
-                      <SelectItem key={category.id} value={category.id.toString()}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  </SelectTrigger> */}
+                  <div className="text-gray-200">
+                    { data?.parentName ? data?.parentName : data?.categoryName }
+                  </div>
+                {/* </Select> */}
               </div>
               <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
                   onClick={() => {
                     setShowAddTopic(false);
-                    setNewTopicData({ text: '', description: '', categoryId: '' });
+                    setNewTopicData({ text: '', slug: '', categoryId: '' });
                   }}
                   className="border-cyan-400/30 text-gray-200 hover:bg-slate-700"
                 >
