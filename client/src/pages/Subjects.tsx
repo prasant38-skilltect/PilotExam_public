@@ -54,7 +54,10 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
       return await apiRequest('POST', '/api/admin/categories', categoryData);
     },
     onSuccess: () => {
+      // Invalidate multiple related queries
       queryClient.invalidateQueries({ queryKey: ['/api/admin/categories'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/subjects'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/topics'] });
       setShowAddCategory(false);
       setNewCategoryData({ name: '', slug: '' });
       toast({
@@ -76,7 +79,11 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
       return await apiRequest('PUT', `/api/admin/categories/${categoryData.id}`, categoryData);
     },
     onSuccess: () => {
+      // Invalidate multiple related queries
       queryClient.invalidateQueries({ queryKey: ['/api/admin/categories'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/subjects'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/topics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
       setEditingCategory(null);
       toast({
         title: "Success",
@@ -97,7 +104,11 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
       return await apiRequest('DELETE', `/api/admin/categories/${categoryId}`);
     },
     onSuccess: () => {
+      // Invalidate multiple related queries
       queryClient.invalidateQueries({ queryKey: ['/api/admin/categories'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/subjects'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/topics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
       toast({
         title: "Success",
         description: "Category deleted successfully.",
