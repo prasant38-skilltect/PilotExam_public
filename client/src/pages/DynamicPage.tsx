@@ -179,6 +179,14 @@ export default function DynamicPage() {
       .replace(/^_+|_+$/g, '') }));     // remove leading/trailing _  
   }
 
+  const setNewEditName = (name: string) => {
+    setEditingTopic(prev => ({ ...prev, text: name }));
+    setEditingTopic(prev => ({ ...prev, slug: name.trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')   // replace spaces & special chars with _
+      .replace(/^_+|_+$/g, '') }));     // remove leading/trailing _  
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
@@ -246,11 +254,6 @@ export default function DynamicPage() {
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <h4 className="font-medium text-white">{topic.text}</h4>
-                          {topic.categoryName && (
-                            <p className="text-cyan-400 text-xs mt-1">
-                              Category: {topic.categoryName}
-                            </p>
-                          )}
                         </div>
                         <div className="flex gap-1 ml-2">
                           <Button
@@ -381,7 +384,7 @@ export default function DynamicPage() {
                   <Input
                     id="edit-topic-text"
                     value={editingTopic.text}
-                    onChange={(e) => setEditingTopic((prev: any) => ({ ...prev, text: e.target.value }))}
+                    onChange={(e) => setNewEditName(e.target.value )}
                     placeholder="Enter topic name"
                     className="bg-slate-700 border-cyan-400/30 text-white"
                     data-testid="input-edit-topic-name"

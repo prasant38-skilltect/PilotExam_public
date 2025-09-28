@@ -496,12 +496,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.slug = slug;
       }
       if (categoryId) {
-        const category = await storage.getSubject(categoryId);
+        const category = await storage.getCategory(categoryId);
         if (!category) {
           return res.status(400).json({ message: "Category not found" });
         }
         updateData.categoryId = parseInt(categoryId);
-        updateData.categoryName = category.name;
+        updateData.categoryName = category.text;
       }
 
       const updatedTopic = await storage.updateTopic(topicId, updateData);
