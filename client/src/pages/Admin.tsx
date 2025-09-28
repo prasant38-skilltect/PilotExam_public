@@ -40,10 +40,10 @@ export default function Admin() {
   const [hasEmptyExplanation, setHasEmptyExplanation] = useState(false);
   const [debouncedSearchText, setDebouncedSearchText] = useState("");
   
-  // Question management state
-  const [showAddSingleQuestion, setShowAddSingleQuestion] = useState(false);
+  // Question management state - unified dialog
+  const [showQuestionDialog, setShowQuestionDialog] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
-  const [newQuestionData, setNewQuestionData] = useState({
+  const [questionData, setQuestionData] = useState({
     question_text: '',
     explanation_text: '',
     options: [
@@ -53,6 +53,8 @@ export default function Admin() {
       { text: '', isCorrect: false }
     ]
   });
+  const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
+  const isEditMode = editingQuestionId !== null;
   
   // Topic linking state after bulk upload
   const [showTopicLinking, setShowTopicLinking] = useState(false);
@@ -160,8 +162,8 @@ export default function Admin() {
       // Invalidate multiple related queries
       queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
-      setShowAddSingleQuestion(false);
-      setNewQuestionData({
+      setShowQuestionDialog(false);
+      setQuestionData({
         question_text: '',
         explanation_text: '',
         options: [
@@ -171,6 +173,7 @@ export default function Admin() {
           { text: '', isCorrect: false }
         ]
       });
+      setEditingQuestionId(null);
       toast({
         title: "Success",
         description: "Question created successfully.",
@@ -205,8 +208,18 @@ export default function Admin() {
                   queryKeyString.includes('section'));
         }
       });
-      setIsEditDialogOpen(false);
-      setEditingQuestion(null);
+      setShowQuestionDialog(false);
+      setQuestionData({
+        question_text: '',
+        explanation_text: '',
+        options: [
+          { text: '', isCorrect: false },
+          { text: '', isCorrect: false },
+          { text: '', isCorrect: false },
+          { text: '', isCorrect: false }
+        ]
+      });
+      setEditingQuestionId(null);
       toast({
         title: "Success",
         description: "Question updated successfully.",
@@ -306,28 +319,40 @@ export default function Admin() {
     }
   });
 
-  const handleEditQuestion = (question: any) => {
-    setEditingQuestion({
-      id: question.id,
-      question_text: question.text,
-      option_a: question.option_a,
-      option_b: question.option_b,
-      option_c: question.option_c,
-      option_d: question.option_d,
-      correct_answer: question.correct_answer,
-      explanation_text: question.explanation,
+  // Unified dialog handlers
+  const openCreateDialog = () => {
+    setQuestionData({
+      question_text: '',
+      explanation_text: '',
+      options: [
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false }
+      ]
     });
-    setIsEditDialogOpen(true);
+    setEditingQuestionId(null);
+    setShowQuestionDialog(true);
+  };
+
+  const openEditDialog = (question: any) => {
+    // Convert question data to the expected format
+    const optionA = { text: question.option_a || '', isCorrect: question.correct_answer === 'A' };
+    const optionB = { text: question.option_b || '', isCorrect: question.correct_answer === 'B' };
+    const optionC = { text: question.option_c || '', isCorrect: question.correct_answer === 'C' };
+    const optionD = { text: question.option_d || '', isCorrect: question.correct_answer === 'D' };
+    
+    setQuestionData({
+      question_text: question.text || '',
+      explanation_text: question.explanation || '',
+      options: [optionA, optionB, optionC, optionD]
+    });
+    setEditingQuestionId(question.id);
+    setShowQuestionDialog(true);
   };
 
   const handleSaveQuestion = () => {
-    if (!editingQuestion) return;
-    updateQuestionMutation.mutate(editingQuestion);
-  };
-
-  // Helper functions for question management
-  const handleCreateSingleQuestion = () => {
-    if (!newQuestionData.question_text.trim()) {
+    if (!questionData.question_text.trim()) {
       toast({
         title: "Error",
         description: "Please enter question text",
@@ -336,7 +361,7 @@ export default function Admin() {
       return;
     }
 
-    const validOptions = newQuestionData.options.filter(opt => opt.text.trim());
+    const validOptions = questionData.options.filter(opt => opt.text.trim());
     if (validOptions.length === 0) {
       toast({
         title: "Error", 
@@ -356,11 +381,59 @@ export default function Admin() {
       return;
     }
 
-    createQuestionMutation.mutate({
-      question_text: newQuestionData.question_text,
-      explanation_text: newQuestionData.explanation_text,
+    const questionPayload = {
+      question_text: questionData.question_text,
+      explanation_text: questionData.explanation_text,
       options: validOptions
+    };
+
+    if (isEditMode) {
+      // For edit mode, convert back to the expected format for the API
+      const editPayload = {
+        id: editingQuestionId,
+        question_text: questionData.question_text,
+        option_a: questionData.options[0]?.text || '',
+        option_b: questionData.options[1]?.text || '',
+        option_c: questionData.options[2]?.text || '',
+        option_d: questionData.options[3]?.text || '',
+        correct_answer: questionData.options.findIndex(opt => opt.isCorrect) === 0 ? 'A' :
+                      questionData.options.findIndex(opt => opt.isCorrect) === 1 ? 'B' :
+                      questionData.options.findIndex(opt => opt.isCorrect) === 2 ? 'C' : 'D',
+        explanation_text: questionData.explanation_text,
+      };
+      updateQuestionMutation.mutate(editPayload);
+    } else {
+      createQuestionMutation.mutate(questionPayload);
+    }
+  };
+
+  const closeDialog = () => {
+    setShowQuestionDialog(false);
+    setQuestionData({
+      question_text: '',
+      explanation_text: '',
+      options: [
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false }
+      ]
     });
+    setEditingQuestionId(null);
+  };
+
+  // Helper function for updating question options
+  const updateQuestionOption = (index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
+    setQuestionData(prev => ({
+      ...prev,
+      options: prev.options.map((option, i) => 
+        i === index 
+          ? { ...option, [field]: value }
+          : field === 'isCorrect' && value === true 
+            ? { ...option, isCorrect: false } // Only one option can be correct
+            : option
+      )
+    }));
   };
 
   const handleDownloadTemplate = () => {
@@ -582,7 +655,7 @@ export default function Admin() {
                       </div>
                       <div className="flex gap-2">
                         <Button
-                          onClick={() => setShowAddSingleQuestion(true)}
+                          onClick={openCreateDialog}
                           size="sm"
                           className="bg-green-600 hover:bg-green-700"
                           data-testid="button-add-single-question"
@@ -729,7 +802,7 @@ export default function Admin() {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => handleEditQuestion(question)}
+                                      onClick={() => openEditDialog(question)}
                                     >
                                       <Edit className="h-3 w-3 mr-1" />
                                       Edit
@@ -991,10 +1064,13 @@ export default function Admin() {
         </Card>
 
         {/* Edit Question Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        {/* Question Dialog (Create/Edit) */}
+        <Dialog open={showQuestionDialog} onOpenChange={closeDialog}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Edit Question #{editingQuestion?.id}</DialogTitle>
+              <DialogTitle>
+                {isEditMode ? `Edit Question #${editingQuestionId}` : 'Add New Question'}
+              </DialogTitle>
             </DialogHeader>
             {editingQuestion && (
               <div className="space-y-4">
