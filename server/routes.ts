@@ -771,6 +771,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   //   }
   // });
 
+  // Search questions by text (public)
+  app.get('/api/questions/search', async (req, res) => {
+    try {
+      const { query } = req.query;
+      
+      if (!query || typeof query !== 'string' || query.length < 3) {
+        return res.status(400).json({ message: "Query must be at least 3 characters long" });
+      }
+
+      const searchResults = await storage.searchQuestions(query);
+      res.json(searchResults);
+    } catch (error) {
+      console.error("Error searching questions:", error);
+      res.status(500).json({ message: "Failed to search questions" });
+    }
+  });
+
   // // Question routes (public)
   // app.get('/api/subjects/:subjectId/questions', async (req, res) => {
   //   try {

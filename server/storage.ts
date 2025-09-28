@@ -148,6 +148,9 @@ export interface IStorage {
   getUserProgress(userId: string): Promise<UserProgress[]>;
   updateUserProgress(progress: InsertUserProgress): Promise<UserProgress>;
   getSectionProgress(userId: string, sectionName: string): Promise<UserProgress | undefined>;
+
+  // Question search
+  searchQuestions(searchText: string): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -629,6 +632,53 @@ export class DatabaseStorage implements IStorage {
       .from(questionOptions)
       .where(eq(questionOptions.questionId, questionId))
       .orderBy(asc(questionOptions.optionOrder));
+  }
+
+  async searchQuestions(searchText: string): Promise<any[]> {
+    try {
+      // Simple search for questions that contain the search text
+      const searchResults = await db
+        .select({
+          questionId: questions.id,
+          questionText: questions.text,
+          explanation: questions.explanation
+        })
+        .from(questions)
+        .where(
+          and(
+            eq(questions.isActive, true),
+            like(questions.text, `%${searchText}%`)
+          )
+        )
+        .limit(10);
+
+      // For each question, get the quizzes it belongs to
+      const resultsWithQuizzes = await Promise.all(
+        searchResults.map(async (question) => {
+          const quizData = await db
+            .select({
+              quizId: quizzes.id,
+              quizTitle: quizzes.title,
+              quizSlug: quizzes.slug
+            })
+            .from(quizQuestions)
+            .leftJoin(quizzes, eq(quizQuestions.quizId, quizzes.id))
+            .where(eq(quizQuestions.questionId, question.questionId));
+
+          return {
+            questionId: question.questionId,
+            questionText: question.questionText,
+            explanation: question.explanation,
+            quizzes: quizData.filter(q => q.quizId !== null)
+          };
+        })
+      );
+
+      return resultsWithQuizzes;
+    } catch (error) {
+      console.error("Error searching questions:", error);
+      throw error;
+    }
   }
 
   // Test session operations
