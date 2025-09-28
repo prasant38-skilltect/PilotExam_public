@@ -157,7 +157,9 @@ export default function Admin() {
       return await apiRequest('POST', '/api/admin/questions', questionData);
     },
     onSuccess: () => {
+      // Invalidate multiple related queries
       queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
       setShowAddSingleQuestion(false);
       setNewQuestionData({
         question_text: '',
@@ -190,7 +192,16 @@ export default function Admin() {
       return await apiRequest('PUT', `/api/admin/questions/${questionData.id}`, questionData);
     },
     onSuccess: () => {
+      // Invalidate multiple related queries
       queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
+      // Invalidate any quiz or topic queries that might contain this question
+      queryClient.invalidateQueries({ queryFn: (query) => {
+        return query.queryKey[0]?.toString().startsWith('/api/') && 
+               (query.queryKey[0]?.toString().includes('quiz') ||
+                query.queryKey[0]?.toString().includes('topic') ||
+                query.queryKey[0]?.toString().includes('section'));
+      }});
       setIsEditDialogOpen(false);
       setEditingQuestion(null);
       toast({
@@ -262,7 +273,16 @@ export default function Admin() {
       return await apiRequest('POST', '/api/admin/questions/link-to-topic', { questionIds, topicId });
     },
     onSuccess: () => {
+      // Invalidate multiple related queries
       queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/topics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
+      // Invalidate any topic-specific quiz queries
+      queryClient.invalidateQueries({ queryFn: (query) => {
+        return query.queryKey[0]?.toString().startsWith('/api/') && 
+               (query.queryKey[0]?.toString().includes('quiz') ||
+                query.queryKey[0]?.toString().includes('topic'));
+      }});
       setShowTopicLinking(false);
       setUploadedQuestions([]);
       setSelectedQuestions([]);
