@@ -1297,10 +1297,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
+      console.log("Received file for quiz-specific bulk upload:", req.body);
+
       const quizId = parseInt(req.params.quizId);
-      if (!quizId && quizId !== -1) {
-        return res.status(400).json({ message: "Invalid quiz ID" });
-      }
 
       let quiz;
       if (quizId === -1) {
@@ -1309,6 +1308,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const title = `Quiz Created ${currentDate}`;
         const slug = `quiz-${Date.now()}`;
         quiz = await storage.createQuiz(title, slug);
+        const topicId = req.body.topicId;     // from FormData
+
+        // Update quizId to topic
+        console.log("Created new quiz with ID", quiz.id);
+        await storage.updateQuizIdToTopic(topicId, quiz.quizId);
       } else {
         // Verify quiz exists
         quiz = await storage.getQuizByQuizId(quizId);

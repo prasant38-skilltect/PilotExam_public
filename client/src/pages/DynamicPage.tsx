@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Plus, Edit, Trash2, Settings, Tag } from 'lucide-react';
+import ManageQuestions from '../components/ManangeQuestions';
 
 type Subject = {
   categoryId: number,
@@ -203,9 +204,6 @@ export default function DynamicPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
       <div className="max-w-4xl mx-auto px-4 py-20">
         <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Choose Your Flight Training Module
-          </h1>
           <Link href="/">
             <Button
               variant="outline"
@@ -241,7 +239,7 @@ export default function DynamicPage() {
               {subjects?.data && subjects.data.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {subjects.data.map((topic: any) => (
-                    <div
+                    topic.text !== 'ignore' && <div
                       key={topic.id}
                       className="bg-slate-700/60 p-3 rounded-lg border border-cyan-400/20"
                     >
@@ -286,7 +284,7 @@ export default function DynamicPage() {
         {subjects?.type === "topic" &&
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {subjects?.data?.map((subject: any) => (
-              <Link key={subject.id} href={`/${subject.slug}/`}>
+              subject?.text !== 'ignore' && <Link key={subject.id} href={`/${subject.slug}/`}>
                 <Button
                   variant="outline"
                   className="w-full h-16 text-sm font-medium bg-slate-800/60 border-cyan-400/30 text-cyan-100 hover:bg-cyan-400/10 hover:border-cyan-400/50 transition-all duration-300 whitespace-normal text-center p-3"
@@ -300,6 +298,10 @@ export default function DynamicPage() {
         }
         {subjects?.type === "quiz" && isAuthenticated &&
           <GenericSectionTest sectionId={subjects.id} quizData={subjects.data} sectionName={subjects.topicName}/>
+        }
+
+        {subjects?.type === "topic" && subjects.data.length === 1 && subjects.data[0].text === "ignore" && isAuthenticated &&
+          <ManageQuestions sectionId={1} quizData={subjects.data} sectionName={subjects.data[0].slug}/>
         }
 
         {/* Add Topic Dialog */}
@@ -386,30 +388,21 @@ export default function DynamicPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="edit-topic-description" className="text-gray-200">Description (Optional)</Label>
-                  <Textarea
-                    id="edit-topic-description"
-                    value={editingTopic.description || ''}
-                    onChange={(e) => setEditingTopic((prev: any) => ({ ...prev, description: e.target.value }))}
-                    placeholder="Enter topic description"
+                  <Label htmlFor="edit-topic-description" className="text-gray-200">Slug</Label>
+                  <Input
+                    id="edit-topic-slub"
+                    value={editingTopic.slug || ''}
+                    onChange={(e) => setEditingTopic((prev: any) => ({ ...prev, slug: e.target.value }))}
+                    placeholder="Enter topic slug"
                     className="bg-slate-700 border-cyan-400/30 text-white"
-                    data-testid="textarea-edit-topic-description"
+                    data-testid="textarea-edit-topic-slug"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="edit-topic-category" className="text-gray-200">Category</Label>
-                  <Select value={editingTopic.categoryId?.toString()} onValueChange={(value) => setEditingTopic((prev: any) => ({ ...prev, categoryId: value }))}>
-                    <SelectTrigger className="bg-slate-700 border-cyan-400/30 text-white" data-testid="select-edit-topic-category">
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-cyan-400/30">
-                      {categories.map((category: any) => (
-                        <SelectItem key={category.id} value={category.id.toString()}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="edit-topic-category" className="text-gray-200">Parent Topic</Label>
+                  <div className="text-gray-200">
+                    { data?.parentName ? data?.parentName : data?.categoryName }
+                  </div>
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button

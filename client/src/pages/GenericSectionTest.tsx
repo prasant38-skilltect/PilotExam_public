@@ -109,7 +109,7 @@ export default function GenericSectionTest({
   const urlParams = new URLSearchParams(window.location.search);
   const resumeSessionId = urlParams.get('resumeSession');
 
-  const quizId = quizData[0]?.quiz_id ? quizData[0]?.quiz_id : -1;
+  const quizId = quizData && quizData[0]?.quiz_id ? quizData[0]?.quiz_id : -1;
   // Mutation for updating questions (admin only)
   const updateQuestionMutation = useMutation({
     mutationFn: async (questionData: any) => {
@@ -239,6 +239,7 @@ export default function GenericSectionTest({
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('quizId', quizId.toString());
       const response = await fetch(`/api/quizzes/${quizId}/questions/bulk-upload`, {
         method: 'POST',
         body: formData,
@@ -820,57 +821,57 @@ export default function GenericSectionTest({
   //   );
   // }
 
-  if (!questions || questions.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="text-center text-white">
-            <h1 className="text-2xl mb-4">No Questions Available</h1>
-            <Link href="/">
-              <Button
-                variant="outline"
-                className="border-cyan-400/40 text-cyan-200"
-              >
-                ← Back to Home
-              </Button>
-            </Link>
-          </div>
-            {isAdmin && (<>
+  // if (!questions || questions.length === 0) {
+  //   return (
+  //     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
+  //       <div className="max-w-7xl mx-auto px-4 py-8">
+  //         <div className="text-center text-white">
+  //           <h1 className="text-2xl mb-4">No Questions Available</h1>
+  //           <Link href="/">
+  //             <Button
+  //               variant="outline"
+  //               className="border-cyan-400/40 text-cyan-200"
+  //             >
+  //               ← Back to Home
+  //             </Button>
+  //           </Link>
+  //         </div>
+  //           {isAdmin && (<>
               
-              {/* Admin Bulk Upload Section */}
-                <div className="flex gap-2 justify-center">
-                  <Button
-                    onClick={() => setShowAddQuestionForm(true)}
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-700"
-                    data-testid="button-add-question"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add Question
-                  </Button>
-                  <Button
-                    onClick={handleDownloadTemplate}
-                    className="bg-blue-600 hover:bg-blue-700"
-                    data-testid="button-download-quiz-template"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Template
-                  </Button>
-                  <Button
-                    onClick={() => setShowBulkUpload(true)}
-                    className="bg-cyan-600 hover:bg-cyan-700"
-                    data-testid="button-bulk-upload-quiz"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Bulk Upload
-                  </Button>
-                </div>
-              </>
-            )}
-        </div>
-      </div>
-    );
-  }
+  //             {/* Admin Bulk Upload Section */}
+  //               <div className="flex gap-2 justify-center">
+  //                 <Button
+  //                   onClick={() => setShowAddQuestionForm(true)}
+  //                   size="sm"
+  //                   className="bg-green-600 hover:bg-green-700"
+  //                   data-testid="button-add-question"
+  //                 >
+  //                   <Plus className="h-4 w-4 mr-1" />
+  //                   Add Question
+  //                 </Button>
+  //                 <Button
+  //                   onClick={handleDownloadTemplate}
+  //                   className="bg-blue-600 hover:bg-blue-700"
+  //                   data-testid="button-download-quiz-template"
+  //                 >
+  //                   <Download className="h-4 w-4 mr-2" />
+  //                   Download Template
+  //                 </Button>
+  //                 <Button
+  //                   onClick={() => setShowBulkUpload(true)}
+  //                   className="bg-cyan-600 hover:bg-cyan-700"
+  //                   data-testid="button-bulk-upload-quiz"
+  //                 >
+  //                   <Upload className="h-4 w-4 mr-2" />
+  //                   Bulk Upload
+  //                 </Button>
+  //               </div>
+  //             </>
+  //           )}
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   const sortedQuestions = [...questions].sort(
     (a: any, b: any) => a.sequence - b.sequence,
@@ -1022,7 +1023,8 @@ export default function GenericSectionTest({
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
       <div className="w-full mx-auto px-2 sm:px-4 py-4 sm:py-8">
           {/* Progress Saving Alert */}
-          <Alert className="mb-6 border-green-500/20 bg-green-500/10">
+          {
+            quizData.length > 1 && <Alert className="mb-6 border-green-500/20 bg-green-500/10">
             <AlertDescription className="text-green-100">
               <span className="inline-flex items-center gap-2">
                 <span>✅ Your progress is being saved automatically. Use progress page in profile section.</span>
@@ -1036,6 +1038,7 @@ export default function GenericSectionTest({
               </span>
             </AlertDescription>
           </Alert>
+          }
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3">
           <div className="flex items-center space-x-2 sm:space-x-4">
@@ -1051,376 +1054,329 @@ export default function GenericSectionTest({
             </Link>
             <h1 className="text-lg sm:text-xl font-bold text-white">{sectionName}</h1>
           </div>
-          <div className="flex items-center space-x-2 sm:space-x-4 text-white">
-            {isAdmin && (<>
-              <Button
-                onClick={() => setShowAddQuestionForm(true)}
-                size="sm"
-                className="bg-green-600 hover:bg-green-700"
-                data-testid="button-add-question"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Add Question
-              </Button>
-              {/* Admin Bulk Upload Section */}
-              {quizId && (
-                <div className="flex gap-2 justify-center">
-                  <Button
-                    onClick={handleDownloadTemplate}
-                    className="bg-blue-600 hover:bg-blue-700"
-                    data-testid="button-download-quiz-template"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Template
-                  </Button>
-                  <Button
-                    onClick={() => setShowBulkUpload(true)}
-                    className="bg-cyan-600 hover:bg-cyan-700"
-                    data-testid="button-bulk-upload-quiz"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Bulk Upload
-                  </Button>
-                </div>
-              )}
-              </>
-            )}
+           <div className="flex items-center space-x-2 sm:space-x-4 text-white">
             <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
             <span className="font-mono text-base sm:text-lg">{formatTime(elapsedTime)}</span>
           </div>
         </div>
-
-        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">
-          {/* Question Navigator */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center text-sm">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Questions ({answeredQuestions.size}/{sortedQuestions.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-5 gap-4">
-                  {sortedQuestions.map((q: any, index) => {
-                    const isAnswered = answeredQuestions.has(q.id);
-                    const isCorrect =
-                      isAnswered && selectedAnswers[q.id] === q.correct_answer;
-                    const isWrong =
-                      isAnswered && selectedAnswers[q.id] !== q.correct_answer;
-                    const isCurrent = currentQuestionIndex === index;
-
-                    let buttonClass = "";
-                    if (isCurrent) {
-                      buttonClass = "bg-blue-600 text-white border-blue-600";
-                    } else if (isCorrect) {
-                      buttonClass = "bg-green-500 text-white border-green-500";
-                    } else if (isWrong) {
-                      buttonClass = "bg-red-500 text-white border-red-500";
-                    } else {
-                      buttonClass = "bg-white text-black border-gray-300";
-                    }
-
-                    return (
-                      <Button
-                        key={q.id}
-                        variant="outline"
-                        size="sm"
-                        className={cn("h-8 w-8 p-0 text-xs", buttonClass)}
-                        onClick={() => setCurrentQuestionIndex(index)}
-                      >
-                        {q.sequence}
-                      </Button>
-                    );
-                  })}
-                </div>
-                <div className="mt-4 pt-4 border-t">
-                  <Button
-                    onClick={handleFinishTest}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white"
-                    disabled={answeredQuestions.size === 0}
-                  >
-                    Finish Test
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Question Area */}
-          <div className="lg:col-span-3">
-            <Card className="h-full">
-              <CardContent className="p-6">
-                <Tabs
-                  value={activeTab}
-                  onValueChange={setActiveTab}
-                  className="h-full"
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3">
+          {isAdmin && (<>
+            {/* Admin Bulk Upload Section */}
+            {quizId && (
+              <div className="flex gap-2 justify-center">
+                <Button
+                  onClick={() => setShowAddQuestionForm(true)}
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700"
+                  data-testid="button-add-question"
                 >
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="question">Question</TabsTrigger>
-                    {isAdmin && <TabsTrigger value="explanation">Explanation</TabsTrigger>}
-                    <TabsTrigger value="comments">Write Your Answer</TabsTrigger>
-                  </TabsList>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Question
+                </Button>
+                <Button
+                  onClick={handleDownloadTemplate}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  data-testid="button-download-quiz-template"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Template
+                </Button>
+                <Button
+                  onClick={() => setShowBulkUpload(true)}
+                  className="bg-cyan-600 hover:bg-cyan-700"
+                  data-testid="button-bulk-upload-quiz"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Bulk Upload
+                </Button>
+              </div>
+            )}
+            </>
+          )}
+        </div>
+        {
+          quizData.length > 1 && (
+            <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">
+            {/* Question Navigator */}
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center text-sm">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Questions ({answeredQuestions.size}/{sortedQuestions.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-5 gap-4">
+                    {sortedQuestions.map((q: any, index) => {
+                      const isAnswered = answeredQuestions.has(q.id);
+                      const isCorrect =
+                        isAnswered && selectedAnswers[q.id] === q.correct_answer;
+                      const isWrong =
+                        isAnswered && selectedAnswers[q.id] !== q.correct_answer;
+                      const isCurrent = currentQuestionIndex === index;
 
-                  <TabsContent value="question" className="mt-4">
-                    <div className="space-y-6">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
-                        {editingQuestionId === currentQuestion.id ? (
-                          <div className="flex-1 space-y-4">
-                            <Label htmlFor="edit-question">Question Text</Label>
-                            <Textarea
-                              id="edit-question"
-                              value={editFormData.question_text}
-                              onChange={(e) => setEditFormData(prev => ({...prev, question_text: e.target.value}))}
-                              rows={3}
-                            />
-                          </div>
-                        ) : (
-                          <h2 className="text-lg sm:text-xl font-semibold leading-relaxed flex-1">
-                            #{currentQuestion.sequence}.{" "}
-                            {currentQuestion.question_text}
-                          </h2>
-                        )}
-                        <div className="flex gap-2 flex-shrink-0">
-                          {isAdmin && (
-                            <>
-                              {editingQuestionId === currentQuestion.id ? (
-                                <>
-                                  <Button
-                                    variant="default"
-                                    size="sm"
-                                    onClick={saveQuestion}
-                                    disabled={updateQuestionMutation.isPending}
-                                  >
-                                    <Save className="h-4 w-4 mr-1" />
-                                    Save
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={cancelEditing}
-                                  >
-                                    <X className="h-4 w-4 mr-1" />
-                                    Cancel
-                                  </Button>
-                                </>
-                              ) : (
-                                <>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => startEditing(currentQuestion)}
-                                  >
-                                    <Edit className="h-4 w-4 mr-1 sm:mr-2" />
-                                    <span className="hidden sm:inline">Edit</span>
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleDeleteQuestion(currentQuestion.id)}
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                    disabled={deleteQuestionMutation.isPending}
-                                    data-testid="button-delete-question"
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-1 sm:mr-2" />
-                                    <span className="hidden sm:inline">Delete</span>
-                                  </Button>
-                                </>
-                              )}
-                            </>
+                      let buttonClass = "";
+                      if (isCurrent) {
+                        buttonClass = "bg-blue-600 text-white border-blue-600";
+                      } else if (isCorrect) {
+                        buttonClass = "bg-green-500 text-white border-green-500";
+                      } else if (isWrong) {
+                        buttonClass = "bg-red-500 text-white border-red-500";
+                      } else {
+                        buttonClass = "bg-white text-black border-gray-300";
+                      }
+
+                      return (
+                        <Button
+                          key={q.id}
+                          variant="outline"
+                          size="sm"
+                          className={cn("h-8 w-8 p-0 text-xs", buttonClass)}
+                          onClick={() => setCurrentQuestionIndex(index)}
+                        >
+                          {q.sequence}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-4 pt-4 border-t">
+                    <Button
+                      onClick={handleFinishTest}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white"
+                      disabled={answeredQuestions.size === 0}
+                    >
+                      Finish Test
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Main Question Area */}
+            <div className="lg:col-span-3">
+              <Card className="h-full">
+                <CardContent className="p-6">
+                  <Tabs
+                    value={activeTab}
+                    onValueChange={setActiveTab}
+                    className="h-full"
+                  >
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="question">Question</TabsTrigger>
+                      {isAdmin && <TabsTrigger value="explanation">Explanation</TabsTrigger>}
+                      <TabsTrigger value="comments">Write Your Answer</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="question" className="mt-4">
+                      <div className="space-y-6">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
+                          {editingQuestionId === currentQuestion.id ? (
+                            <div className="flex-1 space-y-4">
+                              <Label htmlFor="edit-question">Question Text</Label>
+                              <RichTextEditor
+                                value={editFormData.question_text}
+                                onChange={(value: string) => setEditFormData(prev => ({...prev, question_text: value}))}
+                                placeholder="Enter the question text with formatting..."
+                              />
+                            </div>
+                          ) : (
+                            <h2 className="text-lg sm:text-xl font-semibold leading-relaxed flex-1">
+                              #{currentQuestion.sequence}.{" "}
+                              {currentQuestion.question_text}
+                            </h2>
                           )}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleReportIssue(currentQuestion.id)}
-                            className="flex-shrink-0"
-                          >
-                            <Flag className="h-4 w-4 mr-1 sm:mr-2" />
-                            <span className="hidden sm:inline">Report</span>
-                          </Button>
+                          <div className="flex gap-2 flex-shrink-0">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleReportIssue(currentQuestion.id)}
+                              className="flex-shrink-0"
+                            >
+                              <Flag className="h-4 w-4 mr-1 sm:mr-2" />
+                              <span className="hidden sm:inline">Report</span>
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        {editingQuestionId === currentQuestion.id ? (
-                          <div className="space-y-4">
-                            <div className="grid gap-4">
-                              <div>
-                                <Label htmlFor="edit-option-a">Option A</Label>
-                                <Input
-                                  id="edit-option-a"
-                                  value={editFormData.option_a}
-                                  onChange={(e) => setEditFormData(prev => ({...prev, option_a: e.target.value}))}
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="edit-option-b">Option B</Label>
-                                <Input
-                                  id="edit-option-b"
-                                  value={editFormData.option_b}
-                                  onChange={(e) => setEditFormData(prev => ({...prev, option_b: e.target.value}))}
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="edit-option-c">Option C</Label>
-                                <Input
-                                  id="edit-option-c"
-                                  value={editFormData.option_c}
-                                  onChange={(e) => setEditFormData(prev => ({...prev, option_c: e.target.value}))}
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="edit-option-d">Option D</Label>
-                                <Input
-                                  id="edit-option-d"
-                                  value={editFormData.option_d}
-                                  onChange={(e) => setEditFormData(prev => ({...prev, option_d: e.target.value}))}
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="edit-correct">Correct Answer</Label>
-                                <select
-                                  id="edit-correct"
-                                  value={editFormData.correct_answer}
-                                  onChange={(e) => setEditFormData(prev => ({...prev, correct_answer: e.target.value}))}
-                                  className="w-full p-2 border rounded-md"
-                                >
-                                  <option value="A">A</option>
-                                  <option value="B">B</option>
-                                  <option value="C">C</option>
-                                  <option value="D">D</option>
-                                </select>
+                        <div className="flex flex-shrink-0">
+                            {isAdmin && (
+                              <>
+                                {editingQuestionId === currentQuestion.id ? (
+                                  <>
+                                    <Button
+                                      variant="default"
+                                      size="sm"
+                                      onClick={saveQuestion}
+                                      disabled={updateQuestionMutation.isPending}
+                                    >
+                                      <Save className="h-4 w-4 mr-1" />
+                                      Save
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={cancelEditing}
+                                    >
+                                      <X className="h-4 w-4 mr-1" />
+                                      Cancel
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => startEditing(currentQuestion)}
+                                    >
+                                      <Edit className="h-4 w-4 mr-1 sm:mr-2" />
+                                      <span className="hidden sm:inline">Edit</span>
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleDeleteQuestion(currentQuestion.id)}
+                                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      disabled={deleteQuestionMutation.isPending}
+                                      data-testid="button-delete-question"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-1 sm:mr-2" />
+                                      <span className="hidden sm:inline">Delete</span>
+                                    </Button>
+                                  </>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        <div className="space-y-3">
+                          {editingQuestionId === currentQuestion.id ? (
+                            <div className="space-y-4">
+                              <div className="grid gap-4">
+                                <div>
+                                  <Label htmlFor="edit-option-a">Option A</Label>
+                                  <Input
+                                    id="edit-option-a"
+                                    value={editFormData.option_a}
+                                    onChange={(e) => setEditFormData(prev => ({...prev, option_a: e.target.value}))}
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="edit-option-b">Option B</Label>
+                                  <Input
+                                    id="edit-option-b"
+                                    value={editFormData.option_b}
+                                    onChange={(e) => setEditFormData(prev => ({...prev, option_b: e.target.value}))}
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="edit-option-c">Option C</Label>
+                                  <Input
+                                    id="edit-option-c"
+                                    value={editFormData.option_c}
+                                    onChange={(e) => setEditFormData(prev => ({...prev, option_c: e.target.value}))}
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="edit-option-d">Option D</Label>
+                                  <Input
+                                    id="edit-option-d"
+                                    value={editFormData.option_d}
+                                    onChange={(e) => setEditFormData(prev => ({...prev, option_d: e.target.value}))}
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="edit-correct">Correct Answer</Label>
+                                  <select
+                                    id="edit-correct"
+                                    value={editFormData.correct_answer}
+                                    onChange={(e) => setEditFormData(prev => ({...prev, correct_answer: e.target.value}))}
+                                    className="w-full p-2 border rounded-md"
+                                  >
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                  </select>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ) : (
-                          <>
-                            {[
-                              { key: "A", text: currentQuestion.option_a },
-                              { key: "B", text: currentQuestion.option_b },
-                              { key: "C", text: currentQuestion.option_c },
-                              { key: "D", text: currentQuestion.option_d },
-                            ]
-                              .filter((option) => option.text) // Only show options that have text
-                              .map((option) => {
-                                const isSelected =
-                                  selectedAnswers[currentQuestion.id] === option.key;
-                                const isCorrect =
-                                  currentQuestion.correct_answer === option.key;
-                                const hasAnswered =
-                                  currentQuestion.id in selectedAnswers;
-                                const isSingleOption = currentQuestion.is_single_option;
+                          ) : (
+                            <>
+                              {[
+                                { key: "A", text: currentQuestion.option_a },
+                                { key: "B", text: currentQuestion.option_b },
+                                { key: "C", text: currentQuestion.option_c },
+                                { key: "D", text: currentQuestion.option_d },
+                              ]
+                                .filter((option) => option.text) // Only show options that have text
+                                .map((option) => {
+                                  const isSelected =
+                                    selectedAnswers[currentQuestion.id] === option.key;
+                                  const isCorrect =
+                                    currentQuestion.correct_answer === option.key;
+                                  const hasAnswered =
+                                    currentQuestion.id in selectedAnswers;
+                                  const isSingleOption = currentQuestion.is_single_option;
 
-                                let buttonClass = "";
-                                if (hasAnswered) {
-                                  if (isSelected && !isCorrect) {
-                                    buttonClass =
-                                      "bg-red-500 text-white border-red-500";
-                                  } else if (isCorrect || (isSingleOption && isSelected)) {
-                                    buttonClass =
-                                      "bg-green-500 text-white border-green-500";
-                                  } else {
-                                    buttonClass = "bg-gray-100 text-gray-600";
-                                  }
-                                } else {
-                                  buttonClass = isSelected
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-white text-black hover:bg-gray-50";
-                                }
-
-                                return (
-                                  <Button
-                                    key={option.key}
-                                    variant="outline"
-                                    className={cn(
-                                      "w-full text-left justify-start p-3 sm:p-4 h-auto min-h-[3rem] whitespace-normal break-words",
-                                      buttonClass,
-                                    )}
-                                    onClick={() =>
-                                      handleAnswerSelect(
-                                        currentQuestion.id,
-                                        option.key,
-                                      )
+                                  let buttonClass = "";
+                                  if (hasAnswered) {
+                                    if (isSelected && !isCorrect) {
+                                      buttonClass =
+                                        "bg-red-500 text-white border-red-500";
+                                    } else if (isCorrect || (isSingleOption && isSelected)) {
+                                      buttonClass =
+                                        "bg-green-500 text-white border-green-500";
+                                    } else {
+                                      buttonClass = "bg-gray-100 text-gray-600";
                                     }
-                                    disabled={hasAnswered}
-                                  >
-                                <span className="font-semibold mr-2 sm:mr-3 flex-shrink-0">
-                                  {isSingleOption ? "" : `${option.key}.`}
-                                </span>
-                                <span className="flex-1 text-left leading-relaxed">
-                                  {option.text}
-                                </span>
-                                {hasAnswered && (isCorrect || (isSingleOption && isSelected)) && (
-                                  <span className="ml-2">✓</span>
-                                )}
-                                {hasAnswered && isSelected && !isCorrect && !isSingleOption && (
-                                  <span className="ml-2">✗</span>
-                                )}
-                              </Button>
-                            );
-                          })}
-                          </>
-                        )}
-                      </div>
+                                  } else {
+                                    buttonClass = isSelected
+                                      ? "bg-blue-600 text-white"
+                                      : "bg-white text-black hover:bg-gray-50";
+                                  }
 
-                      {/* Show explanation immediately when answer is selected */}
-                      {currentQuestion.id in selectedAnswers &&
-                        (currentQuestion.explanation_text ||
-                          currentQuestion.explanation) && (
-                          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
-                            <h4 className="font-semibold mb-2 text-blue-800 dark:text-blue-200">
-                              Explanation:
-                            </h4>
-                            <div
-                              className="text-gray-800 dark:text-gray-200"
-                              dangerouslySetInnerHTML={{
-                                __html: currentQuestion.explanation_text,
-                              }}
-                            />
-                          </div>
-                        )}
-
-                      <div className="flex justify-between pt-4">
-                        <Button
-                          variant="outline"
-                          onClick={handlePrevious}
-                          disabled={currentQuestionIndex === 0}
-                        >
-                          Previous
-                        </Button>
-                        <Button
-                          onClick={
-                            currentQuestionIndex === sortedQuestions.length - 1
-                              ? handleFinishTest
-                              : handleNext
-                          }
-                          disabled={false}
-                        >
-                          {currentQuestionIndex === sortedQuestions.length - 1
-                            ? "Finish"
-                            : "Next"}
-                        </Button>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="explanation" className="mt-4">
-                    <div className="space-y-4">
-                      {isAdmin && editingQuestionId === currentQuestion.id ? (
-                        <div className="space-y-4">
-                          <Label htmlFor="edit-explanation">Explanation</Label>
-                          <RichTextEditor
-                            value={editFormData.explanation_text}
-                            onChange={(value: string) => setEditFormData(prev => ({...prev, explanation_text: value}))}
-                            placeholder="Enter explanation with formatting..."
-                          />
+                                  return (
+                                    <Button
+                                      key={option.key}
+                                      variant="outline"
+                                      className={cn(
+                                        "w-full text-left justify-start p-3 sm:p-4 h-auto min-h-[3rem] whitespace-normal break-words",
+                                        buttonClass,
+                                      )}
+                                      onClick={() =>
+                                        handleAnswerSelect(
+                                          currentQuestion.id,
+                                          option.key,
+                                        )
+                                      }
+                                      disabled={hasAnswered}
+                                    >
+                                  <span className="font-semibold mr-2 sm:mr-3 flex-shrink-0">
+                                    {isSingleOption ? "" : `${option.key}.`}
+                                  </span>
+                                  <span className="flex-1 text-left leading-relaxed">
+                                    {option.text}
+                                  </span>
+                                  {hasAnswered && (isCorrect || (isSingleOption && isSelected)) && (
+                                    <span className="ml-2">✓</span>
+                                  )}
+                                  {hasAnswered && isSelected && !isCorrect && !isSingleOption && (
+                                    <span className="ml-2">✗</span>
+                                  )}
+                                </Button>
+                              );
+                            })}
+                            </>
+                          )}
                         </div>
-                      ) : (
-                        <>
-                          <h3 className="text-lg font-semibold">Explanation</h3>
-                          {currentQuestion.explanation_text ||
-                          currentQuestion.explanation ? (
-                            <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
+
+                        {/* Show explanation immediately when answer is selected */}
+                        {currentQuestion.id in selectedAnswers &&
+                          (currentQuestion.explanation_text ||
+                            currentQuestion.explanation) && (
+                            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
+                              <h4 className="font-semibold mb-2 text-blue-800 dark:text-blue-200">
+                                Explanation:
+                              </h4>
                               <div
                                 className="text-gray-800 dark:text-gray-200"
                                 dangerouslySetInnerHTML={{
@@ -1428,99 +1384,151 @@ export default function GenericSectionTest({
                                 }}
                               />
                             </div>
-                          ) : (
-                            <p className="text-gray-500">
-                              No explanation available for this question.
-                            </p>
                           )}
-                        </>
-                      )}
-                    </div>
-                  </TabsContent>
 
-                  <TabsContent value="comments" className="mt-4">
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold flex items-center">
-                        <MessageSquare className="h-5 w-5 mr-2" />
-                        Comments ({comments.length})
-                      </h3>
-
-                      <div className="border rounded-lg p-4">
-                        <Textarea
-                          placeholder="Add a comment..."
-                          value={newComment}
-                          onChange={(e) => setNewComment(e.target.value)}
-                          className="mb-3"
-                        />
-                        <Button 
-                          size="sm" 
-                          onClick={handleAddComment}
-                          disabled={addCommentMutation.isPending || !newComment.trim()}
-                          data-testid="button-post-comment"
-                        >
-                          <Send className="h-4 w-4 mr-2" />
-                          {addCommentMutation.isPending ? "Posting..." : "Post Comment"}
-                        </Button>
-                      </div>
-
-                      <div className="space-y-4">
-                        {(comments as any[]).length === 0 ? (
-                          <p className="text-gray-500 text-center py-4">
-                            No comments yet. Be the first to comment!
-                          </p>
-                        ) : (
-                          (comments as any[]).map((comment: any) => (
-                          <div
-                            key={comment.id}
-                            className="border rounded-lg p-4"
+                        <div className="flex justify-between pt-4">
+                          <Button
+                            variant="outline"
+                            onClick={handlePrevious}
+                            disabled={currentQuestionIndex === 0}
                           >
-                            <div className="flex items-start space-x-3">
-                              <Avatar className="h-8 w-8">
-                                <AvatarFallback className="text-xs">
-                                  {comment.username.slice(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-2 mb-1">
-                                  <span className="font-semibold text-sm">
-                                    {comment.username}
-                                  </span>
-                                  <span className="text-xs text-gray-500">
-                                    {formatCommentDate(comment.createdAt)}
-                                  </span>
-                                </div>
-                                <p className="text-sm">{comment.comment}</p>
-                                {/* <div className="flex items-center space-x-4 mt-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 text-xs"
-                                  >
-                                    <ThumbsUp className="h-3 w-3 mr-1" />
-                                    {comment.likes}
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 text-xs"
-                                  >
-                                    <ThumbsDown className="h-3 w-3 mr-1" />
-                                    {comment.dislikes}
-                                  </Button>
-                                </div> */}
-                              </div>
-                            </div>
+                            Previous
+                          </Button>
+                          <Button
+                            onClick={
+                              currentQuestionIndex === sortedQuestions.length - 1
+                                ? handleFinishTest
+                                : handleNext
+                            }
+                            disabled={false}
+                          >
+                            {currentQuestionIndex === sortedQuestions.length - 1
+                              ? "Finish"
+                              : "Next"}
+                          </Button>
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="explanation" className="mt-4">
+                      <div className="space-y-4">
+                        {isAdmin && editingQuestionId === currentQuestion.id ? (
+                          <div className="space-y-4">
+                            <Label htmlFor="edit-explanation">Explanation</Label>
+                            <RichTextEditor
+                              value={editFormData.explanation_text}
+                              onChange={(value: string) => setEditFormData(prev => ({...prev, explanation_text: value}))}
+                              placeholder="Enter explanation with formatting..."
+                            />
                           </div>
-                          ))
+                        ) : (
+                          <>
+                            <h3 className="text-lg font-semibold">Explanation</h3>
+                            {currentQuestion.explanation_text ||
+                            currentQuestion.explanation ? (
+                              <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
+                                <div
+                                  className="text-gray-800 dark:text-gray-200"
+                                  dangerouslySetInnerHTML={{
+                                    __html: currentQuestion.explanation_text,
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <p className="text-gray-500">
+                                No explanation available for this question.
+                              </p>
+                            )}
+                          </>
                         )}
                       </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
+                    </TabsContent>
+
+                    <TabsContent value="comments" className="mt-4">
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold flex items-center">
+                          <MessageSquare className="h-5 w-5 mr-2" />
+                          Comments ({comments.length})
+                        </h3>
+
+                        <div className="border rounded-lg p-4">
+                          <Textarea
+                            placeholder="Add a comment..."
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            className="mb-3"
+                          />
+                          <Button 
+                            size="sm" 
+                            onClick={handleAddComment}
+                            disabled={addCommentMutation.isPending || !newComment.trim()}
+                            data-testid="button-post-comment"
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            {addCommentMutation.isPending ? "Posting..." : "Post Comment"}
+                          </Button>
+                        </div>
+
+                        <div className="space-y-4">
+                          {(comments as any[]).length === 0 ? (
+                            <p className="text-gray-500 text-center py-4">
+                              No comments yet. Be the first to comment!
+                            </p>
+                          ) : (
+                            (comments as any[]).map((comment: any) => (
+                            <div
+                              key={comment.id}
+                              className="border rounded-lg p-4"
+                            >
+                              <div className="flex items-start space-x-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback className="text-xs">
+                                    {comment.username.slice(0, 2).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                  <div className="flex items-center space-x-2 mb-1">
+                                    <span className="font-semibold text-sm">
+                                      {comment.username}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      {formatCommentDate(comment.createdAt)}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm">{comment.comment}</p>
+                                  {/* <div className="flex items-center space-x-4 mt-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 text-xs"
+                                    >
+                                      <ThumbsUp className="h-3 w-3 mr-1" />
+                                      {comment.likes}
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 text-xs"
+                                    >
+                                      <ThumbsDown className="h-3 w-3 mr-1" />
+                                      {comment.dislikes}
+                                    </Button>
+                                  </div> */}
+                                </div>
+                              </div>
+                            </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-        </div>
+          )
+        }
 
         {/* Report Issue Dialog */}
         <Dialog
@@ -1577,12 +1585,10 @@ export default function GenericSectionTest({
             <div className="space-y-4">
               <div>
                 <Label htmlFor="new-question-text">Question Text</Label>
-                <Textarea
-                  id="new-question-text"
-                  value={newQuestionData.question_text}
-                  onChange={(e) => setNewQuestionData(prev => ({...prev, question_text: e.target.value}))}
-                  rows={3}
-                  placeholder="Enter the question text..."
+                <RichTextEditor
+                  value={editFormData.question_text}
+                  onChange={(value: string) => setEditFormData(prev => ({...prev, question_text: value}))}
+                  placeholder="Enter the question text with formatting..."
                 />
               </div>
 

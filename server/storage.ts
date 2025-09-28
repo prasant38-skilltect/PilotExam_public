@@ -387,7 +387,7 @@ export class DatabaseStorage implements IStorage {
 
       const newTopic = {
           ...topic[0],
-          text: "Dummy Topic",
+          text: "ignore",
           parentId: topic[0].id,
           parentName: topic[0].slug
         }
@@ -889,6 +889,16 @@ export class DatabaseStorage implements IStorage {
           .onConflictDoNothing({ target: [quizQuestions.quizId, quizQuestions.questionId] });
       }
     });
+  }
+
+  // Link a single question to a quiz by quiz's internal primary key
+  async updateQuizIdToTopic(topicId: number, quizId: number): Promise<void> {
+    console.log("Updating topic with quizId...", topicId, quizId);
+    // Update topic with the external quizId
+    await db
+      .update(topics)
+      .set({ quizId: quizId })
+      .where(eq(topics.id, topicId));
   }
 
   // Admin operations implementation
