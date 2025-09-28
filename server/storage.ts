@@ -357,7 +357,7 @@ export class DatabaseStorage implements IStorage {
     return cateogry;
   }
 
-  async getTopicByName(name: string): Promise<any | []> {
+  async getTopicByCategoryName(name: string): Promise<any | []> {
     const parentTopics = await db
       .select()
       .from(topics)
@@ -414,26 +414,7 @@ export class DatabaseStorage implements IStorage {
         };
       }
     } else {
-      console.log("Fetching category by name as no topic found with slug", name);
-      const category = await this.getCategoryByName(name);
-      console.log("category....", category);
-
-      if(!category) return [];
-
-      const newTopic = {
-          id: category.id,
-          slug: name,
-          text: "ignore",
-          categoryId: category.id,
-          categoryName: category.text,
-          parentId: -1,
-          parentName: null,
-          quizId: -1
-        }
-      return {
-        type: "topic",
-        data: [newTopic],
-      };
+      this.getDefaultReturnValue(name);
     }
    
     const quiz = await db
@@ -443,7 +424,7 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
 
     if (quiz.length === 0) {
-      return []
+      return this.getDefaultReturnValue(name);
     }
 
     const quizId = quiz[0].id;
@@ -484,7 +465,26 @@ export class DatabaseStorage implements IStorage {
       };
     }
 
-    return [];
+    const topic = await this.getTopicByName(name);
+
+    console.log("topic....", topic);
+
+    if(!topic) return [];
+
+    const newTopic = {
+        id: topic.id,
+        slug: name,
+        text: "ignore",
+        categoryId: topic.categoryId,
+        categoryName: topic.categoryName,
+        parentId: -1,
+        parentName: null,
+        quiz_id: quizId
+      }
+    return {
+      type: "topic",
+      data: [newTopic],
+    };
   }
 
   async getSubject(id: number): Promise<Subject | undefined> {
@@ -495,6 +495,29 @@ export class DatabaseStorage implements IStorage {
     return subject;
   }
 
+  async getDefaultReturnValue(name: string) {
+    console.log("Fetching category by name as no topic found with slug", name);
+    const category = await this.getCategoryByName(name);
+    console.log("category....", category);
+
+    if(!category) return [];
+
+    const newTopic = {
+        id: category.id,
+        slug: name,
+        text: "ignore",
+        categoryId: category.id,
+        categoryName: category.text,
+        parentId: -1,
+        parentName: null,
+        quiz_id: -1
+      }
+    return {
+      type: "topic",
+      data: [newTopic],
+    };
+  }
+
   async getCategory(id: number): Promise<Categories | undefined> {
     const [cateogry] = await db
       .select()
@@ -503,7 +526,16 @@ export class DatabaseStorage implements IStorage {
     return cateogry;
   }
 
-    async createCategories(category: InsertCategory): Promise<Categories> {
+  async getTopicByName(name: string): Promise<Topics | undefined> {
+    const [topic] = await db
+      .select()
+      .from(topics)
+      .where(eq(topics.slug, name));
+
+    return topic;
+  }
+  
+  async createCategories(category: InsertCategory): Promise<Categories> {
     const [created] = await db.insert(categories).values(category).returning();
     return created;
   }

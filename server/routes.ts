@@ -679,7 +679,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/:topic', async (req, res) => {
     try {
-      const subjects = await storage.getTopicByName(req.params.topic);
+      const subjects = await storage.getTopicByCategoryName(req.params.topic);
       res.json(subjects);
     } catch (error) {
       console.error("Error fetching subjects:", error);
@@ -944,6 +944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const questionId = parseInt(req.params.id);
       const deletedQuestion = await storage.softDeleteQuestion(questionId);
+
       res.json({ message: "Question deleted successfully", question: deletedQuestion });
     } catch (error) {
       console.error("Error deleting question:", error);
