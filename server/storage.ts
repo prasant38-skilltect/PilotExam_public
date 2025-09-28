@@ -75,6 +75,7 @@ export interface IStorage {
   getAllSubjects(): Promise<Categories[]>;
   getSubject(id: number): Promise<Subject | undefined>;
   getCategory(id: number): Promise<Categories | undefined>;
+  getCategoryByName(name: string): Promise<Categories | undefined>;
   createSubject(subject: InsertSubject): Promise<Subject>;
   updateCategory(id: number, data: Partial<Categories>): Promise<Categories>;
   deleteCategory(id: number): Promise<void>;
@@ -347,6 +348,15 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(categories).orderBy(categories.id);
   }
 
+  async getCategoryByName(name: string): Promise<Categories | undefined> {
+    const [cateogry] = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.text, name));
+
+    return cateogry;
+  }
+
   async getTopicByName(name: string): Promise<any | []> {
     const parentTopics = await db
       .select()
@@ -379,29 +389,53 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
     console.log("TopicQuizId...", topicQuizId);
 
-    if(topicQuizId[0].id === -1) {
-      const topic: any = await db
-        .select()
-        .from(topics)
-        .where(and(eq(topics.slug, name)));
+    if(topicQuizId.length > 0) {
+       if(topicQuizId[0].id === -1) {
+        const topic: any = await db
+          .select()
+          .from(topics)
+          .where(and(eq(topics.slug, name)));
+
+        const newTopic = {
+            ...topic[0],
+            text: "ignore",
+            parentId: topic[0].id,
+            parentName: topic[0].slug
+          }
+        return {
+          type: "topic",
+          data: [newTopic],
+        };
+      } else if(topicQuizId[0].id === 1) {
+        return {
+          type: "quiz",
+          data: [],
+          topicName: topicQuizId[0].text,
+        };
+      }
+    } else {
+      console.log("Fetching category by name as no topic found with slug", name);
+      const category = await this.getCategoryByName(name);
+      console.log("category....", category);
+
+      if(!category) return [];
 
       const newTopic = {
-          ...topic[0],
+          id: category.id,
+          slug: name,
           text: "ignore",
-          parentId: topic[0].id,
-          parentName: topic[0].slug
+          categoryId: category.id,
+          categoryName: category.text,
+          parentId: -1,
+          parentName: null,
+          quizId: -1
         }
       return {
         type: "topic",
         data: [newTopic],
       };
-    } else if(topicQuizId[0].id === 1) {
-      return {
-        type: "quiz",
-        data: [],
-        topicName: topicQuizId[0].text,
-      };
     }
+   
     const quiz = await db
       .select({ id: quizzes.id })
       .from(quizzes)
