@@ -28,13 +28,10 @@ export default function QuestionBank() {
   const queryClient = useQueryClient();
 
   // Topic management state
-  const [showAddTopic, setShowAddTopic] = useState(false);
-  const [editingTopic, setEditingTopic] = useState<any>(null);
-  const [newTopicData, setNewTopicData] = useState({
-    text: '',
-    description: '',
-    categoryId: ''
-  });
+  const [showTopicDialog, setShowTopicDialog] = useState(false);
+  const [topicData, setTopicData] = useState({ text: '', description: '', categoryId: '' });
+  const [editingTopicId, setEditingTopicId] = useState<number | null>(null);
+  const isEditMode = editingTopicId !== null;
 
   // Fetch topics and categories for admin
   const { data: topics = [] } = useQuery({
@@ -66,8 +63,9 @@ export default function QuestionBank() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
       // Invalidate any dynamic pages that might show topics
       queryClient.invalidateQueries({ queryKey: ['/api', { type: 'topic' }] });
-      setShowAddTopic(false);
-      setNewTopicData({ text: '', description: '', categoryId: '' });
+      setShowTopicDialog(false);
+      setTopicData({ text: '', description: '', categoryId: '' });
+      setEditingTopicId(null);
       toast({
         title: "Success",
         description: "Topic created successfully.",
@@ -100,7 +98,9 @@ export default function QuestionBank() {
                  queryKeyString.includes('topic');
         }
       });
-      setEditingTopic(null);
+      setShowTopicDialog(false);
+      setTopicData({ text: '', description: '', categoryId: '' });
+      setEditingTopicId(null);
       toast({
         title: "Success",
         description: "Topic updated successfully.",
@@ -133,6 +133,9 @@ export default function QuestionBank() {
                  queryKeyString.includes('topic');
         }
       });
+      setShowTopicDialog(false);
+      setTopicData({ text: '', description: '', categoryId: '' });
+      setEditingTopicId(null);
       toast({
         title: "Success",
         description: "Topic deleted successfully.",
@@ -147,8 +150,25 @@ export default function QuestionBank() {
     }
   });
 
-  const handleCreateTopic = () => {
-    if (!newTopicData.text.trim()) {
+  // Unified dialog handlers
+  const openCreateDialog = () => {
+    setTopicData({ text: '', description: '', categoryId: '' });
+    setEditingTopicId(null);
+    setShowTopicDialog(true);
+  };
+
+  const openEditDialog = (topic: any) => {
+    setTopicData({ 
+      text: topic.text, 
+      description: topic.description || '',
+      categoryId: topic.categoryId?.toString() || ''
+    });
+    setEditingTopicId(topic.id);
+    setShowTopicDialog(true);
+  };
+
+  const handleSaveTopic = () => {
+    if (!topicData.text.trim()) {
       toast({
         title: "Error",
         description: "Please enter a topic name",
@@ -156,7 +176,7 @@ export default function QuestionBank() {
       });
       return;
     }
-    if (!newTopicData.categoryId) {
+    if (!topicData.categoryId) {
       toast({
         title: "Error",
         description: "Please select a category",
@@ -164,12 +184,18 @@ export default function QuestionBank() {
       });
       return;
     }
-    createTopicMutation.mutate(newTopicData);
+
+    if (isEditMode) {
+      updateTopicMutation.mutate({ ...topicData, id: editingTopicId });
+    } else {
+      createTopicMutation.mutate(topicData);
+    }
   };
 
-  const handleUpdateTopic = () => {
-    if (!editingTopic) return;
-    updateTopicMutation.mutate(editingTopic);
+  const closeDialog = () => {
+    setShowTopicDialog(false);
+    setTopicData({ text: '', description: '', categoryId: '' });
+    setEditingTopicId(null);
   };
 
   const handleDeleteTopic = (topicId: number) => {
@@ -223,7 +249,7 @@ export default function QuestionBank() {
             <CardContent>
               <div className="flex gap-2 mb-4">
                 <Button
-                  onClick={() => setShowAddTopic(true)}
+                  onClick={openCreateDialog}
                   className="bg-green-600 hover:bg-green-700"
                   data-testid="button-add-topic"
                 >
@@ -255,7 +281,7 @@ export default function QuestionBank() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => setEditingTopic(topic)}
+                            onClick={() => openEditDialog(topic)}
                             className="text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900"
                             data-testid={`button-edit-topic-${topic.id}`}
                           >
@@ -318,19 +344,19 @@ export default function QuestionBank() {
           </div>
         </div>
 
-        {/* Add Topic Dialog */}
-        <Dialog open={showAddTopic} onOpenChange={setShowAddTopic}>
+        {/* Topic Dialog (Create/Edit) */}
+        <Dialog open={showTopicDialog} onOpenChange={closeDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Topic</DialogTitle>
+              <DialogTitle>{isEditMode ? 'Edit Topic' : 'Add New Topic'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="topic-text">Topic Name</Label>
                 <Input
                   id="topic-text"
-                  value={newTopicData.text}
-                  onChange={(e) => setNewTopicData(prev => ({ ...prev, text: e.target.value }))}
+                  value={topicData.text}
+                  onChange={(e) => setTopicData(prev => ({ ...prev, text: e.target.value }))}
                   placeholder="Enter topic name"
                   data-testid="input-topic-name"
                 />
@@ -339,15 +365,15 @@ export default function QuestionBank() {
                 <Label htmlFor="topic-description">Description (Optional)</Label>
                 <Textarea
                   id="topic-description"
-                  value={newTopicData.description}
-                  onChange={(e) => setNewTopicData(prev => ({ ...prev, description: e.target.value }))}
+                  value={topicData.description}
+                  onChange={(e) => setTopicData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Enter topic description"
                   data-testid="textarea-topic-description"
                 />
               </div>
               <div>
                 <Label htmlFor="topic-category">Category</Label>
-                <Select value={newTopicData.categoryId} onValueChange={(value) => setNewTopicData(prev => ({ ...prev, categoryId: value }))}>
+                <Select value={topicData.categoryId} onValueChange={(value) => setTopicData(prev => ({ ...prev, categoryId: value }))}>
                   <SelectTrigger data-testid="select-topic-category">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
@@ -363,87 +389,22 @@ export default function QuestionBank() {
               <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    setShowAddTopic(false);
-                    setNewTopicData({ text: '', description: '', categoryId: '' });
-                  }}
+                  onClick={closeDialog}
                 >
                   Cancel
                 </Button>
                 <Button
-                  onClick={handleCreateTopic}
-                  disabled={createTopicMutation.isPending}
-                  className="bg-green-600 hover:bg-green-700"
-                  data-testid="button-create-topic"
+                  onClick={handleSaveTopic}
+                  disabled={createTopicMutation.isPending || updateTopicMutation.isPending}
+                  className={isEditMode ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}
+                  data-testid={isEditMode ? "button-update-topic" : "button-create-topic"}
                 >
-                  {createTopicMutation.isPending ? "Creating..." : "Create Topic"}
+                  {(createTopicMutation.isPending || updateTopicMutation.isPending) 
+                    ? `${isEditMode ? 'Updating' : 'Creating'}...` 
+                    : `${isEditMode ? 'Update' : 'Create'} Topic`}
                 </Button>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Topic Dialog */}
-        <Dialog open={!!editingTopic} onOpenChange={() => setEditingTopic(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Topic</DialogTitle>
-            </DialogHeader>
-            {editingTopic && (
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="edit-topic-text">Topic Name</Label>
-                  <Input
-                    id="edit-topic-text"
-                    value={editingTopic.text}
-                    onChange={(e) => setEditingTopic(prev => ({ ...prev, text: e.target.value }))}
-                    placeholder="Enter topic name"
-                    data-testid="input-edit-topic-name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-topic-description">Description (Optional)</Label>
-                  <Textarea
-                    id="edit-topic-description"
-                    value={editingTopic.description || ''}
-                    onChange={(e) => setEditingTopic(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Enter topic description"
-                    data-testid="textarea-edit-topic-description"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-topic-category">Category</Label>
-                  <Select value={editingTopic.categoryId?.toString()} onValueChange={(value) => setEditingTopic(prev => ({ ...prev, categoryId: value }))}>
-                    <SelectTrigger data-testid="select-edit-topic-category">
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category: any) => (
-                        <SelectItem key={category.id} value={category.id.toString()}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setEditingTopic(null)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleUpdateTopic}
-                    disabled={updateTopicMutation.isPending}
-                    className="bg-blue-600 hover:bg-blue-700"
-                    data-testid="button-update-topic"
-                  >
-                    {updateTopicMutation.isPending ? "Updating..." : "Update Topic"}
-                  </Button>
-                </div>
-              </div>
-            )}
           </DialogContent>
         </Dialog>
       </div>
