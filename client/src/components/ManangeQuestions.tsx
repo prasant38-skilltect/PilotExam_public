@@ -74,6 +74,19 @@ export default function ManageQuestions({
   const topicSlug = quizData && quizData[0]?.slug ? quizData[0]?.slug : '';
   const topicId = quizData && quizData[0]?.id ? quizData[0]?.id : -1;
 
+  // Fetch questions for this quiz/section
+  const { data: questionsData, isLoading: loadingQuestions } = useQuery({
+    queryKey: ['/api/quiz/questions', { quizId, sectionId }],
+    queryFn: async () => {
+      if (quizId === -1) return { questions: [] };
+      const res = await apiRequest('GET', `/api/quiz/${quizId}/questions`);
+      return res instanceof Response ? await res.json() : res;
+    },
+    enabled: quizId !== -1
+  });
+
+  const questions = questionsData?.questions || [];
+
   // Mutation for creating new questions (admin only)
   const createQuestionMutation = useMutation({
     mutationFn: async (questionData: any) => {
@@ -355,6 +368,82 @@ export default function ManageQuestions({
             )}
           </div>
         </div>
+
+        {/* Questions List */}
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20 mb-6">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Questions ({questions.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loadingQuestions ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent mx-auto"></div>
+                <p className="text-white mt-2">Loading questions...</p>
+              </div>
+            ) : questions.length === 0 ? (
+              <div className="text-center py-8">
+                <FileText className="h-12 w-12 text-white/50 mx-auto mb-4" />
+                <p className="text-white/70">No questions found for this section.</p>
+                <p className="text-white/50 text-sm">Add questions using the buttons above.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {questions.map((question: any, index: number) => (
+                  <div key={question.id} className="bg-white/5 rounded-lg p-4 border border-white/10">
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <div className="text-sm text-white/70 mb-1">Question {index + 1}</div>
+                        <p className="text-white font-medium mb-2">{question.text || question.question_text}</p>
+                        {question.options && question.options.length > 0 && (
+                          <div className="space-y-1">
+                            {question.options.map((option: any, optIndex: number) => (
+                              <div key={optIndex} className={`text-sm px-2 py-1 rounded ${
+                                option.isCorrect || option.is_correct 
+                                  ? 'bg-green-500/20 text-green-200 border border-green-500/30' 
+                                  : 'text-white/70'
+                              }`}>
+                                {String.fromCharCode(65 + optIndex)}. {option.text || option.option_text}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {question.explanation && (
+                          <div className="mt-2 p-2 bg-blue-500/10 rounded border border-blue-500/20">
+                            <div className="text-xs text-blue-200 mb-1">Explanation:</div>
+                            <div className="text-sm text-blue-100">{question.explanation}</div>
+                          </div>
+                        )}
+                      </div>
+                      {isAuthenticated && (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-white border-white/20 hover:bg-white/10"
+                            data-testid={`button-edit-question-${question.id}`}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-400 border-red-400/20 hover:bg-red-500/10"
+                            data-testid={`button-delete-question-${question.id}`}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Add Question Dialog */}
         <Dialog open={showAddQuestionForm} onOpenChange={setShowAddQuestionForm}>
