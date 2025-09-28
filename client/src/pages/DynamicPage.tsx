@@ -11,22 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Plus, Edit, Trash2, Settings, Tag } from 'lucide-react';
 import ManageQuestions from '../components/ManangeQuestions';
-
-type Subject = {
-  categoryId: number,
-  categoryName: string,
-  id: number,
-  parentId: number,
-  parentName: string,
-  quizId: number,
-  slug: string,
-  text: string
-};
 
 export default function DynamicPage() {
   const link = useLocation();
@@ -379,8 +367,8 @@ export default function DynamicPage() {
                     setShowAddTopic(false);
                     setNewTopicData({ text: '', slug: '', categoryId: '' });
                   }}
-                  className="border-cyan-400/30 text-gray-200 hover:bg-slate-700"
-                >
+                    className="hover:bg-slate-700 hover:text-white"
+                  >
                   Cancel
                 </Button>
                 <Button
@@ -436,7 +424,7 @@ export default function DynamicPage() {
                   <Button
                     variant="outline"
                     onClick={() => setEditingTopic(null)}
-                    className="border-cyan-400/30 text-gray-200 hover:bg-slate-700"
+                    className="hover:bg-slate-700 hover:text-white"
                   >
                     Cancel
                   </Button>

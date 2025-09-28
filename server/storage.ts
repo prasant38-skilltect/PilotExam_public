@@ -151,6 +151,9 @@ export interface IStorage {
   getUserProgress(userId: string): Promise<UserProgress[]>;
   updateUserProgress(progress: InsertUserProgress): Promise<UserProgress>;
   getSectionProgress(userId: string, sectionName: string): Promise<UserProgress | undefined>;
+
+  // Question search
+  searchQuestions(searchText: string): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -441,37 +444,41 @@ export class DatabaseStorage implements IStorage {
     const quizId = quiz[0].id;
     console.log("quizId....", quizId);
 
-    const result2 = await db
-      .select({
-        id: quizQuestions.id,
-        quiz_id: quizQuestions.quizId,
-        position: quizQuestions.position,
-        questionPk: questions.id,
-        question_id: questions.questionId,
-        question_text: questions.text,
-        explaination: questions.explanation,
-        explaination_img: questions.explanationImage,
-        tooltio: questions.tooltip,
-        featured_img: questions.featuredImage,
-        created_at: questions.createdAt,
-        option_text: questionOptions.optionText,
-        isCorrect: questionOptions.isCorrect,
-        optionOrder: questionOptions.optionOrder,
-      })
-      .from(quizQuestions)
-      .innerJoin(questions, eq(quizQuestions.questionId, questions.id))
-      .leftJoin(questionOptions, eq(questions.id, questionOptions.questionId))
-      .where(and(
-          eq(quizQuestions.quizId, quizId),
-          eq(questions.isActive, true)
-        ))
-      .orderBy(asc(quizQuestions.id), asc(questionOptions.optionOrder));
+    const result2 = await db.execute(sql`
+      SELECT 
+        qq.id,
+        qq.quiz_id,
+        qq.position,
+        q.id AS question_pk,
+        q.question_id,
+        q.text AS question_text,
+        q.explanation,
+        q.explanation_image,
+        q.tooltip,
+        q.featured_image,
+        q.created_at,
+        json_agg(json_build_object(
+          'option_text', qo.option_text,
+          'isCorrect', qo.is_correct,
+          'optionOrder', qo.option_order
+        ) ORDER BY qo.option_order) AS options
+      FROM quiz_questions qq
+      JOIN questions q 
+        ON qq.question_id = q.id
+      LEFT JOIN question_options qo 
+        ON q.id = qo.question_id
+      WHERE qq.quiz_id = ${quizId}
+        AND q.is_active = true
+      GROUP BY qq.id, q.id
+      ORDER BY qq.id;
+    `);
 
     // console.log("results quiz......", result2);
-    if (result2.length > 0) {
+    const quizRows = Array.isArray(result2) ? result2 : (result2.rows ?? []);
+    if (quizRows.length > 0) {
       return {
         type: "quiz",
-        data: result2,
+        data: quizRows,
         topicName: topicQuizId[0].text,
       };
     }
@@ -641,6 +648,58 @@ export class DatabaseStorage implements IStorage {
       .where(eq(questionOptions.questionId, questionId))
       .orderBy(asc(questionOptions.optionOrder));
   }
+
+  async searchQuestions(searchText: string): Promise<any[]> {
+    try {
+      const rows = await db
+        .select({
+          questionId: questions.id,
+          questionText: questions.text,
+          explanation: questions.explanation,
+          quizId: quizzes.id,
+          quizTitle: topics.text,
+          quizSlug: topics.slug,
+        })
+        .from(questions)
+        .leftJoin(quizQuestions, eq(questions.id, quizQuestions.questionId))
+        .leftJoin(quizzes, eq(quizQuestions.quizId, quizzes.id))
+        .leftJoin(topics, eq(quizzes.quizId, topics.quizId))
+        .where(
+          and(
+            eq(questions.isActive, true),
+            like(questions.text, `%${searchText}%`)
+          )
+        )
+        .limit(50); // fetch extra since grouping may shrink results
+
+      // Group quizzes under each question
+      const questionMap: Record<string, any> = {};
+
+      for (const row of rows) {
+        if (!questionMap[row.questionId]) {
+          questionMap[row.questionId] = {
+            questionId: row.questionId,
+            questionText: row.questionText,
+            explanation: row.explanation,
+            quizzes: [],
+          };
+        }
+        if (row.quizId) {
+          questionMap[row.questionId].quizzes.push({
+            quizId: row.quizId,
+            quizTitle: row.quizTitle,
+            quizSlug: row.quizSlug,
+          });
+        }
+      }
+
+      return Object.values(questionMap).slice(0, 10);
+    } catch (error) {
+      console.error("Error searching questions:", error);
+      throw error;
+    }
+  }
+
 
   // Test session operations
   async createTestSession(session: InsertTestSession): Promise<TestSession> {
