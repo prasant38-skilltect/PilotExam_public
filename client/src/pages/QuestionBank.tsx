@@ -61,7 +61,11 @@ export default function QuestionBank() {
       return await apiRequest('POST', '/api/admin/topics', topicData);
     },
     onSuccess: () => {
+      // Invalidate multiple related queries
       queryClient.invalidateQueries({ queryKey: ['/api/admin/topics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
+      // Invalidate any dynamic pages that might show topics
+      queryClient.invalidateQueries({ queryKey: ['/api', { type: 'topic' }] });
       setShowAddTopic(false);
       setNewTopicData({ text: '', description: '', categoryId: '' });
       toast({
@@ -83,7 +87,16 @@ export default function QuestionBank() {
       return await apiRequest('PUT', `/api/admin/topics/${topicData.id}`, topicData);
     },
     onSuccess: () => {
+      // Invalidate multiple related queries
       queryClient.invalidateQueries({ queryKey: ['/api/admin/topics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
+      // Invalidate any dynamic pages that might show topics
+      queryClient.invalidateQueries({ queryKey: ['/api', { type: 'topic' }] });
+      // Invalidate any pages that might show this specific topic
+      queryClient.invalidateQueries({ queryFn: (query) => {
+        return query.queryKey[0]?.toString().startsWith('/api/') && 
+               query.queryKey[0]?.toString().includes('topic');
+      }});
       setEditingTopic(null);
       toast({
         title: "Success",
@@ -104,7 +117,16 @@ export default function QuestionBank() {
       return await apiRequest('DELETE', `/api/admin/topics/${topicId}`);
     },
     onSuccess: () => {
+      // Invalidate multiple related queries
       queryClient.invalidateQueries({ queryKey: ['/api/admin/topics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
+      // Invalidate any dynamic pages that might show topics
+      queryClient.invalidateQueries({ queryKey: ['/api', { type: 'topic' }] });
+      // Invalidate any pages that might show topics
+      queryClient.invalidateQueries({ queryFn: (query) => {
+        return query.queryKey[0]?.toString().startsWith('/api/') && 
+               query.queryKey[0]?.toString().includes('topic');
+      }});
       toast({
         title: "Success",
         description: "Topic deleted successfully.",
