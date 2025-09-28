@@ -149,8 +149,18 @@ export default function GenericSectionTest({
         title: "Success",
         description: "Question added successfully",
       });
-      // Refresh the questions data
-      queryClient.invalidateQueries({ queryKey: [`/api/quiz/questions`] });
+      // Refresh the questions data - use predicate to match all question queries
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKey = query.queryKey as string[];
+          return queryKey && (
+            queryKey[0]?.includes('questions') || 
+            queryKey[0]?.includes('/api/sections/') ||
+            queryKey[0]?.includes('/api/quiz/') ||
+            queryKey[0]?.includes('/api/admin/questions')
+          );
+        }
+      });
     },
     onError: (error: any) => {
       toast({
@@ -171,8 +181,18 @@ export default function GenericSectionTest({
         title: "Success",
         description: "Question deleted successfully",
       });
-      // Refresh the questions data
-      queryClient.invalidateQueries({ queryKey: [`/api/quiz/questions`] });
+      // Refresh the questions data - use predicate to match all question queries
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKey = query.queryKey as string[];
+          return queryKey && (
+            queryKey[0]?.includes('questions') || 
+            queryKey[0]?.includes('/api/sections/') ||
+            queryKey[0]?.includes('/api/quiz/') ||
+            queryKey[0]?.includes('/api/admin/questions')
+          );
+        }
+      });
     },
     onError: (error: any) => {
       toast({
@@ -261,8 +281,18 @@ export default function GenericSectionTest({
       setShowBulkUpload(false);
       setUploadFile(null);
       setIsUploading(false);
-      // Refresh questions
-      queryClient.invalidateQueries({ queryKey: [`/api/sections/${sectionId}/questions`] });
+      // Refresh questions - use predicate to match all question queries
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKey = query.queryKey as string[];
+          return queryKey && (
+            queryKey[0]?.includes('questions') || 
+            queryKey[0]?.includes('/api/sections/') ||
+            queryKey[0]?.includes('/api/quiz/') ||
+            queryKey[0]?.includes('/api/admin/questions')
+          );
+        }
+      });
     },
     onError: (error: any) => {
       console.error("Upload error:", error);

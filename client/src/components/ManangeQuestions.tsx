@@ -104,7 +104,7 @@ export default function ManageQuestions({
         title: "Success",
         description: "Question added successfully",
       });
-      // Refresh the questions data - use predicate to match all question queries
+      // Refresh the questions data - use predicate to match all question queries including section-specific
       queryClient.invalidateQueries({ 
         predicate: (query) => {
           const queryKey = query.queryKey as string[];
@@ -112,7 +112,8 @@ export default function ManageQuestions({
             queryKey[0]?.includes('questions') || 
             queryKey[0]?.includes('/api/sections/') ||
             queryKey[0]?.includes('/api/quiz/') ||
-            queryKey[0]?.includes('/api/admin/questions')
+            queryKey[0]?.includes('/api/admin/questions') ||
+            queryKey[0] === `/api/sections/${sectionId}/questions`
           );
         }
       });
@@ -153,7 +154,7 @@ export default function ManageQuestions({
       setShowBulkUpload(false);
       setUploadFile(null);
       setIsUploading(false);
-      // Refresh questions - use predicate to match all question queries
+      // Refresh questions - use predicate to match all question queries including section-specific
       queryClient.invalidateQueries({ 
         predicate: (query) => {
           const queryKey = query.queryKey as string[];
@@ -161,7 +162,8 @@ export default function ManageQuestions({
             queryKey[0]?.includes('questions') || 
             queryKey[0]?.includes('/api/sections/') ||
             queryKey[0]?.includes('/api/quiz/') ||
-            queryKey[0]?.includes('/api/admin/questions')
+            queryKey[0]?.includes('/api/admin/questions') ||
+            queryKey[0] === `/api/sections/${sectionId}/questions`
           );
         }
       });
