@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import Subscribe from '@/pages/subscribe'
+import Subscribe from '../../client/src/pages/subscribe'
 
 export const metadata: Metadata = {
   title: 'Subscribe - ATPL Exam Preparation Plans',
