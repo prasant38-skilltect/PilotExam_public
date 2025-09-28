@@ -64,7 +64,7 @@ export default function ManageQuestions({
   const [sessionId] = useState(() => `quiz_${sectionId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
   const { toast } = useToast();
-  const { user, isAdmin, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   
   // Parse URL parameters to check for resume session from browser's search params
@@ -91,8 +91,18 @@ export default function ManageQuestions({
         title: "Success",
         description: "Question added successfully",
       });
-      // Refresh the questions data
-      queryClient.invalidateQueries({ queryKey: [`/api/quiz/questions`] });
+      // Refresh the questions data - use predicate to match all question queries
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKey = query.queryKey as string[];
+          return queryKey && (
+            queryKey[0]?.includes('questions') || 
+            queryKey[0]?.includes('/api/sections/') ||
+            queryKey[0]?.includes('/api/quiz/') ||
+            queryKey[0]?.includes('/api/admin/questions')
+          );
+        }
+      });
     },
     onError: (error: any) => {
       toast({
@@ -130,8 +140,18 @@ export default function ManageQuestions({
       setShowBulkUpload(false);
       setUploadFile(null);
       setIsUploading(false);
-      // Refresh questions
-      queryClient.invalidateQueries({ queryKey: [`/api/sections/${sectionId}/questions`] });
+      // Refresh questions - use predicate to match all question queries
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKey = query.queryKey as string[];
+          return queryKey && (
+            queryKey[0]?.includes('questions') || 
+            queryKey[0]?.includes('/api/sections/') ||
+            queryKey[0]?.includes('/api/quiz/') ||
+            queryKey[0]?.includes('/api/admin/questions')
+          );
+        }
+      });
     },
     onError: (error: any) => {
       console.error("Upload error:", error);
@@ -300,7 +320,7 @@ export default function ManageQuestions({
             <h1 className="text-lg sm:text-xl font-bold text-white">{sectionName}</h1>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4 text-white">
-            {isAdmin && (<>
+            {isAuthenticated && (<>
               <Button
                 onClick={() => setShowAddQuestionForm(true)}
                 size="sm"
