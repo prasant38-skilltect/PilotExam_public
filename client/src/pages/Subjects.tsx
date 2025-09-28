@@ -323,7 +323,7 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
                   placeholder="Enter category slug"
                   data-testid="input-category-slug"
                 />
-              </div>
+              {/* </div>
               <div>
                 <Label htmlFor="category-description">Description (Optional)</Label>
                 <Textarea
@@ -332,7 +332,7 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
                   onChange={(e) => setCategoryData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Enter category description"
                   data-testid="textarea-category-description"
-                />
+                /> */}
               </div>
               <div className="flex justify-end gap-2">
                 <Button

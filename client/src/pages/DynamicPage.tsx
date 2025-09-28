@@ -342,8 +342,8 @@ export default function DynamicPage() {
                     setShowAddTopic(false);
                     setNewTopicData({ text: '', slug: '', categoryId: '' });
                   }}
-                  className="border-cyan-400/30 text-gray-200 hover:bg-slate-700"
-                >
+                    className="hover:bg-slate-700 hover:text-white"
+                  >
                   Cancel
                 </Button>
                 <Button
@@ -399,7 +399,7 @@ export default function DynamicPage() {
                   <Button
                     variant="outline"
                     onClick={() => setEditingTopic(null)}
-                    className="border-cyan-400/30 text-gray-200 hover:bg-slate-700"
+                    className="hover:bg-slate-700 hover:text-white"
                   >
                     Cancel
                   </Button>
