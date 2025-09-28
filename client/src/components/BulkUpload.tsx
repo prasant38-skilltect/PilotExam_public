@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Download } from "lucide-react";
 
-export function BulkUpload({showBulkUpload, setShowBulkUpload, handleDownloadTemplate, setUploadedQuestions, setShowTopicLinking, setSelectedQuestions}: {setShowBulkUpload: any, showBulkUpload: any, handleBulkUpload: () => void, bulkUploadMutation: any, handleDownloadTemplate: any, setUploadedQuestions: any, setShowTopicLinking: any, setSelectedQuestions: any}) {
+export function BulkUpload({showBulkUpload, setShowBulkUpload, handleDownloadTemplate, setUploadedQuestions, setShowTopicLinking, setSelectedQuestions}: {setShowBulkUpload: any, showBulkUpload: any, handleDownloadTemplate: any, setUploadedQuestions: any, setShowTopicLinking: any, setSelectedQuestions: any}) {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     
     const { toast } = useToast();
@@ -44,8 +44,13 @@ export function BulkUpload({showBulkUpload, setShowBulkUpload, handleDownloadTem
           return await response.json();
         },
         onSuccess: (data) => {
-          // Invalidate multiple related queries
-          queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+          // Invalidate multiple related queries - use predicate to match all question queries
+          queryClient.invalidateQueries({ 
+            predicate: (query) => {
+              const queryKey = query.queryKey as string[];
+              return queryKey && queryKey[0] === '/api/admin/questions';
+            }
+          });
           queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
           
           setShowBulkUpload(false);

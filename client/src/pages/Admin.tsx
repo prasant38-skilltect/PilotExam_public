@@ -15,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { BulkUpload } from "@/components/BulkUpload";
+import { BulkUpload } from "../components/BulkUpload";
 import { Link } from "wouter";
 import { Home, Edit, Eye, Calendar, User, MessageSquare, Search, ChevronLeft, ChevronRight, TreePine, ExternalLink, Plus, Upload, Download, Link as LinkIcon, Check, ChevronsUpDown } from "lucide-react";
 import { TopicLinking } from "../components/TopicLinking";
@@ -296,9 +296,11 @@ export default function Admin() {
       // Invalidate any topic-specific quiz queries
       queryClient.invalidateQueries({ 
         predicate: (query) => {
-          return query.queryKey[0]?.toString().startsWith('/api/') && 
-                 (query.queryKey[0]?.toString().includes('quiz') ||
-                  query.queryKey[0]?.toString().includes('topic'));
+          const firstKey = query.queryKey[0];
+          return !!(firstKey && 
+                   firstKey.toString().startsWith('/api/') && 
+                   (firstKey.toString().includes('quiz') ||
+                    firstKey.toString().includes('topic')));
         }
       });
       setShowTopicLinking(false);
@@ -507,14 +509,6 @@ export default function Admin() {
     setSelectedTopic(null);
   };
 
-  const updateNewQuestionOption = (index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
-    setNewQuestionData(prev => ({
-      ...prev,
-      options: prev.options.map((opt, i) => 
-        i === index ? { ...opt, [field]: value } : opt
-      )
-    }));
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB', {
@@ -1200,78 +1194,6 @@ export default function Admin() {
           </DialogContent>
         </Dialog>
 
-        {/* Add Single Question Dialog */}
-        <Dialog open={showAddSingleQuestion} onOpenChange={setShowAddSingleQuestion}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add New Question</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="new-question-text">Question Text</Label>
-                <Textarea
-                  id="new-question-text"
-                  value={newQuestionData.question_text}
-                  onChange={(e) => setNewQuestionData(prev => ({...prev, question_text: e.target.value}))}
-                  rows={3}
-                  placeholder="Enter the question text..."
-                />
-              </div>
-
-              <div>
-                <Label>Options</Label>
-                <div className="space-y-2">
-                  {newQuestionData.options.map((option, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <Input
-                        value={option.text}
-                        onChange={(e) => updateNewQuestionOption(index, 'text', e.target.value)}
-                        placeholder={`Option ${String.fromCharCode(65 + index)}`}
-                        className="flex-1"
-                      />
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={option.isCorrect}
-                          onChange={(e) => updateNewQuestionOption(index, 'isCorrect', e.target.checked)}
-                          className="rounded"
-                        />
-                        <span className="text-sm text-gray-600">Correct</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="new-explanation">Explanation (Optional)</Label>
-                <Textarea
-                  id="new-explanation"
-                  value={newQuestionData.explanation_text}
-                  onChange={(e) => setNewQuestionData(prev => ({...prev, explanation_text: e.target.value}))}
-                  rows={3}
-                  placeholder="Enter explanation for the correct answer..."
-                />
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAddSingleQuestion(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleCreateSingleQuestion}
-                  disabled={createQuestionMutation.isPending}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  {createQuestionMutation.isPending ? "Adding..." : "Add Question"}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {/* Bulk Upload Dialog */}
         <BulkUpload showBulkUpload={showBulkUpload} setShowBulkUpload={setShowBulkUpload} handleDownloadTemplate={handleDownloadTemplate} setUploadedQuestions={setUploadedQuestions} setShowTopicLinking={setShowTopicLinking} setSelectedQuestions={setSelectedQuestions} />
@@ -1350,7 +1272,21 @@ export default function Admin() {
         </Dialog>
 
         {/* Topic Linking Dialog - Enhanced */}
-        <TopicLinking showTopicLinking={showTopicLinking} linkQuestionsToTopicMutation={linkQuestionsToTopicMutation} allTopics={allTopics} setShowTopicLinking={setShowTopicLinking} selectedQuestions={selectedQuestions} setSelectedQuestions={setSelectedQuestions} uploadedQuestions={uploadedQuestions} setUploadedQuestions={setUploadedQuestions} loadingTopics={loadingTopics} setSelectedTopic={setSelectedTopic}/>
+        <TopicLinking 
+          showTopicLinking={showTopicLinking} 
+          setShowTopicLinking={setShowTopicLinking} 
+          selectedQuestions={selectedQuestions} 
+          linkQuestionsToTopicMutation={linkQuestionsToTopicMutation} 
+          setUploadedQuestions={setUploadedQuestions} 
+          allTopics={allTopics} 
+          loadingTopics={loadingTopics} 
+          handleQuestionSelection={handleQuestionSelectionInTable} 
+          uploadedQuestions={uploadedQuestions} 
+          setSelectedQuestions={setSelectedQuestions} 
+          topics={allTopics} 
+          selectedTopic={selectedTopic} 
+          setSelectedTopic={setSelectedTopic}
+        />
 
         {/* Bulk Topic Mapping Dialog - Enhanced */}
         <Dialog open={showBulkTopicMapping} onOpenChange={setShowBulkTopicMapping}>

@@ -11,13 +11,13 @@ import { Search, Link as LinkIcon, Check, ChevronsUpDown } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-export function TopicLinking({showTopicLinking, setShowTopicLinking, selectedQuestions, linkQuestionsToTopicMutation, setUploadedQuestions, allTopics, loadingTopics, handleQuestionSelection, uploadedQuestions, setSelectedQuestions, topics, selectedTopic, setSelectedTopic}: {showTopicLinking: any, setShowTopicLinking: any, selectedQuestions: any, linkQuestionsToTopicMutation: any, setUploadedQuestions: any, allTopics: any, loadingTopics: any, handleQuestionSelection, uploadedQuestions: any, setSelectedQuestions: any, topics: any, selectedTopic: any, setSelectedTopic: any}) {
+export function TopicLinking({showTopicLinking, setShowTopicLinking, selectedQuestions, linkQuestionsToTopicMutation, setUploadedQuestions, allTopics, loadingTopics, handleQuestionSelection, uploadedQuestions, setSelectedQuestions, topics, selectedTopic, setSelectedTopic}: {showTopicLinking: any, setShowTopicLinking: any, selectedQuestions: any, linkQuestionsToTopicMutation: any, setUploadedQuestions: any, allTopics: any, loadingTopics: any, handleQuestionSelection: any, uploadedQuestions: any, setSelectedQuestions: any, topics: any, selectedTopic: any, setSelectedTopic: any}) {
     const [topicSearchOpen, setTopicSearchOpen] = useState(false);
     const { toast } = useToast();
 
     const handleSelectAllQuestions = (selectAll: boolean) => {
         if (selectAll) {
-        setSelectedQuestions(uploadedQuestions.map(q => q.id));
+        setSelectedQuestions(uploadedQuestions.map((q: any) => q.id));
         } else {
         setSelectedQuestions([]);
         }
