@@ -31,12 +31,10 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
   const queryClient = useQueryClient();
 
   // Category management state
-  const [showAddCategory, setShowAddCategory] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<any>(null);
-  const [newCategoryData, setNewCategoryData] = useState({
-    name: '',
-    slug: ''
-  });
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
+  const [categoryData, setCategoryData] = useState({ name: '', slug: '', description: '' });
+  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
+  const isEditMode = editingCategoryId !== null;
 
   // Fetch categories for admin
   const { data: categories = [] } = useQuery({
@@ -58,8 +56,9 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
       queryClient.invalidateQueries({ queryKey: ['/api/admin/categories'] });
       queryClient.invalidateQueries({ queryKey: ['/api/subjects'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/topics'] });
-      setShowAddCategory(false);
-      setNewCategoryData({ name: '', slug: '' });
+      setShowCategoryDialog(false);
+      setCategoryData({ name: '', slug: '', description: '' });
+      setEditingCategoryId(null);
       toast({
         title: "Success",
         description: "Category created successfully.",
@@ -84,7 +83,9 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
       queryClient.invalidateQueries({ queryKey: ['/api/subjects'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/topics'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
-      setEditingCategory(null);
+      setShowCategoryDialog(false);
+      setCategoryData({ name: '', slug: '', description: '' });
+      setEditingCategoryId(null);
       toast({
         title: "Success",
         description: "Category updated successfully.",
@@ -123,8 +124,25 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
     }
   });
 
-  const handleCreateCategory = () => {
-    if (!newCategoryData.name.trim()) {
+  // Unified dialog handlers
+  const openCreateDialog = () => {
+    setCategoryData({ name: '', slug: '', description: '' });
+    setEditingCategoryId(null);
+    setShowCategoryDialog(true);
+  };
+
+  const openEditDialog = (category: any) => {
+    setCategoryData({ 
+      name: category.name, 
+      slug: category.slug || '',
+      description: category.description || ''
+    });
+    setEditingCategoryId(category.id);
+    setShowCategoryDialog(true);
+  };
+
+  const handleSaveCategory = () => {
+    if (!categoryData.name.trim()) {
       toast({
         title: "Error",
         description: "Please enter a category name",
@@ -132,7 +150,7 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
       });
       return;
     }
-     if (!newCategoryData.slug.trim()) {
+    if (!categoryData.slug.trim()) {
       toast({
         title: "Error",
         description: "Please enter a slug name",
@@ -140,12 +158,18 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
       });
       return;
     }
-    createCategoryMutation.mutate(newCategoryData);
+
+    if (isEditMode) {
+      updateCategoryMutation.mutate({ ...categoryData, id: editingCategoryId });
+    } else {
+      createCategoryMutation.mutate(categoryData);
+    }
   };
 
-  const handleUpdateCategory = () => {
-    if (!editingCategory) return;
-    updateCategoryMutation.mutate(editingCategory);
+  const closeDialog = () => {
+    setShowCategoryDialog(false);
+    setCategoryData({ name: '', slug: '', description: '' });
+    setEditingCategoryId(null);
   };
 
   const handleDeleteCategory = (categoryId: number) => {
@@ -154,13 +178,13 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
     }
   };
 
-  const setNewName = (name: string) => {
-    setNewCategoryData(prev => ({ ...prev, name }));
-    setNewCategoryData(prev => ({ ...prev, slug: name.trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')   // replace spaces & special chars with _
-      .replace(/^_+|_+$/g, '') }));     // remove leading/trailing _  
-  }
+  const setCategoryName = (name: string) => {
+    setCategoryData(prev => ({
+      ...prev,
+      name,
+      slug: name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+    }));
+  };
 
   if (isLoading) {
     return (
@@ -207,7 +231,7 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
             <CardContent>
               <div className="flex gap-2 mb-4">
                 <Button
-                  onClick={() => setShowAddCategory(true)}
+                  onClick={openCreateDialog}
                   className="bg-green-600 hover:bg-green-700"
                   data-testid="button-add-category"
                 >
@@ -234,7 +258,7 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => setEditingCategory(category)}
+                            onClick={() => openEditDialog(category)}
                             className="text-cyan-200 hover:bg-cyan-400/20"
                             data-testid={`button-edit-category-${category.id}`}
                           >
@@ -273,29 +297,39 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
           ))}
         </div>
 
-        {/* Add Category Dialog */}
-        <Dialog open={showAddCategory} onOpenChange={setShowAddCategory}>
+        {/* Category Dialog (Create/Edit) */}
+        <Dialog open={showCategoryDialog} onOpenChange={closeDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Category</DialogTitle>
+              <DialogTitle>{isEditMode ? 'Edit Category' : 'Add New Category'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="category-name">Category Name</Label>
                 <Input
                   id="category-name"
-                  value={newCategoryData.name}
-                  onChange={(e) => setNewName(e.target.value)}
+                  value={categoryData.name}
+                  onChange={(e) => setCategoryName(e.target.value)}
                   placeholder="Enter category name"
                   data-testid="input-category-name"
                 />
               </div>
               <div>
-                <Label htmlFor="category-description">Slug</Label>
+                <Label htmlFor="category-slug">Slug</Label>
+                <Input
+                  id="category-slug"
+                  value={categoryData.slug}
+                  onChange={(e) => setCategoryData(prev => ({ ...prev, slug: e.target.value }))}
+                  placeholder="Enter category slug"
+                  data-testid="input-category-slug"
+                />
+              </div>
+              <div>
+                <Label htmlFor="category-description">Description (Optional)</Label>
                 <Textarea
                   id="category-description"
-                  value={newCategoryData.slug}
-                  onChange={(e) => setNewCategoryData(prev => ({ ...prev, slug: e.target.value }))}
+                  value={categoryData.description}
+                  onChange={(e) => setCategoryData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Enter category description"
                   data-testid="textarea-category-description"
                 />
@@ -303,72 +337,22 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
               <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    setShowAddCategory(false);
-                    setNewCategoryData({ name: '', slug: '' });
-                  }}
+                  onClick={closeDialog}
                 >
                   Cancel
                 </Button>
                 <Button
-                  onClick={handleCreateCategory}
-                  disabled={createCategoryMutation.isPending}
-                  className="bg-green-600 hover:bg-green-700"
-                  data-testid="button-create-category"
+                  onClick={handleSaveCategory}
+                  disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
+                  className={isEditMode ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}
+                  data-testid={isEditMode ? "button-update-category" : "button-create-category"}
                 >
-                  {createCategoryMutation.isPending ? "Creating..." : "Create Category"}
+                  {(createCategoryMutation.isPending || updateCategoryMutation.isPending) 
+                    ? `${isEditMode ? 'Updating' : 'Creating'}...` 
+                    : `${isEditMode ? 'Update' : 'Create'} Category`}
                 </Button>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Category Dialog */}
-        <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Category</DialogTitle>
-            </DialogHeader>
-            {editingCategory && (
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="edit-category-name">Category Name</Label>
-                  <Input
-                    id="edit-category-name"
-                    value={editingCategory.name}
-                    onChange={(e) => setEditingCategory(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Enter category name"
-                    data-testid="input-edit-category-name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-category-description">Description (Optional)</Label>
-                  <Textarea
-                    id="edit-category-description"
-                    value={editingCategory.description || ''}
-                    onChange={(e) => setEditingCategory(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Enter category description"
-                    data-testid="textarea-edit-category-description"
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setEditingCategory(null)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleUpdateCategory}
-                    disabled={updateCategoryMutation.isPending}
-                    className="bg-blue-600 hover:bg-blue-700"
-                    data-testid="button-update-category"
-                  >
-                    {updateCategoryMutation.isPending ? "Updating..." : "Update Category"}
-                  </Button>
-                </div>
-              </div>
-            )}
           </DialogContent>
         </Dialog>
       </div>
