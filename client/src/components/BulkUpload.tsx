@@ -44,7 +44,10 @@ export function BulkUpload({showBulkUpload, setShowBulkUpload, handleDownloadTem
           return await response.json();
         },
         onSuccess: (data) => {
+          // Invalidate multiple related queries
           queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
+          
           setShowBulkUpload(false);
           setSelectedFile(null);
           
