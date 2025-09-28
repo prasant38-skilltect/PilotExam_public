@@ -35,6 +35,7 @@ const Admin = lazy(() => import("@/pages/Admin"));
 const Progress = lazy(() => import("@/pages/Progress"));
 const AirSpeedIndicator = lazy(() => import("@/pages/AirSpeedIndicator"));
 const NotFound = lazy(() => import("@/pages/not-found"));
+const Subscriptions = lazy(() => import("@/pages/Subscriptions"));
 
 // Loading component for lazy loaded pages
 const PageLoader = () => (
@@ -145,6 +146,11 @@ function Router() {
           <Route path="/progress">
             <Suspense fallback={<PageLoader />}>
               <Progress />
+            </Suspense>
+          </Route>
+          <Route path="/subscriptions">
+            <Suspense fallback={<PageLoader />}>
+              <Subscriptions />
             </Suspense>
           </Route>
 

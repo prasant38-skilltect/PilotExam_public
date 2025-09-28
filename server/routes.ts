@@ -178,6 +178,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/subscriptions', async (req: any, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      } else {
+        const subscriptions = await storage.getSubscriptionsByUserId(user.id);
+        return res.json(subscriptions);
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  app.get('/api/subscriptionsPlan', async (req: any, res) => {
+    try {
+        const plans = await storage.getSubcriptionPlanDetails();
+        return res.json(plans);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
   // Update user profile
   app.patch('/api/auth/user/profile', isAuthenticated, async (req: any, res) => {
     try {

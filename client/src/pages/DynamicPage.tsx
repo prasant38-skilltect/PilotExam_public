@@ -41,6 +41,9 @@ export default function DynamicPage() {
     queryKey: [`/api${link[0]}`],
   });
 
+  const {data: subcriptions = []} = useQuery<any>({
+    queryKey: ['/api/subscriptions'],
+  });
   // Topic management state
   const [showAddTopic, setShowAddTopic] = useState(false);
   const [editingTopic, setEditingTopic] = useState<any>(null);
@@ -203,6 +206,28 @@ export default function DynamicPage() {
         </div>
       </div>
     );
+  }
+
+  if(subjects?.type === "quiz" && isAuthenticated && subcriptions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
+        <div className="max-w-4xl mx-auto px-4 py-20">
+          <div className="text-center mb-12">
+            <h1 className="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-700 bg-clip-text text-transparent">
+              You need to subscribe to access this quiz.
+            </h1>
+            <Link href="/subscriptions">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-blue-800 via-blue-700 to-cyan-600 text-white hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border border-cyan-400/20 shadow-lg shadow-cyan-400/20"
+                data-testid="button-subscribe"
+              > Subscribe Now
+              </Button>
+            </Link>   
+          </div>
+        </div>
+      </div>
+    )
   }
   console.log("link....", link[0])
   console.log("subjects....", subjects)

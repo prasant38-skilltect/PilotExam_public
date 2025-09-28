@@ -2,6 +2,7 @@ import {
   users,
   subjects,
   subscriptions,
+  subscriptionPlan,
   // chapters,
   // sections,
   questions,
@@ -73,6 +74,8 @@ export interface IStorage {
   ): Promise<void>;
   // Subject/Category operations
   getAllSubjects(): Promise<Categories[]>;
+  getSubscriptionsByUserId(userId: string): Promise<any[]>;
+  getSubcriptionPlanDetails(): Promise<any[]>;
   getSubject(id: number): Promise<Subject | undefined>;
   getCategory(id: number): Promise<Categories | undefined>;
   getCategoryByName(name: string): Promise<Categories | undefined>;
@@ -346,6 +349,14 @@ export class DatabaseStorage implements IStorage {
   // Subject operations
   async getAllSubjects(): Promise<Categories[]> {
     return await db.select().from(categories).orderBy(categories.id);
+  }
+
+  async getSubscriptionsByUserId(userId: string): Promise<any[]> {
+    return await db.select().from(subscriptions).where(eq(subscriptions.user_id, userId));
+  }
+
+  async getSubcriptionPlanDetails(): Promise<any[]> {
+    return await db.select().from(subscriptionPlan).orderBy(subscriptionPlan.id);
   }
 
   async getCategoryByName(name: string): Promise<Categories | undefined> {

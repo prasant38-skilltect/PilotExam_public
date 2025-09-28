@@ -142,6 +142,15 @@ export const subscriptions = pgTable("subscriptions", {
   subscribed_at: timestamp("subscribed_at").defaultNow(),
 });
 
+export const subscriptionPlan = pgTable("subscription_plan", { 
+  id: serial("plan_id").primaryKey(),
+  name: varchar("plan_name", { length: 100 }).notNull().unique(),
+  price: integer("price").notNull(),    
+  duration: varchar("duration", { length: 50 }).notNull(), // e.g., '1 month', '6 months', '1 year'
+  features: text("features").notNull(), // Comma-separated list of features
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Issue Reports table
 export const issueReports = pgTable("issue_reports", {
   id: serial("id").primaryKey(),
