@@ -196,12 +196,15 @@ export default function Admin() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
       // Invalidate any quiz or topic queries that might contain this question
-      queryClient.invalidateQueries({ queryFn: (query) => {
-        return query.queryKey[0]?.toString().startsWith('/api/') && 
-               (query.queryKey[0]?.toString().includes('quiz') ||
-                query.queryKey[0]?.toString().includes('topic') ||
-                query.queryKey[0]?.toString().includes('section'));
-      }});
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKeyString = query.queryKey[0]?.toString() || '';
+          return queryKeyString.startsWith('/api/') && 
+                 (queryKeyString.includes('quiz') ||
+                  queryKeyString.includes('topic') ||
+                  queryKeyString.includes('section'));
+        }
+      });
       setIsEditDialogOpen(false);
       setEditingQuestion(null);
       toast({
@@ -278,11 +281,13 @@ export default function Admin() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/topics'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
       // Invalidate any topic-specific quiz queries
-      queryClient.invalidateQueries({ queryFn: (query) => {
-        return query.queryKey[0]?.toString().startsWith('/api/') && 
-               (query.queryKey[0]?.toString().includes('quiz') ||
-                query.queryKey[0]?.toString().includes('topic'));
-      }});
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return query.queryKey[0]?.toString().startsWith('/api/') && 
+                 (query.queryKey[0]?.toString().includes('quiz') ||
+                  query.queryKey[0]?.toString().includes('topic'));
+        }
+      });
       setShowTopicLinking(false);
       setUploadedQuestions([]);
       setSelectedQuestions([]);

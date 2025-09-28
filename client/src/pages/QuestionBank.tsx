@@ -93,10 +93,13 @@ export default function QuestionBank() {
       // Invalidate any dynamic pages that might show topics
       queryClient.invalidateQueries({ queryKey: ['/api', { type: 'topic' }] });
       // Invalidate any pages that might show this specific topic
-      queryClient.invalidateQueries({ queryFn: (query) => {
-        return query.queryKey[0]?.toString().startsWith('/api/') && 
-               query.queryKey[0]?.toString().includes('topic');
-      }});
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKeyString = query.queryKey[0]?.toString() || '';
+          return queryKeyString.startsWith('/api/') && 
+                 queryKeyString.includes('topic');
+        }
+      });
       setEditingTopic(null);
       toast({
         title: "Success",
@@ -123,10 +126,13 @@ export default function QuestionBank() {
       // Invalidate any dynamic pages that might show topics
       queryClient.invalidateQueries({ queryKey: ['/api', { type: 'topic' }] });
       // Invalidate any pages that might show topics
-      queryClient.invalidateQueries({ queryFn: (query) => {
-        return query.queryKey[0]?.toString().startsWith('/api/') && 
-               query.queryKey[0]?.toString().includes('topic');
-      }});
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKeyString = query.queryKey[0]?.toString() || '';
+          return queryKeyString.startsWith('/api/') && 
+                 queryKeyString.includes('topic');
+        }
+      });
       toast({
         title: "Success",
         description: "Topic deleted successfully.",

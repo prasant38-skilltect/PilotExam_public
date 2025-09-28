@@ -108,8 +108,21 @@ export default function GenericSectionTest({ sectionId, sectionName, backUrl, qu
       setShowBulkUpload(false);
       setUploadFile(null);
       setIsUploading(false);
-      // Refresh questions
+      // Comprehensive cache invalidation
       queryClient.invalidateQueries({ queryKey: [`/api/sections/${sectionId}/questions`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/topics'] });
+      // Invalidate any quiz-related queries
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKeyString = query.queryKey[0]?.toString() || '';
+          return queryKeyString.startsWith('/api/') && 
+                 (queryKeyString.includes('quiz') ||
+                  queryKeyString.includes('topic') ||
+                  queryKeyString.includes('section'));
+        }
+      });
     },
     onError: (error: any) => {
       console.error("Upload error:", error);
