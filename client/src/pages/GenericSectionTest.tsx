@@ -139,7 +139,7 @@ export default function GenericSectionTest({
   // Mutation for creating new questions (admin only)
   const createQuestionMutation = useMutation({
     mutationFn: async (questionData: any) => {
-      await apiRequest('POST', `/api/admin/questions/quiz/${quizId}`, questionData);
+      await apiRequest('POST', `/api/admin/questions`, questionData);
     },
     onSuccess: () => {
       setShowAddQuestionForm(false);
@@ -988,7 +988,7 @@ export default function GenericSectionTest({
                           Explanation:
                         </h4>
                         <div
-                          className="text-gray-800 dark:text-gray-200"
+                          className="dark:text-gray-200"
                           dangerouslySetInnerHTML={{
                             __html: question.explanation,
                           }}
@@ -1204,7 +1204,7 @@ export default function GenericSectionTest({
                           ) : (
                             <h2 className="text-lg sm:text-xl font-semibold leading-relaxed flex-1">
                               <div
-                                className="text-gray-800 dark:text-gray-200"
+                                className="dark:text-gray-200"
                                 dangerouslySetInnerHTML={{
                                   __html: currentQuestion.question_text,
                                 }}
@@ -1380,7 +1380,7 @@ export default function GenericSectionTest({
                                   </span>
                                   <span className="flex-1 text-left leading-relaxed">
                                     <div
-                                      className="text-gray-800 dark:text-gray-200"
+                                      className="dark:text-gray-200"
                                       dangerouslySetInnerHTML={{
                                         __html: option.text,
                                       }}
@@ -1408,7 +1408,7 @@ export default function GenericSectionTest({
                                 Explanation:
                               </h4>
                               <div
-                                className="text-gray-800 dark:text-gray-200"
+                                className="dark:text-gray-200"
                                 dangerouslySetInnerHTML={{
                                   __html: currentQuestion.explanation,
                                 }}
@@ -1458,7 +1458,7 @@ export default function GenericSectionTest({
                             currentQuestion.explanation ? (
                               <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
                                 <div
-                                  className="text-gray-800 dark:text-gray-200"
+                                  className="dark:text-gray-200"
                                   dangerouslySetInnerHTML={{
                                     __html: currentQuestion.explanation,
                                   }}
@@ -1669,8 +1669,8 @@ export default function GenericSectionTest({
               <div>
                 <Label htmlFor="new-explanation">Explanation (Optional)</Label>
                 <RichTextEditor
-                  value={editFormData.explanation}
-                  onChange={(value: string) => setEditFormData(prev => ({...prev, explanation: value}))}
+                  value={newQuestionData.explanation}
+                  onChange={(value: string) => setNewQuestionData(prev => ({...prev, explanation: value}))}
                   placeholder="Enter explanation for the correct answer..."
                 />
               </div>

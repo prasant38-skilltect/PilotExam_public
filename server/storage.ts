@@ -1309,14 +1309,6 @@ export class DatabaseStorage implements IStorage {
       questionData.question_text,
       "questions"
     );
-    
-     // Prepare new options data
-      const newOptionsData = [
-        { text: await this.processTextWithImages(questionData.option_a, "options"), order: 0 },
-        { text: await this.processTextWithImages(questionData.option_b, "options"), order: 1 },
-        { text: await this.processTextWithImages(questionData.option_c, "options"), order: 2 },
-        { text: await this.processTextWithImages(questionData.option_d, "options"), order: 3 },
-      ].filter(option => option.text && option.text.trim() !== "");
 
     return await db.transaction(async (tx) => {
       // Generate a unique questionId for new questions (timestamp in seconds + random number)
@@ -1338,7 +1330,29 @@ export class DatabaseStorage implements IStorage {
         })
         .returning();
 
-        
+      // Prepare new options data
+      let newOptionsData;
+      
+      if(questionData.options && Array.isArray(questionData.options) && questionData.options.length > 0) {
+        newOptionsData = (
+          await Promise.all(
+            questionData.options.map(async (opt: any, index: number) => ({
+              text: opt.text ? await this.processTextWithImages(opt.text, "options") : "",
+              isCorrect: opt.isCorrect || false,
+              order: index,
+            }))
+          )
+        ).filter((option: any) => option.text && option.text.trim() !== "");
+      } else {
+        newOptionsData = [
+          { text: await this.processTextWithImages(questionData.option_a, "options"), order: 0 },
+          { text: await this.processTextWithImages(questionData.option_b, "options"), order: 1 },
+          { text: await this.processTextWithImages(questionData.option_c, "options"), order: 2 },
+          { text: await this.processTextWithImages(questionData.option_d, "options"), order: 3 },
+        ].filter(option => option.text && option.text.trim() !== "");
+      }
+
+      console.log("Created question...", newOptionsData);
       // Add options if provided
       if (newOptionsData && newOptionsData.length > 0) {
         // fetch max id from question_options
@@ -1350,7 +1364,7 @@ export class DatabaseStorage implements IStorage {
 
         const optionsToInsert = newOptionsData.map((option: any, index: number) => {
           const optionRecord = {
-            // id: nextId, // manually assign new id
+            id: nextId, // manually assign new id
             questionId: newQuestion.id,
             optionText: option.text,
             isCorrect: option.isCorrect || false,
@@ -1361,6 +1375,7 @@ export class DatabaseStorage implements IStorage {
           return optionRecord;
         });
 
+        console.log("Inserting options...", optionsToInsert);
         await tx.insert(questionOptions).values(optionsToInsert);
       }
 

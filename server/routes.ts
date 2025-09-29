@@ -1233,10 +1233,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create single question
-  app.post('/api/admin/questions/quiz/:quizId', isAdmin, async (req, res) => {
+  app.post('/api/admin/questions', isAdmin, async (req, res) => {
     try {
       const questionData = req.body;
-      const quizId = parseInt(req.params.quizId);
 
       if (!questionData.question_text || !Array.isArray(questionData.options) || questionData.options.length === 0) {
         return res.status(400).json({ message: "Question text and options are required" });
@@ -1249,7 +1248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const result = await storage.createQuestion(questionData);
 
-      await storage.linkQuestionToQuiz(result.id, quizId);
+      // await storage.linkQuestionToQuiz(result.id, quizId);
       
       res.json(result);
     } catch (error) {
