@@ -1,13 +1,13 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
 import {
   users,
   subjects,
   subscriptions,
   subscriptionPlan,
-  // chapters,
-  // sections,
   questions,
-  // questionSections,
-  // answers,
   testSessions,
   userAnswers,
   userProgress,
@@ -24,14 +24,7 @@ import {
   type InsertSubject,
   type SignUpData,
   type SignInData,
-  // type Chapter,
-  // type InsertChapter,
-  // type Section,
-  // type InsertSection,
-  // type Question,
   type InsertQuestion,
-  // type Answer,
-  // type InsertAnswer,
   type TestSession,
   type InsertTestSession,
   type UserAnswer,
@@ -54,6 +47,10 @@ import bcrypt from "bcryptjs";
 import { db } from "./db";
 import { eq, and, desc, avg, max, count, ne, asc, sql, or, like, isNull } from "drizzle-orm";
 import { text } from "stream/consumers";
+
+// Get __filename and __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -1101,6 +1098,47 @@ export class DatabaseStorage implements IStorage {
     return { questions: questionsData, total: Number(totalCount) };
   }
 
+  /**
+   * Process text content and replace base64 images with uploaded file URLs.
+   * @param content The text content that may contain base64 images
+   * @param folder The subfolder under /public/uploads where images should be saved
+   * @returns Updated content with base64 replaced by URL paths
+   */
+  async processTextWithImages(content: string, folder: string): Promise<string> {
+    if (!content) return content;
+
+    const base64Regex = /data:image\/\w+;base64,[A-Za-z0-9+/=]+/g;
+    const matches = content.match(base64Regex);
+
+    if (matches) {
+      console.log(`Found ${matches.length} base64 images in ${folder}, processing upload...`);
+
+      for (const base64Image of matches) {
+        // Convert base64 to Buffer
+        const buffer = Buffer.from(base64Image.split(",")[1], "base64");
+
+        // Extract extension (e.g., "png", "jpeg")
+        const ext = base64Image.substring(11, base64Image.indexOf(";"));
+        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 6)}.${ext}`;
+
+        // Build paths
+        const folderPath = path.join(__dirname, `../public/uploads/${folder}`);
+        if (!fs.existsSync(folderPath)) {
+          fs.mkdirSync(folderPath, { recursive: true });
+        }
+        const filePath = path.join(folderPath, fileName);
+
+        // Save file
+        await fs.promises.writeFile(filePath, buffer);
+
+        // Replace base64 with public URL
+        content = content.replace(base64Image, `/uploads/${folder}/${fileName}`);
+      }
+    }
+
+    return content;
+  }
+
   async updateQuestion(questionId: number, questionData: any): Promise<any> {
     return await db.transaction(async (tx) => {
       // Get current question data
@@ -1113,9 +1151,20 @@ export class DatabaseStorage implements IStorage {
       if (currentQuestion.text !== questionData.question_text) {
         questionUpdates.text = questionData.question_text;
       }
-      if (currentQuestion.explanation !== questionData.explanation_text) {
-        questionUpdates.explanation = questionData.explanation_text;
+      if (currentQuestion.explanation !== questionData.explanation) {
+        questionUpdates.explanation = await this.processTextWithImages(
+          questionData.explanation,
+          "explanations"
+        );
       }
+
+      if (currentQuestion.text !== questionData.question_text) {
+        questionUpdates.text = await this.processTextWithImages(
+          questionData.question_text,
+          "questions"
+        );
+      }
+
       let updatedQuestion = currentQuestion;
       if (Object.keys(questionUpdates).length > 0) {
         [updatedQuestion] = await tx
@@ -1132,11 +1181,11 @@ export class DatabaseStorage implements IStorage {
         .orderBy(asc(questionOptions.optionOrder));
       // Prepare new options data
       const newOptionsData = [
-        { text: questionData.option_a, order: 0 },
-        { text: questionData.option_b, order: 1 },
-        { text: questionData.option_c, order: 2 },
-        { text: questionData.option_d, order: 3 },
-      ].filter(option => option.text && option.text.trim() !== '');
+        { text: await this.processTextWithImages(questionData.option_a, "options"), order: 0 },
+        { text: await this.processTextWithImages(questionData.option_b, "options"), order: 1 },
+        { text: await this.processTextWithImages(questionData.option_c, "options"), order: 2 },
+        { text: await this.processTextWithImages(questionData.option_d, "options"), order: 3 },
+      ].filter(option => option.text && option.text.trim() !== "");
       // Update, insert, or delete options as needed
       for (let i = 0; i < Math.max(currentOptions.length, newOptionsData.length); i++) {
         const currentOption = currentOptions[i];
@@ -1266,7 +1315,7 @@ export class DatabaseStorage implements IStorage {
           id: nextId,
           questionId: nextId,
           text: questionData.question_text,
-          explanation: questionData.explanation_text || null,
+          explanation: questionData.explanation || null,
           isActive: true
         })
         .returning();

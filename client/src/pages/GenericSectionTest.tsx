@@ -81,14 +81,14 @@ export default function GenericSectionTest({
     option_c: '',
     option_d: '',
     correct_answer: '',
-    explanation_text: ''
+    explanation: ''
   });
   const [currentTestSession, setCurrentTestSession] = useState<any>(null);
   const [resumedSession, setResumedSession] = useState<any>(null);
   const [showAddQuestionForm, setShowAddQuestionForm] = useState(false);
   const [newQuestionData, setNewQuestionData] = useState({
     question_text: '',
-    explanation_text: '',
+    explanation: '',
     options: [{ text: '', isCorrect: false }],
     quizId: null
   });
@@ -97,6 +97,7 @@ export default function GenericSectionTest({
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const link = useLocation();
 
   // Session ID for progress tracking
   const [sessionId] = useState(() => `quiz_${sectionId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
@@ -117,11 +118,14 @@ export default function GenericSectionTest({
     },
     onSuccess: () => {
       setEditingQuestionId(null);
+      
       toast({
         title: "Success",
         description: "Question updated successfully",
       });
-      // Optionally refresh questions if needed
+
+      // 🔥 This will refresh your subjects query
+      queryClient.invalidateQueries({ queryKey: [`/api${link[0]}`] });
     },
     onError: (error: any) => {
       toast({
@@ -141,7 +145,7 @@ export default function GenericSectionTest({
       setShowAddQuestionForm(false);
       setNewQuestionData({
         question_text: '',
-        explanation_text: '',
+        explanation: '',
         options: [{ text: '', isCorrect: false }],
         quizId: null
       });
@@ -312,58 +316,42 @@ export default function GenericSectionTest({
   // });
 
   const questions = useMemo(() => {
-    const optionLabels = ["a", "b", "c", "d", "e", "f"];
+    const optionLabels = ["A", "B", "C", "D", "E", "F"];
 
-    if (quizData.length > 0) {
-      let index = 1;
-      
-      // First pass: group questions by ID to count options
-      const questionGroups = quizData.reduce((groups: any, curr: any) => {
-        if (!groups[curr.id]) {
-          groups[curr.id] = [];
-        }
-        groups[curr.id].push(curr);
-        return groups;
-      }, {});
+    if (quizData?.length > 0) {
+      return quizData.map((q: any, index: number) => {
+        // Build options dynamically
+        const options: Record<string, string> = {};
+        let correctAnswer: string | undefined;
 
-      const filteredQuestions = Object.values(
-        quizData.reduce((acc: any, curr: any) => {
-          if (!acc[curr.id]) {
-            acc[curr.id] = {
-              id: curr.id,
-              question_text: curr.question_text,
-              question_id: curr.question_id,
-              sequence: index,
-              optionCount: questionGroups[curr.id].length,
-            };
-            index++;
+        q.options.forEach((opt: any) => {
+          const optionKey = `option_${optionLabels[opt.optionOrder].toLowerCase()}`;
+          options[optionKey] = opt.option_text;
+
+          if (opt.isCorrect) {
+            correctAnswer = optionLabels[opt.optionOrder];
           }
-          const optionKey = `option_${optionLabels[curr.optionOrder]}`;
-          acc[curr.id][optionKey] = curr.option_text;
-          acc[curr.id].featured_img = curr.featured_img;
+        });
 
-          // Handle explanation and correct answer logic
-          const isSingleOptionQuestion = acc[curr.id].optionCount === 1;
-          
-          if (
-            curr.isCorrect ||
-            (acc[curr.id].correct_answer === undefined && curr.optionOrder === 3) ||
-            isSingleOptionQuestion
-          ) {
-            let rawHTML = curr.explaination;
-            rawHTML = rawHTML?.replace(/\\n/g, "<br/>").replace(/\\"/g, '"');
-            acc[curr.id].correct_answer =
-              optionLabels[curr.optionOrder]?.toLocaleUpperCase();
-            acc[curr.id].explanation_text = DOMPurify.sanitize(rawHTML);
-            acc[curr.id].explaination_img = curr.explaination_img;
-            acc[curr.id].tooltip = curr.tooltip;
-            acc[curr.id].is_single_option = isSingleOptionQuestion;
-          }
+        // Process explanation (replace escaped characters, sanitize)
+        let rawHTML = q.explanation;
+        rawHTML = rawHTML?.replace(/\\n/g, "<br/>").replace(/\\"/g, '"');
 
-          return acc;
-        }, {}),
-      );
-      return filteredQuestions;
+        return {
+          id: q.id,
+          question_id: q.question_id,
+          sequence: index + 1,
+          question_text: q.question_text,
+          explanation: DOMPurify.sanitize(rawHTML),
+          explanation_img: q.explanation_image,
+          tooltip: q.tooltip,
+          featured_img: q.featured_image,
+          correct_answer: correctAnswer,
+          optionCount: q.options.length,
+          is_single_option: q.options.length === 1,
+          ...options, // spread all option_a, option_b, etc.
+        };
+      });
     } else {
       return [];
     }
@@ -379,7 +367,7 @@ export default function GenericSectionTest({
       option_c: question.option_c || '',
       option_d: question.option_d || '',
       correct_answer: question.correct_answer || '',
-      explanation_text: question.explanation_text || ''
+      explanation: question.explanation || ''
     });
   };
 
@@ -392,7 +380,7 @@ export default function GenericSectionTest({
       option_c: '',
       option_d: '',
       correct_answer: '',
-      explanation_text: ''
+      explanation: ''
     });
   };
 
@@ -991,7 +979,7 @@ export default function GenericSectionTest({
                         );
                       })}
                     </div>
-                    {(question.explanation_text || question.explanation) && (
+                    {(question.explanation || question.explanation) && (
                       <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
                         <h4 className="font-semibold mb-2 text-blue-800 dark:text-blue-200">
                           Explanation:
@@ -999,10 +987,10 @@ export default function GenericSectionTest({
                         <div
                           className="text-gray-800 dark:text-gray-200"
                           dangerouslySetInnerHTML={{
-                            __html: question.explanation_text,
+                            __html: question.explanation,
                           }}
                         />
-                        {/* <p className="text-sm">{question.explanation_text || question.explanation}</p> */}
+                        {/* <p className="text-sm">{question.explanation || question.explanation}</p> */}
                       </div>
                     )}
                   </CardContent>
@@ -1212,8 +1200,12 @@ export default function GenericSectionTest({
                             </div>
                           ) : (
                             <h2 className="text-lg sm:text-xl font-semibold leading-relaxed flex-1">
-                              #{currentQuestion.sequence}.{" "}
-                              {currentQuestion.question_text}
+                              <div
+                                className="text-gray-800 dark:text-gray-200"
+                                dangerouslySetInnerHTML={{
+                                  __html: currentQuestion.question_text,
+                                }}
+                              />
                             </h2>
                           )}
                           <div className="flex gap-2 flex-shrink-0">
@@ -1283,34 +1275,34 @@ export default function GenericSectionTest({
                               <div className="grid gap-4">
                                 <div>
                                   <Label htmlFor="edit-option-a">Option A</Label>
-                                  <Input
+                                  <RichTextEditor
                                     id="edit-option-a"
                                     value={editFormData.option_a}
-                                    onChange={(e) => setEditFormData(prev => ({...prev, option_a: e.target.value}))}
+                                    onChange={(value: string) => setEditFormData(prev => ({...prev, option_a: value}))}
                                   />
                                 </div>
                                 <div>
                                   <Label htmlFor="edit-option-b">Option B</Label>
-                                  <Input
+                                  <RichTextEditor
                                     id="edit-option-b"
                                     value={editFormData.option_b}
-                                    onChange={(e) => setEditFormData(prev => ({...prev, option_b: e.target.value}))}
+                                    onChange={(value: string) => setEditFormData(prev => ({...prev, option_b: value}))}
                                   />
                                 </div>
                                 <div>
                                   <Label htmlFor="edit-option-c">Option C</Label>
-                                  <Input
+                                  <RichTextEditor
                                     id="edit-option-c"
                                     value={editFormData.option_c}
-                                    onChange={(e) => setEditFormData(prev => ({...prev, option_c: e.target.value}))}
+                                    onChange={(value: string) => setEditFormData(prev => ({...prev, option_c: value}))}
                                   />
                                 </div>
                                 <div>
                                   <Label htmlFor="edit-option-d">Option D</Label>
-                                  <Input
+                                  <RichTextEditor
                                     id="edit-option-d"
-                                    value={editFormData.option_d}
-                                    onChange={(e) => setEditFormData(prev => ({...prev, option_d: e.target.value}))}
+                                    value={editFormData.option_b}
+                                    onChange={(value: string) => setEditFormData(prev => ({...prev, option_d: value}))}
                                   />
                                 </div>
                                 <div>
@@ -1384,7 +1376,12 @@ export default function GenericSectionTest({
                                     {isSingleOption ? "" : `${option.key}.`}
                                   </span>
                                   <span className="flex-1 text-left leading-relaxed">
-                                    {option.text}
+                                    <div
+                                      className="text-gray-800 dark:text-gray-200"
+                                      dangerouslySetInnerHTML={{
+                                        __html: option.text,
+                                      }}
+                                    />
                                   </span>
                                   {hasAnswered && (isCorrect || (isSingleOption && isSelected)) && (
                                     <span className="ml-2">✓</span>
@@ -1401,7 +1398,7 @@ export default function GenericSectionTest({
 
                         {/* Show explanation immediately when answer is selected */}
                         {currentQuestion.id in selectedAnswers &&
-                          (currentQuestion.explanation_text ||
+                          (currentQuestion.explanation ||
                             currentQuestion.explanation) && (
                             <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
                               <h4 className="font-semibold mb-2 text-blue-800 dark:text-blue-200">
@@ -1410,7 +1407,7 @@ export default function GenericSectionTest({
                               <div
                                 className="text-gray-800 dark:text-gray-200"
                                 dangerouslySetInnerHTML={{
-                                  __html: currentQuestion.explanation_text,
+                                  __html: currentQuestion.explanation,
                                 }}
                               />
                             </div>
@@ -1446,21 +1443,21 @@ export default function GenericSectionTest({
                           <div className="space-y-4">
                             <Label htmlFor="edit-explanation">Explanation</Label>
                             <RichTextEditor
-                              value={editFormData.explanation_text}
-                              onChange={(value: string) => setEditFormData(prev => ({...prev, explanation_text: value}))}
+                              value={editFormData.explanation}
+                              onChange={(value: string) => setEditFormData(prev => ({...prev, explanation: value}))}
                               placeholder="Enter explanation with formatting..."
                             />
                           </div>
                         ) : (
                           <>
                             <h3 className="text-lg font-semibold">Explanation</h3>
-                            {currentQuestion.explanation_text ||
+                            {currentQuestion.explanation ||
                             currentQuestion.explanation ? (
                               <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
                                 <div
                                   className="text-gray-800 dark:text-gray-200"
                                   dangerouslySetInnerHTML={{
-                                    __html: currentQuestion.explanation_text,
+                                    __html: currentQuestion.explanation,
                                   }}
                                 />
                               </div>
@@ -1627,9 +1624,9 @@ export default function GenericSectionTest({
                 <div className="space-y-2">
                   {newQuestionData.options.map((option, index) => (
                     <div key={index} className="flex items-center gap-2">
-                      <Input
+                      <RichTextEditor
                         value={option.text}
-                        onChange={(e) => updateOption(index, 'text', e.target.value)}
+                        onChange={(value: string) => updateOption(index, 'text', value)}
                         placeholder={`Option ${index + 1}`}
                         className="flex-1"
                       />
@@ -1668,11 +1665,9 @@ export default function GenericSectionTest({
 
               <div>
                 <Label htmlFor="new-explanation">Explanation (Optional)</Label>
-                <Textarea
-                  id="new-explanation"
-                  value={newQuestionData.explanation_text}
-                  onChange={(e) => setNewQuestionData(prev => ({...prev, explanation_text: e.target.value}))}
-                  rows={3}
+                <RichTextEditor
+                  value={editFormData.explanation}
+                  onChange={(value: string) => setEditFormData(prev => ({...prev, explanation: value}))}
                   placeholder="Enter explanation for the correct answer..."
                 />
               </div>

@@ -1,10 +1,16 @@
 import express, { type Request, Response, NextFunction } from "express";
+import path from "path";
+
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+
+const __dirname = path.resolve(); // if using ES modules, compute like before
+console.log("path", path.join(__dirname, "public/uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
 // Add request logging
 app.use((req, _res, next) => {
