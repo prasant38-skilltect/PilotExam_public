@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Clock, Search, Play, Plane } from '@/components/Icons';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiRequest } from '@/lib/queryClient';
+import JetEngine from '../components/JetEngine';
 
 interface SearchResult {
   questionId: number;
@@ -284,6 +285,9 @@ export default function Home() {
             )}
           </DialogContent>
         </Dialog>
+      </div>
+      <div className="my-12 border-t border-gray-200 dark:border-gray-700">
+        <JetEngine />
       </div>
     </div>
   );

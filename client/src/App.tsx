@@ -188,9 +188,15 @@ function Router() {
               <Results />
             </Suspense>
           </Route> */} 
-          <Route path="/test/*">
+          <Route path="/test/earth-atmosphere/*">
             {() => {
               window.location.replace("/test/earth-atmosphere/index.html");
+              return null;
+            }}
+          </Route>
+          <Route path="/test/jet_engine_animation/*">
+            {() => {
+              window.location.replace("/test/jet_engine_animation/index.html");
               return null;
             }}
           </Route>
