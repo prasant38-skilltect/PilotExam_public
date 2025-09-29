@@ -1300,6 +1300,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createQuestion(questionData: any): Promise<any> {
+    questionData.explanation = await this.processTextWithImages(
+      questionData.explanation,
+      "explanations"
+    );
+
+    questionData.text = await this.processTextWithImages(
+      questionData.question_text,
+      "questions"
+    );
+    
+     // Prepare new options data
+      const newOptionsData = [
+        { text: await this.processTextWithImages(questionData.option_a, "options"), order: 0 },
+        { text: await this.processTextWithImages(questionData.option_b, "options"), order: 1 },
+        { text: await this.processTextWithImages(questionData.option_c, "options"), order: 2 },
+        { text: await this.processTextWithImages(questionData.option_d, "options"), order: 3 },
+      ].filter(option => option.text && option.text.trim() !== "");
+
     return await db.transaction(async (tx) => {
       // Generate a unique questionId for new questions (timestamp in seconds + random number)
       const generatedQuestionId = questionData.questionId || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000);
@@ -1320,8 +1338,9 @@ export class DatabaseStorage implements IStorage {
         })
         .returning();
 
+        
       // Add options if provided
-      if (questionData.options && questionData.options.length > 0) {
+      if (newOptionsData && newOptionsData.length > 0) {
         // fetch max id from question_options
         const [maxResult] = await tx
           .select({ maxId: sql`COALESCE(MAX(id), 0)` })
@@ -1329,9 +1348,9 @@ export class DatabaseStorage implements IStorage {
 
         let nextId = (maxResult?.maxId as number || 0) + 1;
 
-        const optionsToInsert = questionData.options.map((option: any, index: number) => {
+        const optionsToInsert = newOptionsData.map((option: any, index: number) => {
           const optionRecord = {
-            id: nextId, // manually assign new id
+            // id: nextId, // manually assign new id
             questionId: newQuestion.id,
             optionText: option.text,
             isCorrect: option.isCorrect || false,

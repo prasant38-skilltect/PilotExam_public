@@ -974,16 +974,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new question
-  app.post('/api/admin/questions', isAdmin, async (req: any, res) => {
-    try {
-      const questionData = req.body;
-      const newQuestion = await storage.createQuestion(questionData);
-      res.json(newQuestion);
-    } catch (error) {
-      console.error("Error creating question:", error);
-      res.status(500).json({ message: "Failed to create question" });
-    }
-  });
+  // app.post('/api/admin/questions', isAdmin, async (req: any, res) => {
+  //   try {
+  //     const questionData = req.body;
+  //     const newQuestion = await storage.createQuestion(questionData);
+  //     res.json(newQuestion);
+  //   } catch (error) {
+  //     console.error("Error creating question:", error);
+  //     res.status(500).json({ message: "Failed to create question" });
+  //   }
+  // });
 
   // Soft delete question
   app.delete('/api/admin/questions/:id', isAdmin, async (req: any, res) => {
@@ -1211,7 +1211,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create single question
   app.post('/api/admin/questions', isAdmin, async (req, res) => {
     try {
-      const { question_text, explanation_text, options } = req.body;
+      const { question_text, explanation, options } = req.body;
+      const questionData = req.body;
       
       if (!question_text || !Array.isArray(options) || options.length === 0) {
         return res.status(400).json({ message: "Question text and options are required" });
@@ -1222,11 +1223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "At least one option must be marked as correct" });
       }
       
-      const result = await storage.createQuestion({
-        question_text,
-        explanation_text: explanation_text || "",
-        options
-      });
+      const result = await storage.createQuestion(questionData);
       
       res.json(result);
     } catch (error) {
@@ -1234,6 +1231,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create question" });
     }
   });
+
+  // Create single question
+  app.post('/api/admin/questions/quiz/:quizId', isAdmin, async (req, res) => {
+    try {
+      const questionData = req.body;
+      const quizId = parseInt(req.params.quizId);
+
+      if (!questionData.question_text || !Array.isArray(questionData.options) || questionData.options.length === 0) {
+        return res.status(400).json({ message: "Question text and options are required" });
+      }
+      
+      const hasCorrectAnswer = questionData.options.some(opt => opt.isCorrect);
+      if (!hasCorrectAnswer) {
+        return res.status(400).json({ message: "At least one option must be marked as correct" });
+      }
+      
+      const result = await storage.createQuestion(questionData);
+
+      await storage.linkQuestionToQuiz(result.id, quizId);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error creating question:", error);
+      res.status(500).json({ message: "Failed to create question" });
+    }
+  });
+
 
   // Bulk upload questions from Excel
   app.post('/api/admin/questions/bulk-upload', isAdmin, upload.single('file'), async (req, res) => {

@@ -139,7 +139,7 @@ export default function GenericSectionTest({
   // Mutation for creating new questions (admin only)
   const createQuestionMutation = useMutation({
     mutationFn: async (questionData: any) => {
-      await apiRequest('POST', '/api/admin/questions', questionData);
+      await apiRequest('POST', `/api/admin/questions/quiz/${quizId}`, questionData);
     },
     onSuccess: () => {
       setShowAddQuestionForm(false);
@@ -154,6 +154,8 @@ export default function GenericSectionTest({
         description: "Question added successfully",
       });
       // Refresh the questions data - use predicate to match all question queries
+      queryClient.invalidateQueries({ queryKey: [`/api${link[0]}`] });
+
       queryClient.invalidateQueries({ 
         predicate: (query) => {
           const queryKey = query.queryKey as string[];
@@ -286,6 +288,7 @@ export default function GenericSectionTest({
       setUploadFile(null);
       setIsUploading(false);
       // Refresh questions - use predicate to match all question queries
+      queryClient.invalidateQueries({ queryKey: [`/api${link[0]}`] });
       queryClient.invalidateQueries({ 
         predicate: (query) => {
           const queryKey = query.queryKey as string[];
@@ -325,7 +328,7 @@ export default function GenericSectionTest({
         let correctAnswer: string | undefined;
 
         q.options.forEach((opt: any) => {
-          const optionKey = `option_${optionLabels[opt.optionOrder].toLowerCase()}`;
+          const optionKey = `option_${optionLabels[opt.optionOrder]?.toLowerCase()}`;
           options[optionKey] = opt.option_text;
 
           if (opt.isCorrect) {
@@ -1613,8 +1616,8 @@ export default function GenericSectionTest({
               <div>
                 <Label htmlFor="new-question-text">Question Text</Label>
                 <RichTextEditor
-                  value={editFormData.question_text}
-                  onChange={(value: string) => setEditFormData(prev => ({...prev, question_text: value}))}
+                  value={newQuestionData.question_text}
+                  onChange={(value: string) => setNewQuestionData(prev => ({...prev, question_text: value}))}
                   placeholder="Enter the question text with formatting..."
                 />
               </div>
