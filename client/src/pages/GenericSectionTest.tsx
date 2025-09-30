@@ -74,13 +74,19 @@ export default function GenericSectionTest({
   const [activeTab, setActiveTab] = useState("question");
   const [newComment, setNewComment] = useState("");
   const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
-  const [editFormData, setEditFormData] = useState({
+  type EditOption = {
+    optionText: string;
+    isCorrect: boolean;
+    key: string;
+  };
+
+  const [editFormData, setEditFormData] = useState<{
+    question_text: string;
+    options: EditOption[];
+    explanation: string;
+  }>({
     question_text: '',
-    option_a: '',
-    option_b: '',
-    option_c: '',
-    option_d: '',
-    correct_answer: '',
+    options: [],
     explanation: ''
   });
   const [currentTestSession, setCurrentTestSession] = useState<any>(null);
@@ -89,7 +95,7 @@ export default function GenericSectionTest({
   const [newQuestionData, setNewQuestionData] = useState({
     question_text: '',
     explanation: '',
-    options: [{ text: '', isCorrect: false }],
+    options: [{ optionText: '', isCorrect: false, key: null }],
     quizId: null
   });
 
@@ -146,7 +152,7 @@ export default function GenericSectionTest({
       setNewQuestionData({
         question_text: '',
         explanation: '',
-        options: [{ text: '', isCorrect: false }],
+        options: [{ optionText: '', isCorrect: false, key: null }],
         quizId: null
       });
       toast({
@@ -188,6 +194,8 @@ export default function GenericSectionTest({
         description: "Question deleted successfully",
       });
       // Refresh the questions data - use predicate to match all question queries
+      queryClient.invalidateQueries({ queryKey: [`/api${link[0]}`] });
+
       queryClient.invalidateQueries({ 
         predicate: (query) => {
           const queryKey = query.queryKey as string[];
@@ -329,7 +337,7 @@ export default function GenericSectionTest({
 
         q.options.forEach((opt: any) => {
           const optionKey = `option_${optionLabels[opt.optionOrder]?.toLowerCase()}`;
-          options[optionKey] = opt.option_text;
+          options[optionKey] = opt.optionText;
 
           if (opt.isCorrect) {
             correctAnswer = optionLabels[opt.optionOrder];
@@ -352,7 +360,7 @@ export default function GenericSectionTest({
           correct_answer: correctAnswer,
           optionCount: q.options.length,
           is_single_option: q.options.length === 1,
-          ...options, // spread all option_a, option_b, etc.
+          options: q.options, // spread all option_a, option_b, etc.
         };
       });
     } else {
@@ -365,11 +373,7 @@ export default function GenericSectionTest({
     setEditingQuestionId(question.id);
     setEditFormData({
       question_text: question.question_text || '',
-      option_a: question.option_a || '',
-      option_b: question.option_b || '',
-      option_c: question.option_c || '',
-      option_d: question.option_d || '',
-      correct_answer: question.correct_answer || '',
+      options: question.options,
       explanation: question.explanation || ''
     });
   };
@@ -378,16 +382,22 @@ export default function GenericSectionTest({
     setEditingQuestionId(null);
     setEditFormData({
       question_text: '',
-      option_a: '',
-      option_b: '',
-      option_c: '',
-      option_d: '',
-      correct_answer: '',
+      options: [],
       explanation: ''
     });
   };
 
   const saveQuestion = () => {
+    const hasCorrectAnswer = editFormData.options.some(opt => opt.isCorrect);
+    if (!hasCorrectAnswer) {
+      toast({
+        title: "Error",
+        description: "Please mark at least one option as correct",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (editingQuestionId) {
       updateQuestionMutation.mutate({
         id: editingQuestionId,
@@ -513,10 +523,7 @@ export default function GenericSectionTest({
     setIsTestActive(true);
   };
 
-  const handleAnswerSelect = (questionId: number, answer: string) => {
-    const currentQuestion = questions.find(q => q.id === questionId);
-    const isCorrect = currentQuestion?.correct_answer === answer;
-    
+  const handleAnswerSelect = (questionId: number, answer: string, isCorrect: boolean) => {
     setSelectedAnswers((prev) => ({ ...prev, [questionId]: answer }));
     setAnsweredQuestions(
       (prev) => new Set(Array.from(prev).concat([questionId])),
@@ -643,7 +650,7 @@ export default function GenericSectionTest({
   const addNewOption = () => {
     setNewQuestionData(prev => ({
       ...prev,
-      options: [...prev.options, { text: '', isCorrect: false }]
+      options: [...prev.options, { optionText: '', isCorrect: false }]
     }));
   };
 
@@ -656,12 +663,39 @@ export default function GenericSectionTest({
     }
   };
 
-  const updateOption = (index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
+  const updateOption = (
+    key: number,
+    field: 'optionText' | 'isCorrect',
+    value: string | boolean
+  ) => {
     setNewQuestionData(prev => ({
       ...prev,
-      options: prev.options.map((opt, i) => 
-        i === index ? { ...opt, [field]: value } : opt
-      )
+      options: prev.options.map((opt, i) => {
+        if (field === 'isCorrect' && value === true) {
+          // Set only the clicked option as true, others false
+          return { ...opt, isCorrect: Number(opt.key) === key };
+        }
+        // Normal update for option text or toggling isCorrect to false
+        return Number(opt.key) === key ? { ...opt, [field]: value } : opt;
+      })
+    }));
+  };
+
+  const updateEditOption = (
+    key: number,
+    field: 'optionText' | 'isCorrect',
+    value: string | boolean
+  ) => {
+    setEditFormData(prev => ({
+      ...prev,
+      options: prev.options.map((opt, i) => {
+        if (field === 'isCorrect' && value === true) {
+          // Set only the clicked option as true, others false
+          return { ...opt, isCorrect: Number(opt.key) === key };
+        }
+        // Normal update for option text or toggling isCorrect to false
+        return Number(opt.key) === key ? { ...opt, [field]: value } : opt;
+      })
     }));
   };
 
@@ -675,7 +709,7 @@ export default function GenericSectionTest({
       return;
     }
 
-    const validOptions = newQuestionData.options.filter(opt => opt.text.trim());
+    const validOptions = newQuestionData.options.filter(opt => opt.optionText.trim());
     if (validOptions.length === 0) {
       toast({
         title: "Error", 
@@ -953,10 +987,10 @@ export default function GenericSectionTest({
                   <CardContent>
                     <div className="space-y-2 mb-4">
                       {[
-                        { key: "A", text: question.option_a },
-                        { key: "B", text: question.option_b },
-                        { key: "C", text: question.option_c },
-                        { key: "D", text: question.option_d },
+                        { key: "A", optionText: question.option_a },
+                        { key: "B", optionText: question.option_b },
+                        { key: "C", optionText: question.option_c },
+                        { key: "D", optionText: question.option_d },
                       ].map((option) => {
                         const isUserAnswer = userAnswer === option.key;
                         const isCorrectAnswer =
@@ -973,7 +1007,7 @@ export default function GenericSectionTest({
                                   : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300"
                             }`}
                           >
-                            {option.key}. {option.text}
+                            {option.key}. {option.optionText}
                             {isCorrectAnswer && " ✓ Correct"}
                             {isUserAnswer &&
                               !isCorrectAnswer &&
@@ -1276,68 +1310,34 @@ export default function GenericSectionTest({
                           {editingQuestionId === currentQuestion.id ? (
                             <div className="space-y-4">
                               <div className="grid gap-4">
-                                <div>
-                                  <Label htmlFor="edit-option-a">Option A</Label>
-                                  <RichTextEditor
-                                    id="edit-option-a"
-                                    value={editFormData.option_a}
-                                    onChange={(value: string) => setEditFormData(prev => ({...prev, option_a: value}))}
-                                  />
-                                </div>
-                                <div>
-                                  <Label htmlFor="edit-option-b">Option B</Label>
-                                  <RichTextEditor
-                                    id="edit-option-b"
-                                    value={editFormData.option_b}
-                                    onChange={(value: string) => setEditFormData(prev => ({...prev, option_b: value}))}
-                                  />
-                                </div>
-                                <div>
-                                  <Label htmlFor="edit-option-c">Option C</Label>
-                                  <RichTextEditor
-                                    id="edit-option-c"
-                                    value={editFormData.option_c}
-                                    onChange={(value: string) => setEditFormData(prev => ({...prev, option_c: value}))}
-                                  />
-                                </div>
-                                <div>
-                                  <Label htmlFor="edit-option-d">Option D</Label>
-                                  <RichTextEditor
-                                    id="edit-option-d"
-                                    value={editFormData.option_b}
-                                    onChange={(value: string) => setEditFormData(prev => ({...prev, option_d: value}))}
-                                  />
-                                </div>
-                                <div>
-                                  <Label htmlFor="edit-correct">Correct Answer</Label>
-                                  <select
-                                    id="edit-correct"
-                                    value={editFormData.correct_answer}
-                                    onChange={(e) => setEditFormData(prev => ({...prev, correct_answer: e.target.value}))}
-                                    className="w-full p-2 border rounded-md"
-                                  >
-                                    <option value="A">A</option>
-                                    <option value="B">B</option>
-                                    <option value="C">C</option>
-                                    <option value="D">D</option>
-                                  </select>
-                                </div>
+                                {
+                                  editFormData.options.map((option: any, index: any) => (
+                                    <div key={index}>
+                                      <input
+                                        type="checkbox"
+                                        checked={option.isCorrect}
+                                        onChange={(e) => updateEditOption(option.key, 'isCorrect', e.target.checked)}
+                                        className="rounded"
+                                      />
+                                      <span className="text-sm text-gray-600">Correct</span>
+                                      <RichTextEditor
+                                        id={`edit-option-${index}`}
+                                        value={option.optionText}
+                                        onChange={(value: string) => updateEditOption(option.key, 'optionText', value)}
+                                      />
+                                    </div>
+                                  ))
+                                }
                               </div>
                             </div>
                           ) : (
                             <>
-                              {[
-                                { key: "A", text: currentQuestion.option_a },
-                                { key: "B", text: currentQuestion.option_b },
-                                { key: "C", text: currentQuestion.option_c },
-                                { key: "D", text: currentQuestion.option_d },
-                              ]
-                                .filter((option) => option.text) // Only show options that have text
+                              {currentQuestion.options
+                                .filter((option) => option.optionText) // Only show options that have text
                                 .map((option) => {
                                   const isSelected =
                                     selectedAnswers[currentQuestion.id] === option.key;
-                                  const isCorrect =
-                                    currentQuestion.correct_answer === option.key;
+                                  const isCorrect = option.isCorrect;
                                   const hasAnswered =
                                     currentQuestion.id in selectedAnswers;
                                   const isSingleOption = currentQuestion.is_single_option;
@@ -1368,21 +1368,22 @@ export default function GenericSectionTest({
                                         buttonClass,
                                       )}
                                       onClick={() =>
-                                        handleAnswerSelect(
+                                        hasAnswered ? null : handleAnswerSelect(
                                           currentQuestion.id,
                                           option.key,
+                                          option.isCorrect
                                         )
                                       }
-                                      disabled={hasAnswered}
+                                      // disabled={hasAnswered}
                                     >
-                                  <span className="font-semibold mr-2 sm:mr-3 flex-shrink-0">
+                                  {/* <span className="font-semibold mr-2 sm:mr-3 flex-shrink-0">
                                     {isSingleOption ? "" : `${option.key}.`}
-                                  </span>
+                                  </span> */}
                                   <span className="flex-1 text-left leading-relaxed">
                                     <div
                                       className="dark:text-gray-200"
                                       dangerouslySetInnerHTML={{
-                                        __html: option.text,
+                                        __html: option.optionText,
                                       }}
                                     />
                                   </span>
@@ -1626,10 +1627,10 @@ export default function GenericSectionTest({
                 <Label>Options</Label>
                 <div className="space-y-2">
                   {newQuestionData.options.map((option, index) => (
-                    <div key={index} className="flex items-center gap-2">
+                    <div key={option.key} className="flex items-center gap-2">
                       <RichTextEditor
-                        value={option.text}
-                        onChange={(value: string) => updateOption(index, 'text', value)}
+                        value={option.optionText}
+                        onChange={(value: string) => updateOption(index, 'optionText', value)}
                         placeholder={`Option ${index + 1}`}
                         className="flex-1"
                       />

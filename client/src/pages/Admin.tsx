@@ -16,13 +16,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { BulkUpload } from "../components/BulkUpload";
-import { Link } from "wouter";
-import { Home, Edit, Eye, Calendar, User, MessageSquare, Search, ChevronLeft, ChevronRight, TreePine, ExternalLink, Plus, Upload, Download, Link as LinkIcon, Check, ChevronsUpDown } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Home, Edit, Eye, Calendar, User, X, MessageSquare, Search, ChevronLeft, ChevronRight, TreePine, ExternalLink, Plus, Upload, Download, Link as LinkIcon, Check, ChevronsUpDown } from "lucide-react";
 import { TopicLinking } from "../components/TopicLinking";
+import { MapTopicPanel } from "../components/MapTopicPanel";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 export default function Admin() {
-  const [editingQuestion, setEditingQuestion] = useState<any>(null);
+  const [editingQuestion, setEditingQuestion] = useState<any>({});
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [showAddQuestionForm, setShowAddQuestionForm] = useState(false);
+  const [newQuestionData, setNewQuestionData] = useState({
+    question_text: '',
+    explanation: '',
+    options: [{ optionText: '', isCorrect: false }],
+    quizId: null
+  });
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -66,6 +76,7 @@ export default function Admin() {
   const [selectedQuestionsInTable, setSelectedQuestionsInTable] = useState<number[]>([]);
   const [showBulkTopicMapping, setShowBulkTopicMapping] = useState(false);
   const [topicSearchValue, setTopicSearchValue] = useState("");
+  const link = useLocation();
 
   // Debounce search text to avoid too many API calls
   useEffect(() => {
@@ -153,42 +164,6 @@ export default function Admin() {
 
   const hierarchy = hierarchyData || [];
 
-  // Mutation for creating single question
-  const createQuestionMutation = useMutation({
-    mutationFn: async (questionData: any) => {
-      return await apiRequest('POST', '/api/admin/questions', questionData);
-    },
-    onSuccess: () => {
-      // Invalidate multiple related queries
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/category-hierarchy'] });
-      setShowQuestionDialog(false);
-      setQuestionData({
-        question_text: '',
-        explanation_text: '',
-        options: [
-          { text: '', isCorrect: false },
-          { text: '', isCorrect: false },
-          { text: '', isCorrect: false },
-          { text: '', isCorrect: false }
-        ]
-      });
-      setEditingQuestionId(null);
-      toast({
-        title: "Success",
-        description: "Question created successfully.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: "Failed to create question. Please try again.",
-        variant: "destructive",
-      });
-      console.error("Failed to create question:", error);
-    }
-  });
-
   // Mutation for updating questions
   const updateQuestionMutation = useMutation({
     mutationFn: async (questionData: any) => {
@@ -208,16 +183,13 @@ export default function Admin() {
                   queryKeyString.includes('section'));
         }
       });
+      setShowAddQuestionForm(false);
       setShowQuestionDialog(false);
-      setQuestionData({
+      setNewQuestionData({
         question_text: '',
-        explanation_text: '',
-        options: [
-          { text: '', isCorrect: false },
-          { text: '', isCorrect: false },
-          { text: '', isCorrect: false },
-          { text: '', isCorrect: false }
-        ]
+        explanation: '',
+        options: [],
+        quizId: null
       });
       setEditingQuestionId(null);
       toast({
@@ -321,40 +293,49 @@ export default function Admin() {
     }
   });
 
-  // Unified dialog handlers
-  const openCreateDialog = () => {
-    setQuestionData({
-      question_text: '',
-      explanation_text: '',
-      options: [
-        { text: '', isCorrect: false },
-        { text: '', isCorrect: false },
-        { text: '', isCorrect: false },
-        { text: '', isCorrect: false }
-      ]
-    });
-    setEditingQuestionId(null);
-    setShowQuestionDialog(true);
-  };
+  // Mutation for creating new questions (admin only)
+  const createQuestionMutation = useMutation({
+    mutationFn: async (questionData: any) => {
+      await apiRequest('POST', `/api/admin/questions`, questionData);
+    },
+    onSuccess: () => {
+      setShowAddQuestionForm(false);
+      setNewQuestionData({
+        question_text: '',
+        explanation: '',
+        options: [{ optionText: '', isCorrect: false }],
+        quizId: null
+      });
+      toast({
+        title: "Success",
+        description: "Question added successfully",
+      });
+      // Refresh the questions data - use predicate to match all question queries
+      queryClient.invalidateQueries({ queryKey: [`/api${link[0]}`] });
 
-  const openEditDialog = (question: any) => {
-    // Convert question data to the expected format
-    const optionA = { text: question.option_a || '', isCorrect: question.correct_answer === 'A' };
-    const optionB = { text: question.option_b || '', isCorrect: question.correct_answer === 'B' };
-    const optionC = { text: question.option_c || '', isCorrect: question.correct_answer === 'C' };
-    const optionD = { text: question.option_d || '', isCorrect: question.correct_answer === 'D' };
-    
-    setQuestionData({
-      question_text: question.text || '',
-      explanation_text: question.explanation || '',
-      options: [optionA, optionB, optionC, optionD]
-    });
-    setEditingQuestionId(question.id);
-    setShowQuestionDialog(true);
-  };
-
-  const handleSaveQuestion = () => {
-    if (!questionData.question_text.trim()) {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKey = query.queryKey as string[];
+          return queryKey && (
+            queryKey[0]?.includes('questions') || 
+            queryKey[0]?.includes('/api/sections/') ||
+            queryKey[0]?.includes('/api/quiz/') ||
+            queryKey[0]?.includes('/api/admin/questions')
+          );
+        }
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add question",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const handleSubmitNewQuestion = () => {
+    if (!newQuestionData.question_text.trim()) {
       toast({
         title: "Error",
         description: "Please enter question text",
@@ -363,7 +344,7 @@ export default function Admin() {
       return;
     }
 
-    const validOptions = questionData.options.filter(opt => opt.text.trim());
+    const validOptions = newQuestionData.options.filter(opt => opt.optionText.trim());
     if (validOptions.length === 0) {
       toast({
         title: "Error", 
@@ -383,59 +364,42 @@ export default function Admin() {
       return;
     }
 
-    const questionPayload = {
-      question_text: questionData.question_text,
-      explanation_text: questionData.explanation_text,
-      options: validOptions
-    };
+    createQuestionMutation.mutate({
+      ...newQuestionData,
+      options: validOptions,
+      quizId: -1 // Admin-created questions are not tied to a specific quiz
+    });
+  };
 
-    if (isEditMode) {
-      // For edit mode, convert back to the expected format for the API
-      const editPayload = {
+    const saveQuestion = () => {
+    if (editingQuestionId) {
+      updateQuestionMutation.mutate({
         id: editingQuestionId,
-        question_text: questionData.question_text,
-        option_a: questionData.options[0]?.text || '',
-        option_b: questionData.options[1]?.text || '',
-        option_c: questionData.options[2]?.text || '',
-        option_d: questionData.options[3]?.text || '',
-        correct_answer: questionData.options.findIndex(opt => opt.isCorrect) === 0 ? 'A' :
-                      questionData.options.findIndex(opt => opt.isCorrect) === 1 ? 'B' :
-                      questionData.options.findIndex(opt => opt.isCorrect) === 2 ? 'C' : 'D',
-        explanation_text: questionData.explanation_text,
-      };
-      updateQuestionMutation.mutate(editPayload);
-    } else {
-      createQuestionMutation.mutate(questionPayload);
+        ...newQuestionData
+      });
     }
   };
 
-  const closeDialog = () => {
-    setShowQuestionDialog(false);
-    setQuestionData({
-      question_text: '',
-      explanation_text: '',
-      options: [
-        { text: '', isCorrect: false },
-        { text: '', isCorrect: false },
-        { text: '', isCorrect: false },
-        { text: '', isCorrect: false }
-      ]
-    });
+  const cancelEditing = () => {
     setEditingQuestionId(null);
+    setShowAddQuestionForm(false);
+    setNewQuestionData({
+      question_text: '',
+      options: [],
+      explanation: '',
+      quizId: null
+    });
   };
 
-  // Helper function for updating question options
-  const updateQuestionOption = (index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
-    setQuestionData(prev => ({
-      ...prev,
-      options: prev.options.map((option, i) => 
-        i === index 
-          ? { ...option, [field]: value }
-          : field === 'isCorrect' && value === true 
-            ? { ...option, isCorrect: false } // Only one option can be correct
-            : option
-      )
-    }));
+  const openEditDialog = (question: any) => {
+    setNewQuestionData({
+      question_text: question.text || '',
+      explanation: question.explanation || '',
+      options: question.options,
+      quizId: question.quiz_id || null
+    });
+    setEditingQuestionId(question.id);
+    setShowAddQuestionForm(true);
   };
 
   const handleDownloadTemplate = () => {
@@ -518,6 +482,32 @@ export default function Admin() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const updateOption = (index: number, field: 'optionText' | 'isCorrect', value: string | boolean) => {
+    setNewQuestionData(prev => ({
+      ...prev,
+      options: prev.options.map((opt, i) => 
+        i === index ? { ...opt, [field]: value } : opt
+      )
+    }));
+  };
+  
+  const removeOption = (index: number) => {
+    if (newQuestionData.options.length > 1) {
+      setNewQuestionData(prev => ({
+        ...prev,
+        options: prev.options.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  // Helper functions for add question form
+  const addNewOption = () => {
+    setNewQuestionData(prev => ({
+      ...prev,
+      options: [...prev.options, { optionText: '', isCorrect: false }]
+    }));
   };
 
   return (
@@ -649,7 +639,7 @@ export default function Admin() {
                       </div>
                       <div className="flex gap-2">
                         <Button
-                          onClick={openCreateDialog}
+                          onClick={() => setShowAddQuestionForm(true)}
                           size="sm"
                           className="bg-green-600 hover:bg-green-700"
                           data-testid="button-add-single-question"
@@ -686,9 +676,7 @@ export default function Admin() {
                               return;
                             }
                             // Use the actual selected questions and show the same dialog as after upload
-                            setUploadedQuestions(questions.filter((q: any) => selectedQuestionsInTable.includes(q.id)));
-                            setSelectedQuestions(selectedQuestionsInTable);
-                            setShowTopicLinking(true);
+                            setShowBulkTopicMapping(true);
                           }}
                           size="sm"
                           className="bg-green-600 hover:bg-green-700 text-white"
@@ -703,7 +691,12 @@ export default function Admin() {
                   <CardContent>
                     {/* Search and Filter Controls */}
                     <div className="mb-6 space-y-4">
+                      <div className="flex-1">
+                          {/* Bulk Actions for Selected Questions */}
+                        <MapTopicPanel selectedQuestionsInTable={selectedQuestionsInTable} setSelectedQuestionsInTable={setSelectedQuestionsInTable} setShowBulkTopicMapping={setShowBulkTopicMapping} />
+                      </div>
                       <div className="flex flex-col sm:flex-row gap-4">
+                        
                         <div className="flex-1">
                           <Label htmlFor="search">Search Questions</Label>
                           <div className="relative">
@@ -783,7 +776,12 @@ export default function Admin() {
                                 <TableCell>{question.id}</TableCell>
                                 <TableCell className="max-w-md">
                                   <div className="truncate" title={question.text}>
-                                    {question.text}
+                                    <div
+                                      className="dark:text-gray-200"
+                                      dangerouslySetInnerHTML={{
+                                        __html: question.text,
+                                      }}
+                                    />
                                   </div>
                                 </TableCell>
                                 <TableCell>
@@ -809,34 +807,7 @@ export default function Admin() {
                         </Table>
                         
                         {/* Bulk Actions for Selected Questions */}
-                        {selectedQuestionsInTable.length > 0 && (
-                          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-blue-900">
-                                  {selectedQuestionsInTable.length} question{selectedQuestionsInTable.length > 1 ? 's' : ''} selected
-                                </span>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setSelectedQuestionsInTable([])}
-                                  className="text-xs"
-                                >
-                                  Clear Selection
-                                </Button>
-                              </div>
-                              <Button
-                                onClick={() => setShowBulkTopicMapping(true)}
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700"
-                                data-testid="button-bulk-map-to-topic"
-                              >
-                                <LinkIcon className="h-4 w-4 mr-1" />
-                                Map to Topic
-                              </Button>
-                            </div>
-                          </div>
-                        )}
+                        <MapTopicPanel selectedQuestionsInTable={selectedQuestionsInTable} setSelectedQuestionsInTable={setSelectedQuestionsInTable} setShowBulkTopicMapping={setShowBulkTopicMapping} />
                         
                         {/* Pagination for Questions */}
                         {questionsTotal > 50 && (
@@ -1059,141 +1030,102 @@ export default function Admin() {
 
         {/* Edit Question Dialog */}
         {/* Question Dialog (Create/Edit) */}
-        <Dialog open={showQuestionDialog} onOpenChange={closeDialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <Dialog open={showAddQuestionForm} onOpenChange={setShowAddQuestionForm}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
-                {isEditMode ? `Edit Question #${editingQuestionId}` : 'Add New Question'}
-              </DialogTitle>
+              <DialogTitle>{isEditMode ? "Update Question" : "Add New Question"}</DialogTitle>
             </DialogHeader>
-            {editingQuestion && (
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="question_text">Question Text</Label>
-                  <Textarea
-                    id="question_text"
-                    value={editingQuestion.question_text}
-                    onChange={(e) =>
-                      setEditingQuestion({
-                        ...editingQuestion,
-                        question_text: e.target.value,
-                      })
-                    }
-                    className="min-h-[100px]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="option_a">Option A</Label>
-                    <Input
-                      id="option_a"
-                      value={editingQuestion.option_a || ""}
-                      onChange={(e) =>
-                        setEditingQuestion({
-                          ...editingQuestion,
-                          option_a: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="option_b">Option B</Label>
-                    <Input
-                      id="option_b"
-                      value={editingQuestion.option_b || ""}
-                      onChange={(e) =>
-                        setEditingQuestion({
-                          ...editingQuestion,
-                          option_b: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="option_c">Option C</Label>
-                    <Input
-                      id="option_c"
-                      value={editingQuestion.option_c || ""}
-                      onChange={(e) =>
-                        setEditingQuestion({
-                          ...editingQuestion,
-                          option_c: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="option_d">Option D</Label>
-                    <Input
-                      id="option_d"
-                      value={editingQuestion.option_d || ""}
-                      onChange={(e) =>
-                        setEditingQuestion({
-                          ...editingQuestion,
-                          option_d: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="correct_answer">Correct Answer</Label>
-                  <select
-                    id="correct_answer"
-                    value={editingQuestion.correct_answer || ""}
-                    onChange={(e) =>
-                      setEditingQuestion({
-                        ...editingQuestion,
-                        correct_answer: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border rounded-md"
-                  >
-                    <option value="">Select correct answer</option>
-                    <option value="A">A</option>
-                    <option value="B">B</option>
-                    <option value="C">C</option>
-                    <option value="D">D</option>
-                  </select>
-                </div>
-
-                <div>
-                  <Label htmlFor="explanation_text">Explanation</Label>
-                  <Textarea
-                    id="explanation_text"
-                    value={editingQuestion.explanation_text || ""}
-                    onChange={(e) =>
-                      setEditingQuestion({
-                        ...editingQuestion,
-                        explanation_text: e.target.value,
-                      })
-                    }
-                    className="min-h-[100px]"
-                    placeholder="Enter explanation text (use \n for line breaks)"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleSaveQuestion}
-                    disabled={updateQuestionMutation.isPending}
-                  >
-                    {updateQuestionMutation.isPending ? "Saving..." : "Save Changes"}
-                  </Button>
-                </div>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="new-question-text">Question Text</Label>
+                <RichTextEditor
+                  value={newQuestionData.question_text}
+                  onChange={(value: string) => setNewQuestionData(prev => ({...prev, question_text: value}))}
+                  placeholder="Enter the question text with formatting..."
+                />
               </div>
-            )}
+
+              <div>
+                <Label>Options</Label>
+                <div className="space-y-2">
+                  {newQuestionData.options.map((option, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <RichTextEditor
+                        value={option.optionText}
+                        onChange={(value: string) => updateOption(index, 'optionText', value)}
+                        placeholder={`Option ${index + 1}`}
+                        className="flex-1"
+                      />
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={option.isCorrect}
+                          onChange={(e) => updateOption(index, 'isCorrect', e.target.checked)}
+                          className="rounded"
+                        />
+                        <span className="text-sm text-gray-600">Correct</span>
+                      </div>
+                      {newQuestionData.options.length > 1 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeOption(index)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addNewOption}
+                  className="mt-2"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Option
+                </Button>
+              </div>
+
+              <div>
+                <Label htmlFor="new-explanation">Explanation (Optional)</Label>
+                <RichTextEditor
+                  value={newQuestionData.explanation}
+                  onChange={(value: string) => setNewQuestionData(prev => ({...prev, explanation: value}))}
+                  placeholder="Enter explanation for the correct answer..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={cancelEditing}
+                >
+                  Cancel
+                </Button>
+                {isEditMode ?
+                  <Button
+                    onClick={saveQuestion}
+                    disabled={updateQuestionMutation.isPending}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {updateQuestionMutation.isPending ? "Editing..." : "Update Question"}
+                  </Button> 
+                  : 
+                  <Button
+                    onClick={handleSubmitNewQuestion}
+                    disabled={createQuestionMutation.isPending}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {createQuestionMutation.isPending ? "Adding..." : "Add Question"}
+                  </Button>
+                }
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
-
 
         {/* Bulk Upload Dialog */}
         <BulkUpload showBulkUpload={showBulkUpload} setShowBulkUpload={setShowBulkUpload} handleDownloadTemplate={handleDownloadTemplate} setUploadedQuestions={setUploadedQuestions} setShowTopicLinking={setShowTopicLinking} setSelectedQuestions={setSelectedQuestions} />

@@ -45,7 +45,7 @@ import {
 } from "../shared/schema";
 import bcrypt from "bcryptjs";
 import { db } from "./db";
-import { eq, and, desc, avg, max, count, ne, asc, sql, or, like, isNull } from "drizzle-orm";
+import { eq, and, desc, avg, max, count, ne, asc, sql, or, like, isNull, inArray } from "drizzle-orm";
 import { text } from "stream/consumers";
 
 // Get __filename and __dirname in ESM
@@ -373,7 +373,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(topics)
       .where(and(eq(topics.categoryName, name), eq(topics.parentId, -1)));
-    console.log("parentTopics...", parentTopics);
+
     if (parentTopics.length > 0) {
       return {
         type: "topic",
@@ -385,7 +385,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(topics)
       .where(and(eq(topics.parentName, name)));
-    console.log("subTopics...", subTopics);
+
     if (subTopics.length > 0) {
       return {
         type: "topic",
@@ -393,15 +393,20 @@ export class DatabaseStorage implements IStorage {
       };
     }
 
-    const topicQuizId = await db
-      .select({ id: topics.quizId, text: topics.text })
+    const topicBySlug = await db
+      .select({ quizId: topics.quizId, text: topics.text })
       .from(topics)
       .where(eq(topics.slug, name))
       .limit(1);
-    console.log("TopicQuizId...", topicQuizId);
 
-    if(topicQuizId.length > 0) {
-       if(topicQuizId[0].id === -1) {
+    console.log("topicBySlug", topicBySlug);
+    let quiz: any[] = [];
+
+    if(topicBySlug.length > 0) {
+      console.log("topicBySlug[0].quizId", topicBySlug[0]);
+      const quizId = topicBySlug[0].quizId;
+
+       if(quizId === -1) {
         const topic: any = await db
           .select()
           .from(topics)
@@ -417,29 +422,30 @@ export class DatabaseStorage implements IStorage {
           type: "topic",
           data: [newTopic],
         };
-      } else if(topicQuizId[0].id === 1) {
+      } else if(quizId === 1) {
         return {
           type: "quiz",
           data: [],
-          topicName: topicQuizId[0].text,
+          topicName: topicBySlug[0].text,
         };
       }
-    } else {
-      this.getDefaultReturnValue(name);
-    }
-   
-    const quiz = await db
+
+      quiz = await db
       .select({ id: quizzes.id })
       .from(quizzes)
-      .where(eq(quizzes.quizId, topicQuizId[0].id))
+      .where(eq(quizzes.quizId, quizId))
       .limit(1);
+    } else {
+      console.log("No topic found with slug:", name);
+      this.getDefaultReturnValue(name);
+    }
 
     if (quiz.length === 0) {
       return this.getDefaultReturnValue(name);
     }
 
-    const quizId = quiz[0].id;
-    console.log("quizId....", quizId);
+    console.log("quiz", quiz);
+    const quizPrimaryKey = quiz[0].id;
 
     const result2 = await db.execute(sql`
       SELECT 
@@ -455,7 +461,8 @@ export class DatabaseStorage implements IStorage {
         q.featured_image,
         q.created_at,
         json_agg(json_build_object(
-          'option_text', qo.option_text,
+          'key', qo.id,
+          'optionText', qo.option_text,
           'isCorrect', qo.is_correct,
           'optionOrder', qo.option_order
         ) ORDER BY qo.option_order) AS options
@@ -464,25 +471,22 @@ export class DatabaseStorage implements IStorage {
         ON qq.question_id = q.id
       LEFT JOIN question_options qo 
         ON q.id = qo.question_id
-      WHERE qq.quiz_id = ${quizId}
+      WHERE qq.quiz_id = ${quizPrimaryKey}
         AND q.is_active = true
       GROUP BY qq.id, q.id
       ORDER BY qq.id;
     `);
 
-    // console.log("results quiz......", result2);
     const quizRows = Array.isArray(result2) ? result2 : (result2.rows ?? []);
     if (quizRows.length > 0) {
       return {
         type: "quiz",
         data: quizRows,
-        topicName: topicQuizId[0].text,
+        topicName: topicBySlug[0].text,
       };
     }
 
     const topic = await this.getTopicByName(name);
-
-    console.log("topic....", topic);
 
     if(!topic) return [];
 
@@ -494,7 +498,7 @@ export class DatabaseStorage implements IStorage {
         categoryName: topic.categoryName,
         parentId: -1,
         parentName: null,
-        quiz_id: quizId
+        quiz_id: quizPrimaryKey
       }
     return {
       type: "topic",
@@ -511,9 +515,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDefaultReturnValue(name: string) {
-    console.log("Fetching category by name as no topic found with slug", name);
     const category = await this.getCategoryByName(name);
-    console.log("category....", category);
 
     if(!category) return [];
 
@@ -1019,14 +1021,12 @@ export class DatabaseStorage implements IStorage {
         await tx
           .insert(quizQuestions)
           .values(quizQuestionData)
-          .onConflictDoNothing({ target: [quizQuestions.quizId, quizQuestions.questionId] });
       }
     });
   }
 
   // Link a single question to a quiz by quiz's internal primary key
   async updateQuizIdToTopic(topicId: number, quizId: number): Promise<void> {
-    console.log("Updating topic with quizId...", topicId, quizId);
     // Update topic with the external quizId
     await db
       .update(topics)
@@ -1092,10 +1092,34 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(questions.id))
       .limit(limit)
       .offset(offset);
-      
+
+    // Extract IDs from the fetched questions
+    const questionIds = questionsData.map(q => q.id);
+
+    let optionsByQuestion: Record<number, any[]> = {};
+    if (questionIds.length > 0) {
+      const options = await db
+        .select()
+        .from(questionOptions)
+        .where(inArray(questionOptions.questionId, questionIds));
+
+      // Group options by questionId
+      optionsByQuestion = options.reduce((acc, opt) => {
+        if (!acc[opt.questionId]) acc[opt.questionId] = [];
+        acc[opt.questionId].push(opt);
+        return acc;
+      }, {} as Record<number, any[]>);
+    }
+
+    // Attach options to each question
+    const questionsWithOptions = questionsData.map(q => ({
+      ...q,
+      options: optionsByQuestion[q.id] || []
+    }));
+
     const [{ count: totalCount }] = await countQuery;
     
-    return { questions: questionsData, total: Number(totalCount) };
+    return { questions: questionsWithOptions, total: Number(totalCount) };
   }
 
   /**
@@ -1111,8 +1135,6 @@ export class DatabaseStorage implements IStorage {
     const matches = content.match(base64Regex);
 
     if (matches) {
-      console.log(`Found ${matches.length} base64 images in ${folder}, processing upload...`);
-
       for (const base64Image of matches) {
         // Convert base64 to Buffer
         const buffer = Buffer.from(base64Image.split(",")[1], "base64");
@@ -1180,41 +1202,58 @@ export class DatabaseStorage implements IStorage {
         .where(eq(questionOptions.questionId, questionId))
         .orderBy(asc(questionOptions.optionOrder));
       // Prepare new options data
-      const newOptionsData = [
-        { text: await this.processTextWithImages(questionData.option_a, "options"), order: 0 },
-        { text: await this.processTextWithImages(questionData.option_b, "options"), order: 1 },
-        { text: await this.processTextWithImages(questionData.option_c, "options"), order: 2 },
-        { text: await this.processTextWithImages(questionData.option_d, "options"), order: 3 },
-      ].filter(option => option.text && option.text.trim() !== "");
-      // Update, insert, or delete options as needed
-      for (let i = 0; i < Math.max(currentOptions.length, newOptionsData.length); i++) {
-        const currentOption = currentOptions[i];
-        const newOption = newOptionsData[i];
-        if (currentOption && newOption) {
-          // Update existing option if changed
-          const isCorrect = questionData.correct_answer?.toUpperCase() === String.fromCharCode(65 + newOption.order);
+      let newOptionsData;
+      
+      if(questionData.options && Array.isArray(questionData.options) && questionData.options.length > 0) {
+        newOptionsData = (
+          await Promise.all(
+            questionData.options.map(async (opt: any, index: number) => ({
+              optionText: opt.optionText ? await this.processTextWithImages(opt.optionText, "options") : "",
+              isCorrect: opt.isCorrect || false,
+              order: index,
+              key: opt.key || null
+            }))
+          )
+        ).filter((option: any) => option.optionText && option.optionText.trim() !== "");
+      } else {
+        newOptionsData = [
+          { optionText: await this.processTextWithImages(questionData.option_a, "options"), order: 0 },
+          { optionText: await this.processTextWithImages(questionData.option_b, "options"), order: 1 },
+          { optionText: await this.processTextWithImages(questionData.option_c, "options"), order: 2 },
+          { optionText: await this.processTextWithImages(questionData.option_d, "options"), order: 3 },
+        ].filter(option => option.optionText && option.optionText.trim() !== "");
+      }
+      console.log('New options data:', newOptionsData);
 
-          if (currentOption.optionText !== newOption.text || 
-              currentOption.isCorrect !== isCorrect || 
+      // Update, insert, or delete options as needed
+      for (let i = 0; i < newOptionsData.length; i++) {
+        const newOption = newOptionsData[i];
+        const currentOption = currentOptions.find(opt => opt.id === newOption.key);
+        console.log('Comparing current option:', currentOption, 'with new option:', newOption);
+
+        if (currentOption && newOption) {
+          if (currentOption.optionText !== newOption.optionText || 
+              currentOption.isCorrect !== newOption.isCorrect || 
               currentOption.optionOrder !== newOption.order) {
+              console.log('Updating option:', currentOption.id, newOption);
+
             await tx
               .update(questionOptions)
               .set({
-                optionText: newOption.text,
-                isCorrect: isCorrect,
-                optionOrder: newOption.order,
+                optionText: newOption.optionText,
+                isCorrect: newOption.isCorrect,
               })
               .where(eq(questionOptions.id, currentOption.id));
           }
         } else if (newOption) {
+          console.log('Inserting new option:', newOption);
           // Insert new option
-          const isCorrect = questionData.correct_answer?.toUpperCase() === String.fromCharCode(65 + newOption.order);
           await tx
             .insert(questionOptions)
             .values({
               questionId: questionId,
-              optionText: newOption.text,
-              isCorrect: isCorrect,
+              optionText: newOption.optionText,
+              isCorrect: newOption.isCorrect,
               optionOrder: newOption.order,
             });
         } else if (currentOption) {
@@ -1238,7 +1277,6 @@ export class DatabaseStorage implements IStorage {
       })
       .from(categories)
       .orderBy(asc(categories.name));
-      console.log("categoriesData...", categoriesData);
 
     // Get all topics with their quiz information
     const topicsData = await db
@@ -1257,7 +1295,6 @@ export class DatabaseStorage implements IStorage {
       .from(topics)
       .leftJoin(quizzes, eq(topics.quizId, quizzes.quizId))
       .orderBy(asc(topics.categoryName), asc(topics.text));
-      console.log("topicsData...", topicsData);
 
     // Build hierarchy structure
     const hierarchy = categoriesData.map(category => {
@@ -1317,7 +1354,7 @@ export class DatabaseStorage implements IStorage {
       // Get the next available ID to avoid sequence conflicts
       const [maxResult] = await tx.select({ maxId: sql`COALESCE(MAX(id), 0)` }).from(questions);
       const nextId = (maxResult?.maxId as number || 0) + 1;
-      console.log("Next available question ID:", nextId);
+
       // Create question with explicit ID
       const [newQuestion] = await tx
         .insert(questions)
@@ -1337,22 +1374,21 @@ export class DatabaseStorage implements IStorage {
         newOptionsData = (
           await Promise.all(
             questionData.options.map(async (opt: any, index: number) => ({
-              text: opt.text ? await this.processTextWithImages(opt.text, "options") : "",
+              optionText: opt.optionText ? await this.processTextWithImages(opt.optionText, "options") : "",
               isCorrect: opt.isCorrect || false,
               order: index,
             }))
           )
-        ).filter((option: any) => option.text && option.text.trim() !== "");
+        ).filter((option: any) => option.optionText && option.optionText.trim() !== "");
       } else {
         newOptionsData = [
-          { text: await this.processTextWithImages(questionData.option_a, "options"), order: 0 },
-          { text: await this.processTextWithImages(questionData.option_b, "options"), order: 1 },
-          { text: await this.processTextWithImages(questionData.option_c, "options"), order: 2 },
-          { text: await this.processTextWithImages(questionData.option_d, "options"), order: 3 },
-        ].filter(option => option.text && option.text.trim() !== "");
+          { optionText: await this.processTextWithImages(questionData.option_a, "options"), order: 0 },
+          { optionText: await this.processTextWithImages(questionData.option_b, "options"), order: 1 },
+          { optionText: await this.processTextWithImages(questionData.option_c, "options"), order: 2 },
+          { optionText: await this.processTextWithImages(questionData.option_d, "options"), order: 3 },
+        ].filter(option => option.optionText && option.optionText.trim() !== "");
       }
 
-      console.log("Created question...", newOptionsData);
       // Add options if provided
       if (newOptionsData && newOptionsData.length > 0) {
         // fetch max id from question_options
@@ -1366,7 +1402,7 @@ export class DatabaseStorage implements IStorage {
           const optionRecord = {
             id: nextId, // manually assign new id
             questionId: newQuestion.id,
-            optionText: option.text,
+            optionText: option.optionText,
             isCorrect: option.isCorrect || false,
             optionOrder: index,
           };
@@ -1375,7 +1411,6 @@ export class DatabaseStorage implements IStorage {
           return optionRecord;
         });
 
-        console.log("Inserting options...", optionsToInsert);
         await tx.insert(questionOptions).values(optionsToInsert);
       }
 

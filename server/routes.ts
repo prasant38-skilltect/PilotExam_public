@@ -1020,7 +1020,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const sessionId = parseInt(req.params.id);
       const { updates } = req.body;
-      console.log("Received updates for session:", sessionId, updates);
       // ✅ Ensure endTime is a Date before calling Drizzle
       const dataToUpdate = {
         ...updates,
@@ -1278,16 +1277,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const options = [];
         // Add options A, B, C, D if they exist
-        if (row[1]) options.push({ text: row[1], isCorrect: row[5]?.toString().toLowerCase() === 'a' });
-        if (row[2]) options.push({ text: row[2], isCorrect: row[5]?.toString().toLowerCase() === 'b' });
-        if (row[3]) options.push({ text: row[3], isCorrect: row[5]?.toString().toLowerCase() === 'c' });
-        if (row[4]) options.push({ text: row[4], isCorrect: row[5]?.toString().toLowerCase() === 'd' });
+        if (row[1]) options.push({ optionText: row[1], isCorrect: row[5]?.toString().toLowerCase() === 'a' });
+        if (row[2]) options.push({ optionText: row[2], isCorrect: row[5]?.toString().toLowerCase() === 'b' });
+        if (row[3]) options.push({ optionText: row[3], isCorrect: row[5]?.toString().toLowerCase() === 'c' });
+        if (row[4]) options.push({ optionText: row[4], isCorrect: row[5]?.toString().toLowerCase() === 'd' });
         
         if (options.length === 0) continue;
         
         questions.push({
           question_text: row[0],
-          explanation_text: row[6] || "",
+          explanation: row[6] || "",
           options
         });
       }
@@ -1367,8 +1366,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      console.log("Received file for quiz-specific bulk upload:", req.body);
-
       const quizId = parseInt(req.params.quizId);
 
       let quiz;
@@ -1381,7 +1378,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const topicId = req.body.topicId;     // from FormData
 
         // Update quizId to topic
-        console.log("Created new quiz with ID", quiz.id);
         await storage.updateQuizIdToTopic(topicId, quiz.quizId);
       } else {
         // Verify quiz exists
@@ -1404,16 +1400,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const options = [];
         // Add options A, B, C, D if they exist
-        if (row[1]) options.push({ text: row[1], isCorrect: row[5]?.toString().toLowerCase() === 'a' });
-        if (row[2]) options.push({ text: row[2], isCorrect: row[5]?.toString().toLowerCase() === 'b' });
-        if (row[3]) options.push({ text: row[3], isCorrect: row[5]?.toString().toLowerCase() === 'c' });
-        if (row[4]) options.push({ text: row[4], isCorrect: row[5]?.toString().toLowerCase() === 'd' });
+        if (row[1]) options.push({ optionText: row[1], isCorrect: row[5]?.toString().toLowerCase() === 'a' });
+        if (row[2]) options.push({ optionText: row[2], isCorrect: row[5]?.toString().toLowerCase() === 'b' });
+        if (row[3]) options.push({ optionText: row[3], isCorrect: row[5]?.toString().toLowerCase() === 'c' });
+        if (row[4]) options.push({ optionText: row[4], isCorrect: row[5]?.toString().toLowerCase() === 'd' });
         
         if (options.length === 0) continue;
         
         questions.push({
           question_text: row[0],
-          explanation_text: row[6] || "",
+          explanation: row[6] || "",
           options
         });
       }
@@ -1430,7 +1426,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Create the question
           const result = await storage.createQuestion(question);
-          console.log("Linking question ID", result.id, "to quiz ID", quiz.id);
           // Automatically link to the specific quiz
           await storage.linkQuestionToQuiz(result.id, quiz.id);
           

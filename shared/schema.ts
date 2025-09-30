@@ -256,8 +256,8 @@ export const userAnswers = pgTable("user_answers", {
   id: serial("id").primaryKey(),
   sessionId: integer("session_id").references(() => testSessions.id, { onDelete: 'cascade' }).notNull(),
   questionId: integer("question_id").notNull(),
-  selectedAnswer: varchar("selected_answer", { length: 1 }),
-  isCorrect: boolean("is_correct"),
+ selectedAnswer: integer("selected_answer")
+    .references(() => questionOptions.id, { onDelete: "set null" }),  isCorrect: boolean("is_correct"),
   timeSpent: integer("time_spent"), // in seconds
 });
 
