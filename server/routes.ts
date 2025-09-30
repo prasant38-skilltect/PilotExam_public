@@ -991,6 +991,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user subscriptions by user ID
+  app.get('/api/admin/users/:userId/subscriptions', isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const subscriptions = await storage.getSubscriptionsByUserId(userId);
+      res.json(subscriptions);
+    } catch (error) {
+      console.error("Error fetching user subscriptions:", error);
+      res.status(500).json({ message: "Failed to fetch user subscriptions" });
+    }
+  });
+
+  // Toggle user active status
+  app.put('/api/admin/users/:userId/active-status', isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { isActive } = req.body;
+      
+      if (typeof isActive !== 'boolean') {
+        return res.status(400).json({ message: "isActive must be a boolean" });
+      }
+
+      const updatedUser = await storage.updateUserActiveStatus(userId, isActive);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user active status:", error);
+      res.status(500).json({ message: "Failed to update user active status" });
+    }
+  });
+
   // Package management routes
   app.get('/api/packages', async (req, res) => {
     try {

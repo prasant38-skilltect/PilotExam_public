@@ -72,6 +72,7 @@ export interface IStorage {
     currentPassword: string,
     newPassword: string,
   ): Promise<void>;
+  updateUserActiveStatus(userId: string, isActive: boolean): Promise<User>;
   // Subject/Category operations
   getAllSubjects(): Promise<Categories[]>;
   getSubscriptionsByUserId(userId: string): Promise<any[]>;
@@ -324,6 +325,23 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId));
+  }
+
+  async updateUserActiveStatus(userId: string, isActive: boolean): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        isActive,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return user;
   }
 
    async upsertGoogleUser(userData: {
