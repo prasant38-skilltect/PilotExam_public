@@ -91,6 +91,10 @@ export default function Admin() {
     isActive: true
   });
 
+  // User details dialog state
+  const [showUserDetailsDialog, setShowUserDetailsDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+
   // Debounce search text to avoid too many API calls
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -167,6 +171,17 @@ export default function Admin() {
       const res = await apiRequest('GET', '/api/admin/packages');
       return res instanceof Response ? await res.json() : res;
     },
+  });
+
+  // Fetch user subscriptions when user details dialog is open
+  const { data: userSubscriptions = [], isLoading: loadingUserSubscriptions } = useQuery({
+    queryKey: ['/api/admin/users', selectedUser?.id, 'subscriptions'],
+    queryFn: async () => {
+      if (!selectedUser?.id) return [];
+      const res = await apiRequest('GET', `/api/admin/users/${selectedUser.id}/subscriptions`);
+      return res instanceof Response ? await res.json() : res;
+    },
+    enabled: !!selectedUser?.id && showUserDetailsDialog,
   });
 
   // Fetch pending comments for moderation
@@ -478,6 +493,27 @@ export default function Admin() {
     }
   });
 
+  // User active status mutation
+  const toggleUserActiveMutation = useMutation({
+    mutationFn: async ({ userId, isActive }: { userId: string; isActive: boolean }) => {
+      return await apiRequest('PUT', `/api/admin/users/${userId}/active-status`, { isActive });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      toast({
+        title: "Success",
+        description: "User status updated successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update user status. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Package management handlers
   const handleOpenPackageDialog = (pkg?: any) => {
     if (pkg) {
@@ -517,6 +553,21 @@ export default function Admin() {
     } else {
       createPackageMutation.mutate(packageData);
     }
+  };
+
+  // User details dialog handlers
+  const handleOpenUserDetails = (user: any) => {
+    setSelectedUser(user);
+    setShowUserDetailsDialog(true);
+  };
+
+  const handleToggleUserActive = (isActive: boolean) => {
+    if (!selectedUser) return;
+    toggleUserActiveMutation.mutate({ userId: selectedUser.id, isActive }, {
+      onSuccess: () => {
+        setSelectedUser({ ...selectedUser, isActive });
+      }
+    });
   };
 
     const saveQuestion = () => {
@@ -1253,7 +1304,15 @@ export default function Admin() {
                           <TableBody>
                             {users.map((user: any) => (
                               <TableRow key={user.id} data-testid={`user-row-${user.id}`}>
-                                <TableCell className="font-medium">{user.email}</TableCell>
+                                <TableCell className="font-medium">
+                                  <button
+                                    onClick={() => handleOpenUserDetails(user)}
+                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
+                                    data-testid={`button-user-email-${user.id}`}
+                                  >
+                                    {user.email}
+                                  </button>
+                                </TableCell>
                                 <TableCell>
                                   {user.firstName && user.lastName 
                                     ? `${user.firstName} ${user.lastName}` 
@@ -1877,6 +1936,126 @@ export default function Admin() {
                 </Button>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* User Details Dialog */}
+        <Dialog open={showUserDetailsDialog} onOpenChange={setShowUserDetailsDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                User Details
+              </DialogTitle>
+            </DialogHeader>
+            {selectedUser && (
+              <div className="space-y-6">
+                {/* User Information */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm text-gray-500">Email</Label>
+                    <p className="font-medium">{selectedUser.email}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-500">Username</Label>
+                    <p className="font-medium">{selectedUser.username || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-500">Name</Label>
+                    <p className="font-medium">
+                      {selectedUser.firstName && selectedUser.lastName 
+                        ? `${selectedUser.firstName} ${selectedUser.lastName}` 
+                        : selectedUser.firstName || selectedUser.lastName || '-'}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-500">Role</Label>
+                    <Badge variant={selectedUser.isAdmin ? 'default' : 'secondary'}>
+                      {selectedUser.isAdmin ? 'Admin' : 'User'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-500">Created At</Label>
+                    <p className="font-medium">
+                      {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString() : '-'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* User Active Status Toggle */}
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-semibold">Account Status</Label>
+                      <p className="text-sm text-gray-500">Control user's access to the platform</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-sm font-medium ${selectedUser.isActive ? 'text-green-600' : 'text-red-600'}`}>
+                        {selectedUser.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                      <Switch
+                        checked={selectedUser.isActive}
+                        onCheckedChange={handleToggleUserActive}
+                        disabled={toggleUserActiveMutation.isPending}
+                        data-testid="switch-user-active"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* User Subscriptions */}
+                <div className="border-t pt-4">
+                  <Label className="text-base font-semibold mb-3 block">Active Subscriptions</Label>
+                  {loadingUserSubscriptions ? (
+                    <div className="text-center py-4 text-sm text-gray-500">Loading subscriptions...</div>
+                  ) : userSubscriptions.length === 0 ? (
+                    <div className="text-center py-4 text-sm text-gray-500">
+                      No active subscriptions found.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {userSubscriptions.map((sub: any) => {
+                        const startDate = new Date(sub.subscribed_at);
+                        const months = parseInt(sub.plan_duration) || 0;
+                        const endDate = new Date(startDate);
+                        endDate.setMonth(endDate.getMonth() + months);
+
+                        return (
+                          <Card key={sub.id} className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium">{sub.plan_duration} Plan</p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  Started: {startDate.toLocaleDateString()}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <Badge variant={endDate > new Date() ? 'default' : 'secondary'}>
+                                  {endDate > new Date() ? 'Active' : 'Expired'}
+                                </Badge>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  Ends: {endDate.toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowUserDetailsDialog(false)}
+                    data-testid="button-close-user-details"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
