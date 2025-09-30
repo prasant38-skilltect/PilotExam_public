@@ -1645,6 +1645,22 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return newPackage;
   }
+
+  async updateSubscriptionPlan(id: number, packageData: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan> {
+    const [updatedPackage] = await db
+      .update(subscriptionPlan)
+      .set({ ...packageData, updatedAt: new Date() })
+      .where(eq(subscriptionPlan.id, id))
+      .returning();
+    return updatedPackage;
+  }
+  
+  async deleteSubscriptionPlan(id: number): Promise<void> {
+    await db
+      .update(subscriptionPlan)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(subscriptionPlan.id, id));
+  }
 }
 
 export const storage = new DatabaseStorage();

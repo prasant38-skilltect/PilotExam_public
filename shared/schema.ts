@@ -146,10 +146,12 @@ export const subscriptions = pgTable("subscriptions", {
 export const subscriptionPlan = pgTable("subscription_plan", { 
   id: serial("plan_id").primaryKey(),
   name: varchar("plan_name", { length: 100 }).notNull().unique(),
+  months: integer("months").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
   price: integer("price").notNull(),    
-  duration: varchar("duration", { length: 50 }).notNull(), // e.g., '1 month', '6 months', '1 year'
   features: text("features").notNull(), // Comma-separated list of features
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Packages table for subscription plans

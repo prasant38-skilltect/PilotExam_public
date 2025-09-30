@@ -9,6 +9,7 @@ import * as XLSX from "xlsx";
 import path from "path";
 import { OAuth2Client } from "google-auth-library";
 import { PathnameContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
+import { features } from "process";
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, "postmessage");
 // import { setupAuth, isAuthenticated } from "./replitAuth"; // Disabled Replit auth
 // import { insertTestSessionSchema, insertUserAnswerSchema } from "../shared/schema";
@@ -199,8 +200,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/subscriptionsPlan', async (req: any, res) => {
     try {
-        const plans = await storage.getSubcriptionPlanDetails();
-        return res.json(plans);
+      const plans = await storage.getSubcriptionPlanDetails();
+      return res.json(plans);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -210,7 +211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post('/api/admin/subscriptionsPlan', isAdmin, async (req: any, res) => {
     try {
-      const { name, months, price, isActive } = req.body;
+      const { name, months, price, features, isActive } = req.body;
       
       if (!name || !months || !price) {
         return res.status(400).json({ message: "Name, months, and price are required" });
@@ -219,8 +220,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const subscriptionsPlan = {
         name: name.trim(),
         price: parseInt(price),
-        duration: `${parseInt(months)} months`,
-        features: req.body.features || "",
+        months: parseInt(months),
+        features: features,
         isActive: isActive !== undefined ? isActive : true
       };
 
@@ -232,22 +233,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/packages/:id', isAdmin, async (req: any, res) => {
+  app.put('/api/admin/subscriptionsPlan/:id', isAdmin, async (req: any, res) => {
     try {
       const packageId = parseInt(req.params.id);
-      const { name, months, price, isActive } = req.body;
+      const { name, months, price, features, isActive } = req.body;
 
       const updateData: any = {};
       if (name !== undefined) updateData.name = name.trim();
       if (months !== undefined) updateData.months = parseInt(months);
       if (price !== undefined) updateData.price = parseInt(price);
+      if (features !== undefined) updateData.features = features;
       if (isActive !== undefined) updateData.isActive = isActive;
 
-      const updatedPackage = await storage.updatePackage(packageId, updateData);
+      const updatedPackage = await storage.updateSubscriptionPlan(packageId, updateData);
       res.json(updatedPackage);
     } catch (error) {
       console.error("Error updating package:", error);
       res.status(500).json({ message: "Failed to update package" });
+    }
+  });
+
+    app.delete('/api/admin/subscriptionsPlan/:id', isAdmin, async (req: any, res) => {
+    try {
+      const packageId = parseInt(req.params.id);
+      await storage.deleteSubscriptionPlan(packageId);
+      res.json({ message: "Package deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting package:", error);
+      res.status(500).json({ message: "Failed to delete package" });
     }
   });
 

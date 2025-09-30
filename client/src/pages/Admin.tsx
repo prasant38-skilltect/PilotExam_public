@@ -89,6 +89,7 @@ export default function Admin() {
     name: '',
     months: '',
     price: '',
+    features: '',
     isActive: true
   });
 
@@ -428,13 +429,12 @@ export default function Admin() {
   // Package mutations
   const createPackageMutation = useMutation({
     mutationFn: async (packageData: any) => {
-      return await apiRequest('POST', '/api/admin/packages', packageData);
+      return await apiRequest('POST', '/api/admin/subscriptionsPlan', packageData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/packages'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/packages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/subscriptionsPlan'] });
       setShowPackageDialog(false);
-      setPackageFormData({ name: '', months: '', price: '', isActive: true });
+      setPackageFormData({ name: '', months: '', price: '', features: '', isActive: true });
       toast({
         title: "Success",
         description: "Package created successfully.",
@@ -451,14 +451,14 @@ export default function Admin() {
 
   const updatePackageMutation = useMutation({
     mutationFn: async ({ id, ...packageData }: any) => {
-      return await apiRequest('PUT', `/api/admin/packages/${id}`, packageData);
+      return await apiRequest('PUT', `/api/admin/subscriptionsPlan/${id}`, packageData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/packages'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/packages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/subscriptionsPlan'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/subscriptionsPlan'] });
       setShowPackageDialog(false);
       setEditingPackage(null);
-      setPackageFormData({ name: '', months: '', price: '', isActive: true });
+      setPackageFormData({ name: '', months: '', price: '', features: '', isActive: true });
       toast({
         title: "Success",
         description: "Package updated successfully.",
@@ -475,11 +475,10 @@ export default function Admin() {
 
   const deletePackageMutation = useMutation({
     mutationFn: async (packageId: number) => {
-      return await apiRequest('DELETE', `/api/admin/packages/${packageId}`);
+      return await apiRequest('DELETE', `/api/admin/subscriptionsPlan/${packageId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/packages'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/packages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/subscriptionsPlan'] });
       toast({
         title: "Success",
         description: "Package deleted successfully.",
@@ -523,11 +522,12 @@ export default function Admin() {
         name: pkg.name,
         months: pkg.months.toString(),
         price: pkg.price.toString(),
-        isActive: pkg.isActive
+        isActive: pkg.isActive,
+        features: pkg.features
       });
     } else {
       setEditingPackage(null);
-      setPackageFormData({ name: '', months: '', price: '', isActive: true });
+      setPackageFormData({ name: '', months: '', price: '', features: '', isActive: true });
     }
     setShowPackageDialog(true);
   };
@@ -546,6 +546,7 @@ export default function Admin() {
       name: packageFormData.name.trim(),
       months: parseInt(packageFormData.months),
       price: parseInt(packageFormData.price),
+      features: packageFormData.features,
       isActive: packageFormData.isActive
     };
 
@@ -1410,9 +1411,7 @@ export default function Admin() {
                               <TableCell>{pkg.id}</TableCell>
                               <TableCell className="font-medium">{pkg.name}</TableCell>
                               <TableCell>
-                                {pkg.months === 1 ? '1 month' : 
-                                 pkg.months === 12 ? '1 year' : 
-                                 `${pkg.months} months`}
+                                {`${pkg.months} months`}
                               </TableCell>
                               <TableCell>${pkg.price}</TableCell>
                               <TableCell>
@@ -1873,12 +1872,12 @@ export default function Admin() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {editingPackage ? 'Edit Package' : 'Create New Package'}
+                {editingPackage ? 'Edit Package' : 'Create New Subscription Plan'}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="package-name">Package Name</Label>
+                <Label htmlFor="package-name">Subscription Name</Label>
                 <Input
                   id="package-name"
                   value={packageFormData.name}
@@ -1908,6 +1907,16 @@ export default function Admin() {
                   value={packageFormData.price}
                   onChange={(e) => setPackageFormData(prev => ({ ...prev, price: e.target.value }))}
                   placeholder="e.g., 400"
+                  data-testid="input-package-price"
+                />
+              </div>
+              <div>
+                <Label htmlFor="package-price">Features</Label>
+                <Input
+                  id="features"
+                  value={packageFormData.features}
+                  onChange={(e) => setPackageFormData(prev => ({ ...prev, features: e.target.value }))}
+                  placeholder="e.g., Access to all quizzes, Practice tests, Progress tracking, Mobile access"
                   data-testid="input-package-price"
                 />
               </div>
