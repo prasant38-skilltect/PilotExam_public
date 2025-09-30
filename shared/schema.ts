@@ -158,6 +158,9 @@ export const issueReports = pgTable("issue_reports", {
   questionId: integer("question_id").notNull(),
   description: text("description").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  isAcknowledged: boolean("is_acknowledged").default(false).notNull(),
+  acknowledgedAt: timestamp("acknowledged_at"),
+  acknowledgedBy: varchar("acknowledged_by").references(() => users.id),
 });
 
 // Subjects (renamed from atplSubjects for consistency)
