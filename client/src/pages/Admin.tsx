@@ -46,6 +46,9 @@ export default function Admin() {
 
   // Pagination and search state for questions
   const [questionsPage, setQuestionsPage] = useState(1);
+  
+  // Pagination state for users
+  const [usersPage, setUsersPage] = useState(1);
   const [searchText, setSearchText] = useState("");
   const [hasEmptyExplanation, setHasEmptyExplanation] = useState(false);
   const [debouncedSearchText, setDebouncedSearchText] = useState("");
@@ -130,6 +133,22 @@ export default function Admin() {
   const issueReportsTotal = issueReportsData?.total || 0;
   const questions = questionsData?.questions || [];
   const questionsTotal = questionsData?.total || 0;
+
+  // Fetch all users
+  const { data: usersData, isLoading: loadingUsers } = useQuery({
+    queryKey: ['/api/admin/users', { page: usersPage, limit: 50 }],
+    queryFn: async ({ queryKey }) => {
+      const [, params] = queryKey as [string, { page: number; limit: number }];
+      const res = await apiRequest('GET', `/api/admin/users?page=${params.page}&limit=${params.limit}`);
+      if (res instanceof Response) {
+        return await res.json();
+      }
+      return res;
+    },
+  });
+
+  const users = usersData?.users || [];
+  const usersTotal = usersData?.total || 0;
 
   // Fetch pending comments for moderation
   const { data: pendingComments = [], isLoading: loadingComments } = useQuery({
@@ -564,7 +583,7 @@ export default function Admin() {
         <Card>
           <CardContent className="p-6">
             <Tabs defaultValue="reports" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="reports" className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
                   Issue Reports
@@ -580,6 +599,10 @@ export default function Admin() {
                 <TabsTrigger value="hierarchy" className="flex items-center gap-2">
                   <TreePine className="h-4 w-4" />
                   Category Hierarchy
+                </TabsTrigger>
+                <TabsTrigger value="users" className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  User Management
                 </TabsTrigger>
               </TabsList>
 
@@ -1060,6 +1083,91 @@ export default function Admin() {
                             </CardContent>
                           </Card>
                         ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* User Management Tab */}
+              <TabsContent value="users" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <User className="h-5 w-5" />
+                      User Management ({users.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {loadingUsers ? (
+                      <div className="text-center py-8">Loading users...</div>
+                    ) : users.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        No users found.
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Email</TableHead>
+                              <TableHead>Name</TableHead>
+                              <TableHead>Username</TableHead>
+                              <TableHead>Role</TableHead>
+                              <TableHead>Created</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {users.map((user: any) => (
+                              <TableRow key={user.id} data-testid={`user-row-${user.id}`}>
+                                <TableCell className="font-medium">{user.email}</TableCell>
+                                <TableCell>
+                                  {user.firstName && user.lastName 
+                                    ? `${user.firstName} ${user.lastName}` 
+                                    : user.firstName || user.lastName || '-'}
+                                </TableCell>
+                                <TableCell>{user.username || '-'}</TableCell>
+                                <TableCell>
+                                  <Badge variant={user.isAdmin ? 'default' : 'secondary'}>
+                                    {user.isAdmin ? 'Admin' : 'User'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                        
+                        {/* Pagination for Users */}
+                        {usersTotal > 50 && (
+                          <div className="flex justify-center items-center gap-2 mt-6">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setUsersPage(prev => Math.max(1, prev - 1))}
+                              disabled={usersPage === 1}
+                              data-testid="button-users-prev"
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                              Previous
+                            </Button>
+                            <span className="text-sm text-gray-600">
+                              Page {usersPage} of {Math.ceil(usersTotal / 50)}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setUsersPage(prev => prev + 1)}
+                              disabled={usersPage >= Math.ceil(usersTotal / 50)}
+                              data-testid="button-users-next"
+                            >
+                              Next
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardContent>
