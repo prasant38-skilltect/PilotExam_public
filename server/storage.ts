@@ -1190,11 +1190,11 @@ export class DatabaseStorage implements IStorage {
       .limit(limit)
       .offset(offset);
       
-    const [{ count: totalCount }] = await db
-      .select({ count: count() })
+    const countResult = await db
+      .select({ total: count() })
       .from(users);
       
-    return { users: usersData, total: Number(totalCount) };
+    return { users: usersData, total: Number(countResult[0]?.total || 0) };
   }
 
   async updateQuestion(questionId: number, questionData: any): Promise<any> {
