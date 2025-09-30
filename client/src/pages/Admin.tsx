@@ -81,6 +81,16 @@ export default function Admin() {
   const [topicSearchValue, setTopicSearchValue] = useState("");
   const link = useLocation();
 
+  // Packages management state
+  const [showPackageDialog, setShowPackageDialog] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<any>(null);
+  const [packageFormData, setPackageFormData] = useState({
+    name: '',
+    months: '',
+    price: '',
+    isActive: true
+  });
+
   // Debounce search text to avoid too many API calls
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -149,6 +159,15 @@ export default function Admin() {
 
   const users = usersData?.users || [];
   const usersTotal = usersData?.total || 0;
+
+  // Fetch all packages for admin management
+  const { data: packages = [], isLoading: loadingPackages } = useQuery({
+    queryKey: ['/api/admin/packages'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/admin/packages');
+      return res instanceof Response ? await res.json() : res;
+    },
+  });
 
   // Fetch pending comments for moderation
   const { data: pendingComments = [], isLoading: loadingComments } = useQuery({
@@ -390,6 +409,116 @@ export default function Admin() {
     });
   };
 
+  // Package mutations
+  const createPackageMutation = useMutation({
+    mutationFn: async (packageData: any) => {
+      return await apiRequest('POST', '/api/admin/packages', packageData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/packages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/packages'] });
+      setShowPackageDialog(false);
+      setPackageFormData({ name: '', months: '', price: '', isActive: true });
+      toast({
+        title: "Success",
+        description: "Package created successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create package. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const updatePackageMutation = useMutation({
+    mutationFn: async ({ id, ...packageData }: any) => {
+      return await apiRequest('PUT', `/api/admin/packages/${id}`, packageData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/packages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/packages'] });
+      setShowPackageDialog(false);
+      setEditingPackage(null);
+      setPackageFormData({ name: '', months: '', price: '', isActive: true });
+      toast({
+        title: "Success",
+        description: "Package updated successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update package. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deletePackageMutation = useMutation({
+    mutationFn: async (packageId: number) => {
+      return await apiRequest('DELETE', `/api/admin/packages/${packageId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/packages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/packages'] });
+      toast({
+        title: "Success",
+        description: "Package deleted successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete package. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Package management handlers
+  const handleOpenPackageDialog = (pkg?: any) => {
+    if (pkg) {
+      setEditingPackage(pkg);
+      setPackageFormData({
+        name: pkg.name,
+        months: pkg.months.toString(),
+        price: pkg.price.toString(),
+        isActive: pkg.isActive
+      });
+    } else {
+      setEditingPackage(null);
+      setPackageFormData({ name: '', months: '', price: '', isActive: true });
+    }
+    setShowPackageDialog(true);
+  };
+
+  const handleSubmitPackage = () => {
+    if (!packageFormData.name.trim() || !packageFormData.months || !packageFormData.price) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const packageData = {
+      name: packageFormData.name.trim(),
+      months: parseInt(packageFormData.months),
+      price: parseInt(packageFormData.price),
+      isActive: packageFormData.isActive
+    };
+
+    if (editingPackage) {
+      updatePackageMutation.mutate({ id: editingPackage.id, ...packageData });
+    } else {
+      createPackageMutation.mutate(packageData);
+    }
+  };
+
     const saveQuestion = () => {
     if (editingQuestionId) {
       updateQuestionMutation.mutate({
@@ -583,7 +712,7 @@ export default function Admin() {
         <Card>
           <CardContent className="p-6">
             <Tabs defaultValue="reports" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="reports" className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
                   Issue Reports
@@ -603,6 +732,10 @@ export default function Admin() {
                 <TabsTrigger value="users" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
                   User Management
+                </TabsTrigger>
+                <TabsTrigger value="packages" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Packages
                 </TabsTrigger>
               </TabsList>
 
@@ -1173,6 +1306,96 @@ export default function Admin() {
                   </CardContent>
                 </Card>
               </TabsContent>
+
+              {/* Packages Tab */}
+              <TabsContent value="packages" className="mt-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Subscription Packages ({packages.length})
+                    </CardTitle>
+                    <Button 
+                      onClick={() => handleOpenPackageDialog()}
+                      className="bg-green-600 hover:bg-green-700"
+                      data-testid="button-add-package"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Package
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    {loadingPackages ? (
+                      <div className="text-center py-8">Loading packages...</div>
+                    ) : packages.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        No packages found. Create one to get started.
+                      </div>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>ID</TableHead>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Duration</TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Created</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {packages.map((pkg: any) => (
+                            <TableRow key={pkg.id}>
+                              <TableCell>{pkg.id}</TableCell>
+                              <TableCell className="font-medium">{pkg.name}</TableCell>
+                              <TableCell>
+                                {pkg.months === 1 ? '1 month' : 
+                                 pkg.months === 12 ? '1 year' : 
+                                 `${pkg.months} months`}
+                              </TableCell>
+                              <TableCell>${pkg.price}</TableCell>
+                              <TableCell>
+                                <Badge variant={pkg.isActive ? "default" : "secondary"}>
+                                  {pkg.isActive ? 'Active' : 'Inactive'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(pkg.createdAt).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex gap-2 justify-end">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleOpenPackageDialog(pkg)}
+                                    data-testid={`button-edit-package-${pkg.id}`}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (confirm('Are you sure you want to delete this package?')) {
+                                        deletePackageMutation.mutate(pkg.id);
+                                      }
+                                    }}
+                                    data-testid={`button-delete-package-${pkg.id}`}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
             </Tabs>
           </CardContent>
         </Card>
@@ -1579,6 +1802,78 @@ export default function Admin() {
                       Map {selectedQuestionsInTable.length} Questions
                     </>
                   )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Package Dialog (Create/Edit) */}
+        <Dialog open={showPackageDialog} onOpenChange={setShowPackageDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {editingPackage ? 'Edit Package' : 'Create New Package'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="package-name">Package Name</Label>
+                <Input
+                  id="package-name"
+                  value={packageFormData.name}
+                  onChange={(e) => setPackageFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g., 6 Month Plan"
+                  data-testid="input-package-name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="package-months">Duration (months)</Label>
+                <Input
+                  id="package-months"
+                  type="number"
+                  min="1"
+                  value={packageFormData.months}
+                  onChange={(e) => setPackageFormData(prev => ({ ...prev, months: e.target.value }))}
+                  placeholder="e.g., 6"
+                  data-testid="input-package-months"
+                />
+              </div>
+              <div>
+                <Label htmlFor="package-price">Price ($)</Label>
+                <Input
+                  id="package-price"
+                  type="number"
+                  min="0"
+                  value={packageFormData.price}
+                  onChange={(e) => setPackageFormData(prev => ({ ...prev, price: e.target.value }))}
+                  placeholder="e.g., 400"
+                  data-testid="input-package-price"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="package-active"
+                  checked={packageFormData.isActive}
+                  onCheckedChange={(checked) => setPackageFormData(prev => ({ ...prev, isActive: !!checked }))}
+                  data-testid="checkbox-package-active"
+                />
+                <Label htmlFor="package-active">Active</Label>
+              </div>
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowPackageDialog(false)}
+                  data-testid="button-cancel-package"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSubmitPackage}
+                  disabled={createPackageMutation.isPending || updatePackageMutation.isPending}
+                  data-testid="button-save-package"
+                >
+                  {(createPackageMutation.isPending || updatePackageMutation.isPending) ? 'Saving...' : 'Save Package'}
                 </Button>
               </div>
             </div>
