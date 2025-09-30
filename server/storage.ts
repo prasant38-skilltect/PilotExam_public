@@ -442,7 +442,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     const topicBySlug = await db
-      .select({ quizId: topics.quizId, text: topics.text })
+      .select()
       .from(topics)
       .where(eq(topics.slug, name))
       .limit(1);
@@ -531,6 +531,10 @@ export class DatabaseStorage implements IStorage {
         type: "quiz",
         data: quizRows,
         topicName: topicBySlug[0].text,
+        categoryName: topicBySlug[0].categoryName,
+        categorySlug: topicBySlug[0].categorySlug,
+        parentName: topicBySlug[0].parentName,
+        parentSlug: topicBySlug[0].parentSlug,
       };
     }
 

@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Plus, Edit, Trash2, Settings, Tag } from 'lucide-react';
+import { Plus, Edit, Trash2, Settings, Tag, ChevronRight, Home } from 'lucide-react';
 import ManageQuestions from '../components/ManangeQuestions';
 
 export default function DynamicPage() {
@@ -222,9 +222,75 @@ export default function DynamicPage() {
   const data = subjects?.data ? subjects?.data[0] : {}
   const category = subjects?.data ? subjects?.category : {}
   
+  // Build breadcrumb data from subjects structure
+  const breadcrumbData = {
+    categoryName: subjects?.type === "topic" && subjects?.data?.[0]?.categoryName 
+      ? subjects.data[0].categoryName 
+      : null,
+    categorySlug: subjects?.type === "topic" && subjects?.data?.[0]?.categorySlug 
+      ? subjects.data[0].categorySlug 
+      : null,
+    parentName: subjects?.type === "topic" && subjects?.data?.[0]?.parentName 
+      ? subjects.data[0].parentName 
+      : null,
+    parentSlug: subjects?.type === "topic" && subjects?.data?.[0]?.parentSlug 
+      ? subjects.data[0].parentSlug 
+      : null,
+    currentPageName: subjects?.type === "quiz" 
+      ? subjects.topicName 
+      : (subjects?.category?.name || null),
+  };
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
       <div className="max-w-4xl mx-auto px-4 py-10">
+        {/* Breadcrumb Navigation */}
+        <nav className="flex items-center gap-2 text-sm mb-6" aria-label="Breadcrumb">
+          <Link href="/" className="flex items-center gap-1 text-cyan-300 hover:text-cyan-100 transition-colors" data-testid="breadcrumb-home">
+            <Home className="h-4 w-4" />
+            <span>Home</span>
+          </Link>
+          
+          {breadcrumbData.categoryName && (
+            <>
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+              {breadcrumbData.categorySlug ? (
+                <Link href={`/${breadcrumbData.categorySlug}`} className="text-cyan-300 hover:text-cyan-100 transition-colors" data-testid="breadcrumb-category">
+                  {breadcrumbData.categoryName}
+                </Link>
+              ) : (
+                <span className="text-cyan-300" data-testid="breadcrumb-category">
+                  {breadcrumbData.categoryName}
+                </span>
+              )}
+            </>
+          )}
+          
+          {breadcrumbData.parentName && (
+            <>
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+              {breadcrumbData.parentSlug ? (
+                <Link href={`/${breadcrumbData.parentSlug}`} className="text-cyan-300 hover:text-cyan-100 transition-colors" data-testid="breadcrumb-parent">
+                  {breadcrumbData.parentName}
+                </Link>
+              ) : (
+                <span className="text-cyan-300" data-testid="breadcrumb-parent">
+                  {breadcrumbData.parentName}
+                </span>
+              )}
+            </>
+          )}
+          
+          {breadcrumbData.currentPageName && (
+            <>
+              <ChevronRight className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-300 font-medium" data-testid="breadcrumb-current">
+                {breadcrumbData.currentPageName}
+              </span>
+            </>
+          )}
+        </nav>
+
         <h1 className="text-3xl text-white text-center mb-8">
           {category ? category.name : ''} 
         </h1>
