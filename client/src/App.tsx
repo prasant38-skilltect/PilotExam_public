@@ -91,32 +91,7 @@ function Router() {
               <Subjects />
             </Suspense>
           </Route>
-          {/* <Route path="/pressure-heads/">
-            <Suspense fallback={<PageLoader />}>
-              <GenericSectionTest 
-                sectionId={7} 
-                sectionName="PRESSURE HEADS" 
-                backUrl="/oxford-instruments-questions/" 
-              />
-            </Suspense>
-          </Route> */}
           
-          {/* Chapter Routes - Direct MCQ pages */}
-          {/* <Route path="/radio-waves/">
-            <Suspense fallback={<PageLoader />}>
-              <RadioWavesTest />
-            </Suspense>
-          </Route> */}
-          
-
-          {/* Radio Navigation Options */}
-          {/* <Route path="/instruments/">
-            <Suspense fallback={<PageLoader />}>
-              <Instruments />
-            </Suspense>
-          </Route> */}
-          
-
           {/* Authentication Pages */}
           <Route path="/sign-in">
             <Suspense fallback={<PageLoader />}>
@@ -160,11 +135,6 @@ function Router() {
               <AirSpeedIndicator />
             </Suspense>
           </Route>
-          {/* <Route path="/question-banks">
-            <Suspense fallback={<PageLoader />}>
-              <QuestionBank />
-            </Suspense>
-          </Route> */}
 
            <Route path="/question-banks">
             <Suspense fallback={<PageLoader />}>
@@ -172,22 +142,6 @@ function Router() {
             </Suspense>
           </Route>
 
-          {/* Public pages - accessible to all users */}
-          {/* <Route path="/question-bank">
-            <Suspense fallback={<PageLoader />}>
-              <QuestionBank />
-            </Suspense>
-          </Route>
-          <Route path="/test/:subjectId">
-            <Suspense fallback={<PageLoader />}>
-              <Test />
-            </Suspense>
-          </Route>
-          <Route path="/results/:sessionId">
-            <Suspense fallback={<PageLoader />}>
-              <Results />
-            </Suspense>
-          </Route> */} 
           <Route path="/test/earth-atmosphere/*">
             {() => {
               window.location.replace("/test/earth-atmosphere/index.html");
