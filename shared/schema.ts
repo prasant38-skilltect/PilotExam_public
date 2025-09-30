@@ -151,6 +151,17 @@ export const subscriptionPlan = pgTable("subscription_plan", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Packages table for subscription plans
+export const packages = pgTable("packages", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  months: integer("months").notNull(),
+  price: integer("price").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Issue Reports table
 export const issueReports = pgTable("issue_reports", {
   id: serial("id").primaryKey(),
@@ -334,6 +345,7 @@ export const insertQuestionsSchema = createInsertSchema(questions);
 export const insertQuestionOptionsSchema = createInsertSchema(questionOptions);
 export const insertQuizQuestionsSchema = createInsertSchema(quizQuestions);
 export const insertIssueReportSchema = createInsertSchema(issueReports).omit({ id: true, createdAt: true });
+export const insertPackageSchema = createInsertSchema(packages).omit({ id: true, createdAt: true, updatedAt: true });
 
 
 
@@ -400,5 +412,7 @@ export type QuestionOptions = z.infer<typeof insertQuestionOptionsSchema>;
 export type QuizQuestions = z.infer<typeof insertQuizQuestionsSchema>;
 export type IssueReport = typeof issueReports.$inferSelect;
 export type InsertIssueReport = z.infer<typeof insertIssueReportSchema>;
+export type Package = typeof packages.$inferSelect;
+export type InsertPackage = z.infer<typeof insertPackageSchema>;
 export type QuestionComment = typeof questionComments.$inferSelect;
 export type InsertQuestionComment = z.infer<typeof insertQuestionCommentSchema>;
