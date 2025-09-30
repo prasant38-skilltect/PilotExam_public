@@ -435,6 +435,36 @@ export default function Admin() {
     });
   };
 
+  const handleAcknowledgeIssue = async (reportId: number) => {
+    try {
+      const response = await fetch(`/api/admin/issue-reports/${reportId}/acknowledge`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to acknowledge issue');
+      }
+
+      // Refresh the issue reports list
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/issue-reports'] });
+      
+      toast({
+        title: "Success",
+        description: "Issue report acknowledged successfully",
+      });
+    } catch (error) {
+      console.error('Error acknowledging issue:', error);
+      toast({
+        title: "Error",
+        description: "Failed to acknowledge issue report",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Helper functions for bulk question selection in main table
   const handleQuestionSelectionInTable = (questionId: number, isSelected: boolean) => {
     if (isSelected) {
@@ -589,9 +619,20 @@ export default function Admin() {
                                   {formatDate(report.createdAt)}
                                 </span>
                               </div>
-                              <p className="text-gray-700 dark:text-gray-300">
+                              <p className="text-gray-700 dark:text-gray-300 mb-3">
                                 {report.description}
                               </p>
+                              <div className="flex justify-end">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleAcknowledgeIssue(report.id)}
+                                  data-testid={`button-acknowledge-${report.id}`}
+                                >
+                                  <Check className="h-4 w-4 mr-1" />
+                                  Acknowledge
+                                </Button>
+                              </div>
                             </CardContent>
                           </Card>
                         ))}
