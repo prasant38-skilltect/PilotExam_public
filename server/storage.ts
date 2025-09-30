@@ -18,6 +18,7 @@ import {
   quizQuestions,
   issueReports,
   questionComments,
+  packages,
   type User,
   type UpsertUser,
   type Subject,
@@ -42,6 +43,8 @@ import {
   type QuestionComment,
   type InsertQuestionComment,
   type InsertCategory,
+  type Package,
+  type InsertPackage,
 } from "../shared/schema";
 import bcrypt from "bcryptjs";
 import { db } from "./db";
@@ -112,6 +115,14 @@ export interface IStorage {
   getIssueReportsByUser(userId: string): Promise<IssueReport[]>;
   acknowledgeIssueReport(reportId: number, adminId: string): Promise<IssueReport>;
   // getAllIssueReports(): Promise<IssueReport[]>;
+
+  // Package operations
+  getAllPackages(): Promise<Package[]>;
+  getActivePackages(): Promise<Package[]>;
+  getPackageById(id: number): Promise<Package | undefined>;
+  createPackage(packageData: InsertPackage): Promise<Package>;
+  updatePackage(id: number, packageData: Partial<InsertPackage>): Promise<Package>;
+  deletePackage(id: number): Promise<void>;
 
   // Comment operations
   createComment(comment: InsertQuestionComment): Promise<QuestionComment>;
@@ -1554,6 +1565,54 @@ export class DatabaseStorage implements IStorage {
     }
 
     return await query;
+  }
+
+  // Package operations
+  async getAllPackages(): Promise<Package[]> {
+    return await db
+      .select()
+      .from(packages)
+      .orderBy(asc(packages.months));
+  }
+
+  async getActivePackages(): Promise<Package[]> {
+    return await db
+      .select()
+      .from(packages)
+      .where(eq(packages.isActive, true))
+      .orderBy(asc(packages.months));
+  }
+
+  async getPackageById(id: number): Promise<Package | undefined> {
+    const [packageData] = await db
+      .select()
+      .from(packages)
+      .where(eq(packages.id, id));
+    return packageData;
+  }
+
+  async createPackage(packageData: InsertPackage): Promise<Package> {
+    const [newPackage] = await db
+      .insert(packages)
+      .values(packageData)
+      .returning();
+    return newPackage;
+  }
+
+  async updatePackage(id: number, packageData: Partial<InsertPackage>): Promise<Package> {
+    const [updatedPackage] = await db
+      .update(packages)
+      .set({ ...packageData, updatedAt: new Date() })
+      .where(eq(packages.id, id))
+      .returning();
+    return updatedPackage;
+  }
+
+  async deletePackage(id: number): Promise<void> {
+    await db
+      .update(packages)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(packages.id, id));
   }
 }
 
