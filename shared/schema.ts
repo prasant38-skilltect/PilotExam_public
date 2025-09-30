@@ -129,6 +129,7 @@ export const users = pgTable("users", {
   passwordHash: varchar("password_hash"),
   username: varchar("username").unique(),
   isAdmin: boolean("is_admin").default(false).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   googleId: varchar("google_id").unique(),    
