@@ -134,6 +134,7 @@ export interface IStorage {
   getAllIssueReports(page?: number, limit?: number): Promise<{ reports: IssueReport[], total: number }>;
   getAllQuestionsForAdmin(page?: number, limit?: number, searchText?: string, hasEmptyExplanation?: boolean): Promise<{ questions: any[], total: number }>;
   updateQuestion(questionId: number, questionData: any): Promise<any>;
+  getAllUsers(page?: number, limit?: number): Promise<{ users: User[], total: number }>;
 
   // Test session operations
   createTestSession(session: InsertTestSession): Promise<TestSession>;
@@ -1177,6 +1178,23 @@ export class DatabaseStorage implements IStorage {
     }
 
     return content;
+  }
+
+  async getAllUsers(page: number = 1, limit: number = 50): Promise<{ users: User[], total: number }> {
+    const offset = (page - 1) * limit;
+    
+    const usersData = await db
+      .select()
+      .from(users)
+      .orderBy(desc(users.createdAt))
+      .limit(limit)
+      .offset(offset);
+      
+    const [{ count: totalCount }] = await db
+      .select({ count: count() })
+      .from(users);
+      
+    return { users: usersData, total: Number(totalCount) };
   }
 
   async updateQuestion(questionId: number, questionData: any): Promise<any> {
