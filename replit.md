@@ -83,6 +83,14 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes
 
+**September 30, 2025:**
+- **NEW FEATURE**: Added issue report acknowledgment system in admin interface
+- Admins can now acknowledge issue reports with a single click
+- Only unacknowledged issues are displayed in the admin panel
+- Database schema updated with acknowledgment tracking fields (isAcknowledged, acknowledgedAt, acknowledgedBy)
+- Automatic filtering to show only pending issues requiring attention
+- Toast notifications for successful acknowledgment
+
 **September 17, 2025:**
 - **NEW FEATURE**: Added "Pilot Aptitude Test" navigation link and comprehensive test page at `/air-speed-indicator`
 - Created interactive pilot aptitude testing interface with 4 test categories:
