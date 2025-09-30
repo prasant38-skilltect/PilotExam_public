@@ -110,6 +110,7 @@ export interface IStorage {
   // Issue Report operations
   createIssueReport(report: InsertIssueReport): Promise<IssueReport>;
   getIssueReportsByUser(userId: string): Promise<IssueReport[]>;
+  acknowledgeIssueReport(reportId: number, adminId: string): Promise<IssueReport>;
   // getAllIssueReports(): Promise<IssueReport[]>;
 
   // Comment operations
@@ -1038,18 +1039,35 @@ export class DatabaseStorage implements IStorage {
   async getAllIssueReports(page: number = 1, limit: number = 50): Promise<{ reports: IssueReport[], total: number }> {
     const offset = (page - 1) * limit;
     
+    // Only show unacknowledged issues
     const reports = await db
       .select()
       .from(issueReports)
+      .where(eq(issueReports.isAcknowledged, false))
       .orderBy(desc(issueReports.createdAt))
       .limit(limit)
       .offset(offset);
       
     const [{ count: totalCount }] = await db
       .select({ count: count() })
-      .from(issueReports);
+      .from(issueReports)
+      .where(eq(issueReports.isAcknowledged, false));
       
     return { reports, total: Number(totalCount) };
+  }
+
+  async acknowledgeIssueReport(reportId: number, adminId: string): Promise<IssueReport> {
+    const [updatedReport] = await db
+      .update(issueReports)
+      .set({
+        isAcknowledged: true,
+        acknowledgedAt: new Date(),
+        acknowledgedBy: adminId
+      })
+      .where(eq(issueReports.id, reportId))
+      .returning();
+    
+    return updatedReport;
   }
 
   async getAllQuestionsForAdmin(

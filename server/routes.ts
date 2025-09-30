@@ -945,6 +945,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Acknowledge an issue report (admin only)
+  app.post('/api/admin/issue-reports/:id/acknowledge', isAdmin, async (req: any, res) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      const adminId = req.session.userId;
+      
+      if (!adminId) {
+        return res.status(401).json({ message: "Admin user not found" });
+      }
+
+      const acknowledgedReport = await storage.acknowledgeIssueReport(reportId, adminId);
+      res.json(acknowledgedReport);
+    } catch (error) {
+      console.error("Error acknowledging issue report:", error);
+      res.status(500).json({ message: "Failed to acknowledge issue report" });
+    }
+  });
+
   app.get('/api/admin/questions', isAdmin, async (req: any, res) => {
     try {
       const page = parseInt(req.query.page as string) || 1;
