@@ -410,10 +410,16 @@ export class DatabaseStorage implements IStorage {
       .from(topics)
       .where(and(eq(topics.categoryName, name), eq(topics.parentId, -1)));
 
+    console.log("parentTopics", parentTopics);
+
     if (parentTopics.length > 0) {
+      const category = await this.getCategoryByName(name);
+      console.log("category", category);
+
       return {
         type: "topic",
         data: parentTopics,
+        category: category,
       };
     }
 
@@ -422,9 +428,15 @@ export class DatabaseStorage implements IStorage {
       .from(topics)
       .where(and(eq(topics.parentName, name)));
 
-    if (subTopics.length > 0) {
+    console.log("subTopics", subTopics);
+
+    if (subTopics.length > 0) {      
+      const topicByName = await this.getTopicByName(name);
+      console.log("category", topicByName);
+      
       return {
         type: "topic",
+        category: {name: topicByName?.text},
         data: subTopics,
       };
     }

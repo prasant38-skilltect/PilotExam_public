@@ -220,23 +220,13 @@ export default function DynamicPage() {
   console.log("link....", link[0])
   console.log("subjects....", subjects)
   const data = subjects?.data ? subjects?.data[0] : {}
+  const category = subjects?.data ? subjects?.category : {}
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
-      <div className="max-w-4xl mx-auto px-4 py-20">
-        <div className="text-center mb-12">
-          <Link href="/">
-            <Button
-              variant="outline"
-              className="mb-8 border-cyan-400/40 text-cyan-200 hover:bg-cyan-400/10"
-              data-testid="button-back"
-            >
-              ← Back to Home
-            </Button>
-          </Link>
-        </div>
+      <div className="max-w-4xl mx-auto px-4 py-10">
         <h1 className="text-3xl text-white text-center mb-8">
-          {data.categoryName ? data.categoryName : data.parentName}
+          {category ? category.name : ''} 
         </h1>
 
         {/* Admin Topic Management */}

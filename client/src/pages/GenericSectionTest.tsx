@@ -1076,7 +1076,7 @@ export default function GenericSectionTest({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
-      <div className="w-full mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <div className="w-full mx-auto px-2 sm:px-4 sm:py-8">
           {/* Progress Saving Alert */}
           {
             quizData.length > 1 && <Alert className="mb-6 border-green-500/20 bg-green-500/10">
