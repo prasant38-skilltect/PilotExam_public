@@ -167,9 +167,9 @@ export default function Admin() {
 
   // Fetch all packages for admin management
   const { data: packages = [], isLoading: loadingPackages } = useQuery({
-    queryKey: ['/api/admin/packages'],
+    queryKey: ['/api/admin/subscriptionsPlan'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/admin/packages');
+      const res = await apiRequest('GET', '/api/admin/subscriptionsPlan');
       return res instanceof Response ? await res.json() : res;
     },
   });

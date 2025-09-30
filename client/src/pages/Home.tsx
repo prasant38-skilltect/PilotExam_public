@@ -124,21 +124,21 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+        <div className="text-center mb-20">
+          <h1 className="text-xl text-black-600 dark:text-black-300 max-w-4xl mx-auto">
             Master all DGCA subjects with our comprehensive question bank and practice tests
           </h1>
         </div>
 
         {/* Search */}
-        <div className="mb-8 mx-auto" ref={searchContainerRef}>
+        <div className="mb-8 mt-10 mx-auto gap-6" ref={searchContainerRef}>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <Input
               placeholder="Search questions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 border border-blue-400"
               data-testid="input-search-questions"
             />
             

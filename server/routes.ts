@@ -197,13 +197,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/subscriptionsPlan', async (req: any, res) => {
+  app.get('/api/admin/subscriptionsPlan', async (req: any, res) => {
     try {
         const plans = await storage.getSubcriptionPlanDetails();
         return res.json(plans);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  
+  app.post('/api/admin/subscriptionsPlan', isAdmin, async (req: any, res) => {
+    try {
+      const { name, months, price, isActive } = req.body;
+      
+      if (!name || !months || !price) {
+        return res.status(400).json({ message: "Name, months, and price are required" });
+      }
+
+      const subscriptionsPlan = {
+        name: name.trim(),
+        price: parseInt(price),
+        duration: `${parseInt(months)} months`,
+        features: req.body.features || "",
+        isActive: isActive !== undefined ? isActive : true
+      };
+
+      const newPackage = await storage.createSubscriptionPlan(subscriptionsPlan);
+      res.json(newPackage);
+    } catch (error) {
+      console.error("Error creating package:", error);
+      res.status(500).json({ message: "Failed to create package" });
+    }
+  });
+
+  app.put('/api/admin/packages/:id', isAdmin, async (req: any, res) => {
+    try {
+      const packageId = parseInt(req.params.id);
+      const { name, months, price, isActive } = req.body;
+
+      const updateData: any = {};
+      if (name !== undefined) updateData.name = name.trim();
+      if (months !== undefined) updateData.months = parseInt(months);
+      if (price !== undefined) updateData.price = parseInt(price);
+      if (isActive !== undefined) updateData.isActive = isActive;
+
+      const updatedPackage = await storage.updatePackage(packageId, updateData);
+      res.json(updatedPackage);
+    } catch (error) {
+      console.error("Error updating package:", error);
+      res.status(500).json({ message: "Failed to update package" });
+    }
+  });
+
+  app.delete('/api/admin/packages/:id', isAdmin, async (req: any, res) => {
+    try {
+      const packageId = parseInt(req.params.id);
+      await storage.deletePackage(packageId);
+      res.json({ message: "Package deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting package:", error);
+      res.status(500).json({ message: "Failed to delete package" });
     }
   });
 

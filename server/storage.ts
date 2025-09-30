@@ -45,11 +45,15 @@ import {
   type InsertCategory,
   type Package,
   type InsertPackage,
+  type SubscriptionPlan,
+  type InsertSubscriptionPlan,
+  insertSubscriptionPlan,
 } from "../shared/schema";
 import bcrypt from "bcryptjs";
 import { db } from "./db";
 import { eq, and, desc, avg, max, count, ne, asc, sql, or, like, isNull, inArray } from "drizzle-orm";
 import { text } from "stream/consumers";
+import { Subscription } from "react-hook-form/dist/utils/createSubject";
 
 // Get __filename and __dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -122,6 +126,7 @@ export interface IStorage {
   getActivePackages(): Promise<Package[]>;
   getPackageById(id: number): Promise<Package | undefined>;
   createPackage(packageData: InsertPackage): Promise<Package>;
+  createSubscriptionPlan(subscriptionPlanData: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
   updatePackage(id: number, packageData: Partial<InsertPackage>): Promise<Package>;
   deletePackage(id: number): Promise<void>;
 
@@ -1631,6 +1636,14 @@ export class DatabaseStorage implements IStorage {
       .update(packages)
       .set({ isActive: false, updatedAt: new Date() })
       .where(eq(packages.id, id));
+  }
+  
+  async createSubscriptionPlan(packageData: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+    const [newPackage] = await db
+      .insert(subscriptionPlan)
+      .values(packageData)
+      .returning();
+    return newPackage;
   }
 }
 

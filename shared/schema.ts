@@ -347,8 +347,7 @@ export const insertQuestionOptionsSchema = createInsertSchema(questionOptions);
 export const insertQuizQuestionsSchema = createInsertSchema(quizQuestions);
 export const insertIssueReportSchema = createInsertSchema(issueReports).omit({ id: true, createdAt: true });
 export const insertPackageSchema = createInsertSchema(packages).omit({ id: true, createdAt: true, updatedAt: true });
-
-
+export const insertSubscriptionPlan = createInsertSchema(subscriptionPlan).omit({ id: true, createdAt: true });
 
 export const insertTestSessionSchema = createInsertSchema(testSessions).omit({
   id: true,
@@ -415,5 +414,7 @@ export type IssueReport = typeof issueReports.$inferSelect;
 export type InsertIssueReport = z.infer<typeof insertIssueReportSchema>;
 export type Package = typeof packages.$inferSelect;
 export type InsertPackage = z.infer<typeof insertPackageSchema>;
+export type SubscriptionPlan = typeof subscriptionPlan.$inferSelect;
+export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlan>;
 export type QuestionComment = typeof questionComments.$inferSelect;
 export type InsertQuestionComment = z.infer<typeof insertQuestionCommentSchema>;

@@ -171,10 +171,6 @@ export default function Subscribe() {
               </Button>
 
           }
-
-          <div className="mt-6 text-blue-200 text-sm">
-            <p>✅ Cancel anytime • ✅ 30-day money-back guarantee • ✅ Secure payment</p>
-          </div>
         </div>
       </div>
     </div>
