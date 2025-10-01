@@ -2,7 +2,6 @@ import { Link, useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { getSubjectUrl } from '@/shared/urlMapping';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import GenericSectionTest from './GenericSectionTest';
@@ -10,11 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Plus, Edit, Trash2, Settings, Tag, ChevronRight, Home } from 'lucide-react';
 import ManageQuestions from '../components/ManangeQuestions';
+import { getStoredBreadcrumb, saveToBreadcrumb, trimBreadcrumb } from '../utils/breadcrumb';
 
 export default function DynamicPage() {
   const link = useLocation();
@@ -40,16 +39,8 @@ export default function DynamicPage() {
     slug: '',
     categoryId: ''
   });
-
-  // Fetch categories for topic creation
-  const { data: categories = [] } = useQuery({
-    queryKey: ['/api/admin/categories'],
-    queryFn: async () => {
-      const res = await apiRequest('GET', '/api/admin/categories');
-      return res instanceof Response ? await res.json() : res;
-    },
-    enabled: isAdmin && subjects?.type === "topic",
-  });
+  // Inside DynamicPage
+  const [breadcrumbTrail, setBreadcrumbTrail] = useState<any[]>([]);
 
   // Mutations for topic management
   const createTopicMutation = useMutation({
@@ -153,6 +144,23 @@ export default function DynamicPage() {
     }
   };
 
+  useEffect(() => {
+    const path = link[0]; // current path string
+
+    // Try to find a matching slug in the stored breadcrumb
+    const trail = getStoredBreadcrumb();
+    const matchingCrumb = trail.find((t: any) => `/${t.slug}` === path);
+
+    if (matchingCrumb) {
+      // User navigated back/forward → trim the breadcrumb
+      const newTrail = trimBreadcrumb(matchingCrumb.slug);
+      setBreadcrumbTrail(newTrail);
+    } else {
+      // Path not in breadcrumb → maybe user navigated manually or a new topic
+      setBreadcrumbTrail(trail);
+    }
+  }, [link[0]]);
+
   // Check if this is a quiz and user needs authentication
   useEffect(() => {
     if (!isLoading && !authLoading && subjects?.type === "quiz" && !isAuthenticated) {
@@ -161,6 +169,32 @@ export default function DynamicPage() {
       setLocation('/sign-in');
     }
   }, [subjects, isAuthenticated, authLoading, isLoading, link, setLocation]);
+
+  useEffect(() => {
+    if (subjects?.type === "topic" && subjects?.data) {
+      subjects.data.forEach((t: any) => {
+        if (t.slug && t.text) {
+          saveBreadcrumb(t.slug, t.text);
+        }
+      });
+    }
+
+    if (subjects?.type === "quiz" && subjects?.topicSlug && subjects?.topicName) {
+      saveBreadcrumb(subjects.topicSlug, subjects.topicName);
+    }
+  }, [subjects]);
+
+  // Utility for breadcrumb persistence
+  function saveBreadcrumb(slug: string, name: string) {
+    const stored = JSON.parse(sessionStorage.getItem("breadcrumbMap") || "{}");
+    stored[slug] = name;
+    sessionStorage.setItem("breadcrumbMap", JSON.stringify(stored));
+  }
+
+  function getBreadcrumbName(slug: string): string | null {
+    const stored = JSON.parse(sessionStorage.getItem("breadcrumbMap") || "{}");
+    return stored[slug] || null;
+  }
 
   const setNewName = (name: string) => {
     setNewTopicData(prev => ({ ...prev, text: name }));
@@ -217,79 +251,40 @@ export default function DynamicPage() {
   //     </div>
   //   )
   // }
-  console.log("link....", link[0])
-  console.log("subjects....", subjects)
   const data = subjects?.data ? subjects?.data[0] : {}
   const category = subjects?.data ? subjects?.category : {}
   
-  // Build breadcrumb data from subjects structure
-  const breadcrumbData = {
-    categoryName: subjects?.type === "topic" && subjects?.data?.[0]?.categoryName 
-      ? subjects.data[0].categoryName 
-      : null,
-    categorySlug: subjects?.type === "topic" && subjects?.data?.[0]?.categorySlug 
-      ? subjects.data[0].categorySlug 
-      : null,
-    parentName: subjects?.type === "topic" && subjects?.data?.[0]?.parentName 
-      ? subjects.data[0].parentName 
-      : null,
-    parentSlug: subjects?.type === "topic" && subjects?.data?.[0]?.parentSlug 
-      ? subjects.data[0].parentSlug 
-      : null,
-    currentPageName: subjects?.type === "quiz" 
-      ? subjects.topicName 
-      : (subjects?.category?.name || null),
-  };
-  
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
-      <div className="max-w-4xl mx-auto px-4 py-10">
-        {/* Breadcrumb Navigation */}
-        <nav className="flex items-center gap-2 text-sm mb-6" aria-label="Breadcrumb">
-          <Link href="/" className="flex items-center gap-1 text-cyan-300 hover:text-cyan-100 transition-colors" data-testid="breadcrumb-home">
-            <Home className="h-4 w-4" />
-            <span>Home</span>
-          </Link>
-          
-          {breadcrumbData.categoryName && (
-            <>
-              <ChevronRight className="h-4 w-4 text-gray-400" />
-              {breadcrumbData.categorySlug ? (
-                <Link href={`/${breadcrumbData.categorySlug}`} className="text-cyan-300 hover:text-cyan-100 transition-colors" data-testid="breadcrumb-category">
-                  {breadcrumbData.categoryName}
-                </Link>
-              ) : (
-                <span className="text-cyan-300" data-testid="breadcrumb-category">
-                  {breadcrumbData.categoryName}
-                </span>
-              )}
-            </>
+      {/* Breadcrumb Navigation */}
+      <nav className="flex items-center gap-2 text-sm py-5 px-5" aria-label="Breadcrumb">
+        <Link href="/" className="flex items-center gap-1 text-cyan-300 hover:text-cyan-100 transition-colors" data-testid="breadcrumb-home">
+          <Home className="h-4 w-4" />
+          <span>Home</span>
+        </Link>
+
+       {breadcrumbTrail.map((crumb, idx) => (
+        <>
+          <ChevronRight className="h-4 w-4 text-gray-400" />
+          {idx === breadcrumbTrail.length - 1 ? (
+            <span className="text-gray-300 font-medium">{crumb.name}</span>
+          ) : (
+            <Link 
+              href={`/${crumb.slug}`} 
+              onClick={() => {
+                const newTrail = trimBreadcrumb(crumb.slug);
+                setBreadcrumbTrail(newTrail);
+              }}
+              className="text-cyan-300 hover:text-cyan-100"
+            >
+              {crumb.name}
+            </Link>
           )}
-          
-          {breadcrumbData.parentName && (
-            <>
-              <ChevronRight className="h-4 w-4 text-gray-400" />
-              {breadcrumbData.parentSlug ? (
-                <Link href={`/${breadcrumbData.parentSlug}`} className="text-cyan-300 hover:text-cyan-100 transition-colors" data-testid="breadcrumb-parent">
-                  {breadcrumbData.parentName}
-                </Link>
-              ) : (
-                <span className="text-cyan-300" data-testid="breadcrumb-parent">
-                  {breadcrumbData.parentName}
-                </span>
-              )}
-            </>
-          )}
-          
-          {breadcrumbData.currentPageName && (
-            <>
-              <ChevronRight className="h-4 w-4 text-gray-400" />
-              <span className="text-gray-300 font-medium" data-testid="breadcrumb-current">
-                {breadcrumbData.currentPageName}
-              </span>
-            </>
-          )}
-        </nav>
+        </>
+      ))}
+
+      </nav>
+      <div className="max-w-4xl mx-auto px-4 py-6">
 
         <h1 className="text-3xl text-white text-center mb-8">
           {category ? category.name : ''} 
@@ -359,7 +354,9 @@ export default function DynamicPage() {
         {subjects?.type === "topic" &&
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {subjects?.data?.map((subject: any) => (
-              subject?.text !== 'ignore' && <Link key={subject.id} href={`/${subject.slug}/`}>
+              subject?.text !== 'ignore' && <Link key={subject.id} href={`/${subject.slug}/`}   
+                onClick={() => saveToBreadcrumb(subject.slug, subject.text)}
+              >
                 <Button
                   variant="outline"
                   className="w-full h-16 text-sm font-medium bg-slate-800/60 border-cyan-400/30 text-cyan-100 hover:bg-cyan-400/10 hover:border-cyan-400/50 transition-all duration-300 whitespace-normal text-center p-3"

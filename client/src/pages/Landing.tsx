@@ -1,24 +1,21 @@
-import { Link } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 
 import { Rocket, Database, BarChart3, Clock, Smartphone, GraduationCap, UserCheck, Search, Play, Plane } from '@/components/Icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { clearBreadcrumb } from '../utils/breadcrumb';
 
 export default function Landing() {
   const [searchTerm, setSearchTerm] = useState('');
+  
+  useEffect(() => {
+    clearBreadcrumb();
+  }, []);
 
   const { data: apiSubjects, isLoading } = useQuery({
     queryKey: ['/api/subjects'],
   });
-
-  const filteredSubjects = (apiSubjects as any)?.filter((subject: any) =>
-    subject.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    subject.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
 
   const stats = {
     totalQuestions: '10,000+',
@@ -26,40 +23,6 @@ export default function Landing() {
     passRate: '95%',
     students: '50,000+',
   };
-
-  const features = [
-    {
-      icon: UserCheck,
-      title: 'No Registration Required',
-      description: 'Start practicing immediately without creating an account. Perfect for quick study sessions.',
-    },
-    {
-      icon: Database,
-      title: 'EASA Question Bank',
-      description: '10,000+ questions from the official European Central Question Bank (ECQB 2024).',
-    },
-    {
-      icon: BarChart3,
-      title: 'Progress Analytics',
-      description: 'Track your performance across all 14 ATPL subjects with detailed analytics.',
-    },
-    {
-      icon: Clock,
-      title: 'Real Exam Conditions',
-      description: 'Timed tests that simulate actual EASA exam environment and time constraints.',
-    },
-    {
-      icon: Smartphone,
-      title: 'Mobile Responsive',
-      description: 'Study anywhere with our tablet and mobile-optimized interface.',
-    },
-    {
-      icon: GraduationCap,
-      title: 'Detailed Explanations',
-      description: 'Learn from detailed answer explanations and professional commentary.',
-    },
-  ];
-
 
   // Landing page view
   if (isLoading) {

@@ -19,14 +19,8 @@ import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 
 // All other pages lazy loaded
-const QuestionBank = lazy(() => import("@/pages/QuestionBank"));
-const Test = lazy(() => import("@/pages/Test"));
-const Results = lazy(() => import("@/pages/Results"));
-const RadioWavesTest = lazy(() => import("@/pages/RadioWavesTest"));
 const Subjects = lazy(() => import("@/pages/Subjects"));
 const DynamicPage = lazy(() => import("@/pages/DynamicPage"));
-const Instruments = lazy(() => import("@/pages/Instruments"));
-const GenericSectionTest = lazy(() => import("@/pages/GenericSectionTest"));
 const SignIn = lazy(() => import("@/pages/SignIn"));
 const SignUp = lazy(() => import("@/pages/SignUp"));
 const ManageProfile = lazy(() => import("@/pages/ManageProfile"));

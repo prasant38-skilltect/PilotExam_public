@@ -1,15 +1,11 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Clock, Search, Play, Plane } from '@/components/Icons';
-import { Skeleton } from '@/components/ui/skeleton';
 import { apiRequest } from '@/lib/queryClient';
+import { clearBreadcrumb } from '../utils/breadcrumb';
 // import JetEngine from '../components/JetEngine';
 
 interface SearchResult {
@@ -33,6 +29,10 @@ export default function Home() {
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    clearBreadcrumb();
+  }, []);
+  
   // Debounced search effect
   useEffect(() => {
     if (searchTimeoutRef.current) {
