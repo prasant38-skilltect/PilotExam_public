@@ -141,6 +141,12 @@ export const subscriptions = pgTable("subscriptions", {
   user_id: varchar("user_id"),
   plan_duration: varchar("plan_duration"),
   subscribed_at: timestamp("subscribed_at").defaultNow(),
+  plan_expire_at: varchar("plan_expire_at"),
+  plan_amount: integer("plan_amount"),
+  razorpay_payment_id: varchar("razorpay_payment_id", { length: 200 }),
+  razorpay_order_id: varchar("razorpay_order_id", { length: 200 }),
+  razorpay_signature: text("razorpay_signature"),
+  is_active: boolean("is_active"),
 });
 
 export const subscriptionPlan = pgTable("subscription_plan", { 

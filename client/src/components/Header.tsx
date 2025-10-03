@@ -3,7 +3,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun, Plane, Users } from "@/components/Icons";
-import { LogOut, User, Shield } from "lucide-react";
+import { LogOut, User, Shield, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { apiRequest } from "@/lib/queryClient";
@@ -211,6 +211,14 @@ export function Header() {
                     >
                       <Shield className="mr-2 h-4 w-4" />
                       Progress
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => setLocation("/subscriptions")}
+                      data-testid="menu-progress"
+                    >
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Subscription
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="cursor-pointer text-red-600 focus:text-red-600"

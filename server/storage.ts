@@ -51,6 +51,7 @@ import {
 } from "../shared/schema";
 import bcrypt from "bcryptjs";
 import { db } from "./db";
+import { addMonths, addYears } from "date-fns";
 import { eq, and, desc, avg, max, count, ne, asc, sql, or, like, isNull, inArray } from "drizzle-orm";
 import { text } from "stream/consumers";
 import { Subscription } from "react-hook-form/dist/utils/createSubject";
@@ -389,6 +390,45 @@ export class DatabaseStorage implements IStorage {
 
   async getSubscriptionsByUserId(userId: string): Promise<any[]> {
     return await db.select().from(subscriptions).where(eq(subscriptions.user_id, userId));
+  }
+
+  async insertUserSubscription(data: any): Promise<void> {
+    const now = new Date();
+    let expireAt: Date;
+
+    switch (data.months) {
+      case 1:
+        expireAt = addMonths(now, 1);
+        break;
+      case 2:
+        expireAt = addMonths(now, 2);
+        break;
+      case 3:
+        expireAt = addMonths(now, 3);
+        break;
+      case 4:
+        expireAt = addMonths(now, 4);
+        break;
+      default:
+        throw new Error(`Unsupported plan duration: ${data.months}`);
+    }
+
+    const [inserted] : any = await db
+      .insert(subscriptions)
+      .values({
+        user_id: data.userId,
+        plan_duration: data.planDuration,
+        subscribed_at: now,
+        plan_expire_at: expireAt.toISOString(), // store as TIMESTAMP
+        plan_amount: data.planAmount,
+        razorpay_payment_id: data.razorpay_payment_id,
+        razorpay_order_id: data.razorpay_order_id,
+        razorpay_signature: data.razorpay_signature,
+        is_active: data.isActive ?? true,
+      })
+      .returning();
+
+    return inserted;
   }
 
   async getSubcriptionPlanDetails(): Promise<any[]> {

@@ -8,6 +8,7 @@ import multer from "multer";
 import * as XLSX from "xlsx";
 import path from "path";
 import { OAuth2Client } from "google-auth-library";
+import { razorpay } from "./razorpay";
 import { PathnameContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
 import { features } from "process";
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, "postmessage");
@@ -190,7 +191,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       } else {
         const subscriptions = await storage.getSubscriptionsByUserId(user.id);
-        return res.json(subscriptions);
+        let activePlan = subscriptions.find((sub: any) => new Date(sub.plan_expire_at) > new Date() && sub.is_active);
+        
+        if(activePlan !== undefined && activePlan !== null) {
+          return res.json([{
+            plan_duration: activePlan.plan_duration,
+            subscribed_at: activePlan.subscribed_at,
+            plan_expire_at: activePlan.plan_expire_at,
+            plan_amount: activePlan.plan_amount
+          }]);
+        } else {
+          return res.json([]);
+        }
       }
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -230,6 +242,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating package:", error);
       res.status(500).json({ message: "Failed to create package" });
+    }
+  });
+
+  app.post('/api/razorpay', async (req: any, res) => {
+    try {
+      const { amount } = req.body;
+      const options = {
+        amount: amount * 100, // Razorpay expects paise
+        currency: "INR",
+        receipt: `receipt_${Date.now()}`,
+      };
+      const order = await razorpay.orders.create(options);
+      res.status(200).json(order);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/payment/success', async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const addSubscription: any = await storage.insertUserSubscription({
+        ...req.body,
+        userId: user.id
+      });
+      res.status(200).json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
 

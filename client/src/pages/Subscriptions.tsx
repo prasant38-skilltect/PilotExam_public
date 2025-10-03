@@ -9,53 +9,76 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Check, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-
-interface SubscriptionPlan {
-  id: string;
-  name: string;
-  price: number;
-  duration: string;
-  features: string[];
-  popular?: boolean;
-}
+import { apiRequest } from '@/lib/queryClient';
+import PaymentPage from './PaymentPage';
 
 export default function Subscribe() {
   const link = useLocation();
   const [, setLocation] = useLocation();
   const auth = useAuth();
-  const { isAuthenticated, isLoading: authLoading } = auth;
-  const isAdmin = (auth as any)?.isAdmin;
+  const { isAuthenticated, user, isLoading: authLoading } = auth;
+  const [paymentProcessLoading, setPaymentProcessLoading] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<string>('sixmonth');
   const { toast } = useToast();
 
-  const { data: subscriptionPlans = [], isLoading } = useQuery<any>({
-    queryKey: ['/api/subscriptionsPlan'],
+  const {data: subcriptions = [], isLoading: subscriptionLoading} = useQuery<any>({
+    queryKey: ['/api/subscriptions'],
   });
 
-  console.log("subscriptionPlans....", subscriptionPlans);
+  const { data: subscriptionPlans = [], isLoading: planLoading } = useQuery<any>({
+    queryKey: ['/api/admin/subscriptionsPlan'],
+  });
 
   useEffect(() => {
     if (subscriptionPlans.length > 0) {
-      setSelectedPlan(subscriptionPlans[0].id);
+      setSelectedPlanId(subscriptionPlans[0].id);
+      setSelectedPlan(subscriptionPlans[0]);
     }
   }, [subscriptionPlans]);
 
-  const handleSubscribe = () => {
-    const plan = subscriptionPlans.find((p: any) => p.id === selectedPlan);
-    if (!plan) return;
+  const paymentSuccess = useMutation({
+    mutationFn: async (data: any) => {
+      const payload = { ...data };
+      return await apiRequest('POST', '/api/payment/success', payload);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Payment Successful. Thank you for subscribing!",
+        // description: `Selected ${data.name} for $${data.price}. Payment processing will be available once Stripe is configured.`,
+      });
+    }, 
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Payment failed.",
+        variant: "destructive",
+      });
+    }
+  });
 
-    // TODO: Integrate with Stripe once API keys are provided
-    toast({
-      title: "Subscription Coming Soon",
-      description: `Selected ${plan.name} for $${plan.price}. Payment processing will be available once Stripe is configured.`,
-    });
+  const handlePaymentResponse = (res: any) => {
+    if (res.razorpay_payment_id && res.razorpay_order_id && res.razorpay_signature) {
+      paymentSuccess.mutate({
+        ...res,
+        planDuration: selectedPlan.name,
+        months: selectedPlan.months,
+        planAmount: selectedPlan.price,
+        isActive: true
+      })
+    }
+    setPaymentProcessLoading(false);
+  }
+
+  const handleSubscribe = () => {
+    setPaymentProcessLoading(true);
   };
 
   const handleLogin = () => {
     setLocation("/sign-in");
   };
 
-  if (isLoading) {
+  if (planLoading || subscriptionLoading || authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
         <div className="max-w-4xl mx-auto px-4 py-20">
@@ -73,8 +96,40 @@ export default function Subscribe() {
     );
   }
 
+  if(isAuthenticated && subcriptions.length > 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center mb-12">
+            <h1
+              className="text-4xl font-bold text-white mb-4"
+              
+              data-testid="heading-subscribe"
+            >
+              You already have an active subscription plan
+            </h1>
+            <p className="text-xl text-blue-100 max-w-2xl mx-auto">   
+              Your current plan is valid until {new Date(subcriptions[0].plan_expire_at).toLocaleDateString()}.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
+      {paymentProcessLoading &&
+        <PaymentPage
+          user={user}
+          plan={selectedPlan.plan}
+          price={selectedPlan.price}
+          paymentProcessLoading={paymentProcessLoading}
+          onClose={() => setPaymentProcessLoading(false)}
+          handlePaymentResponse={handlePaymentResponse}
+        />
+      }
+
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1
@@ -99,7 +154,10 @@ export default function Subscribe() {
                   : "bg-white/5 backdrop-blur-sm border-white/20 hover:bg-white/10",
                 plan.popular && "ring-2 ring-yellow-400 border-yellow-400/50"
               )}
-              onClick={() => setSelectedPlan(plan.id)}
+              onClick={() => {
+                setSelectedPlanId(plan.id);
+                setSelectedPlan(plan);
+              }}
               data-testid={`plan-card-${plan.id}`}
             >
               {plan.popular && (
@@ -116,8 +174,8 @@ export default function Subscribe() {
                   {plan.name}
                 </CardTitle>
                 <div className="text-white">
-                  <span className="text-4xl font-bold">${plan.price}</span>
-                  <span className="text-blue-200 ml-1">/{plan.duration}</span>
+                  <span className="text-4xl font-bold">₹{plan.price}</span>
+                  <span className="text-blue-200 ml-1">{plan.duration}</span>
                 </div>
               </CardHeader>
 
@@ -138,7 +196,7 @@ export default function Subscribe() {
                 <div className="pt-4">
                   <div className={cn(
                     "w-4 h-4 rounded-full border-2 mx-auto transition-colors",
-                    selectedPlan === plan.id
+                    selectedPlanId === plan.id
                       ? "bg-blue-400 border-blue-400"
                       : "border-white/40"
                   )} />
@@ -169,7 +227,6 @@ export default function Subscribe() {
                 <CreditCard className="h-5 w-5 mr-2" />
                 Sign in to Subscribe
               </Button>
-
           }
         </div>
       </div>
