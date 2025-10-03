@@ -1,6 +1,6 @@
 import { Link } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { getSubjectUrl } from '@/shared/urlMapping';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { apiRequest } from '@/lib/queryClient';
 import { Plus, Edit, Trash2, Settings } from 'lucide-react';
+import { saveToBreadcrumb, trimBreadcrumb } from '../utils/breadcrumb';
 
 type Subject = {
   id: number;
@@ -35,6 +36,10 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
   const [categoryData, setCategoryData] = useState({ name: '', slug: '', description: '' });
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
   const isEditMode = editingCategoryId !== null;
+
+  useEffect(() => {
+    saveToBreadcrumb("question-banks", "Question Bank");
+  }, []);
 
   // Fetch categories for admin
   const { data: categories = [] } = useQuery({
@@ -285,7 +290,9 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {subjects?.map((subject: Subject) => (
-            <Link key={subject.id} href={`/${subject.text}/`}>
+            <Link key={subject.id} href={`/${subject.text}/`}
+              onClick={() => saveToBreadcrumb(subject.text, subject.name)}
+              >
               <Button
                 variant="outline"
                 className="w-full h-16 text-sm font-medium bg-slate-800/60 border-cyan-400/30 text-cyan-100 hover:bg-cyan-400/10 hover:border-cyan-400/50 transition-all duration-300 whitespace-normal text-center p-3"
