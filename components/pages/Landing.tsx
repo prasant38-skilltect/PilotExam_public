@@ -82,7 +82,7 @@ export default function Landing() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <Input
-              placeholder="Search subjects..."
+              placeholder="Search Your Question..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"

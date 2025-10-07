@@ -124,11 +124,11 @@ function Router() {
           </Route>
 
           {/* Pilot Aptitude Test Route */}
-          <Route path="/air-speed-indicator">
+          {/* <Route path="/air-speed-indicator">
             <Suspense fallback={<PageLoader />}>
               <AirSpeedIndicator />
             </Suspense>
-          </Route>
+          </Route> */}
 
            <Route path="/question-banks">
             <Suspense fallback={<PageLoader />}>
