@@ -1166,9 +1166,9 @@ export default function GenericSectionTest({
                     {sortedQuestions.map((q: any, index) => {
                       const isAnswered = answeredQuestions.has(q.id);
                       const isCorrect =
-                        isAnswered && selectedAnswers[q.id] === q.correct_answer;
+                        isAnswered && selectedAnswers[q.id] === q.options.find((opt: any) => opt.isCorrect && opt.key == selectedAnswers[q.id])?.key;
                       const isWrong =
-                        isAnswered && selectedAnswers[q.id] !== q.correct_answer;
+                        isAnswered && selectedAnswers[q.id] !== q.options.find((opt: any) => opt.isCorrect && opt.key == selectedAnswers[q.id])?.key;
                       const isCurrent = currentQuestionIndex === index;
 
                       let buttonClass = "";
