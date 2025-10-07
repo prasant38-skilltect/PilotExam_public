@@ -1236,14 +1236,24 @@ export default function GenericSectionTest({
                               />
                             </div>
                           ) : (
-                            <h2 className="text-lg sm:text-xl font-semibold leading-relaxed flex-1">
-                              <div
-                                className="dark:text-gray-200"
-                                dangerouslySetInnerHTML={{
-                                  __html: currentQuestion.question_text,
-                                }}
-                              />
-                            </h2>
+                            <div className="mb-4">
+                              {currentQuestion.featured_img && (
+                                <img
+                                  src={currentQuestion.featured_img}
+                                  alt="Question illustration"
+                                  className="w-full object-contain rounded-lg mb-4"
+                                />
+                              )}
+
+                              <h2 className="text-lg sm:text-xl font-semibold leading-relaxed flex-1">
+                                <div
+                                  className="dark:text-gray-200"
+                                  dangerouslySetInnerHTML={{
+                                    __html: currentQuestion.question_text,
+                                  }}
+                                />
+                              </h2>
+                            </div>
                           )}
                           <div className="flex gap-2 flex-shrink-0">
                             <Button
