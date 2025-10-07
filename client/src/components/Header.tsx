@@ -21,7 +21,7 @@ const navigationItems = [
   { href: "/atpl-viva", label: "ATPL Viva" },
   { href: "/classes", label: "Classes" },
   // { href: "/aptitude-test", label: "Aptitude Test" },
-  { href: "/air-speed-indicator", label: "Pilot Aptitude Test" },
+  { href: "/pilot-aptitude-tests", label: "Pilot Aptitude Test" },
   { href: "/airbus-320", label: "Airbus 320" },
   { href: "/syllabus", label: "Syllabus" },
   { href: "/pilot-resume", label: "Pilot Resume" },
