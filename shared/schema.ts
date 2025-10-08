@@ -21,6 +21,7 @@ export const categories = pgTable(
     id: serial("id").primaryKey(),
     name: varchar("name", { length: 100 }).notNull().unique(),
     text: varchar("text", { length: 100 }).notNull().unique(),
+    sort_order: integer("sort_order").default(0).notNull(),
   },
   (table) => [
     uniqueIndex("uq_category_name").on(table.name),

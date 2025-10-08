@@ -19,6 +19,7 @@ type Subject = {
   id: number;
   name: string;
   text: string;
+  sort_order?: number;
 };
 
 export default function Subjects({ showBackToHome = true }: { showBackToHome?: boolean }) {
@@ -209,6 +210,31 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
     );
   }
 
+  // Sort categories by sort_order
+  const sortedCategories = [...categories].sort((a, b) => {
+    // Move sort_order === 0 to the end
+    if (a.sort_order === 0 && b.sort_order !== 0) return 1;
+    if (a.sort_order !== 0 && b.sort_order === 0) return -1;
+    if (a.sort_order != null && b.sort_order != null && a.sort_order !== b.sort_order) {
+      return a.sort_order - b.sort_order;
+    }
+    // Fallback to name sort
+    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+  });
+
+    // Sort subjects by sort_order
+  const sortedSubjects = [...subjects || []].sort((a, b) => {
+     // Move sort_order === 0 to the end
+    if (a.sort_order === 0 && b.sort_order !== 0) return 1;
+    if (a.sort_order !== 0 && b.sort_order === 0) return -1;
+    if (a.sort_order != null && b.sort_order != null && a.sort_order !== b.sort_order) {
+      return a.sort_order - b.sort_order;
+    }
+    // Fallback to name sort
+    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+  });
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
       <div className="max-w-4xl mx-auto px-4 py-20">
@@ -245,9 +271,9 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
                 </Button>
               </div>
               
-              {categories.length > 0 && (
+              {sortedCategories.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {categories.map((category: any) => (
+                  {sortedCategories.map((category: any) => (
                     <div
                       key={category.id}
                       className="bg-white/20 p-3 rounded-lg border border-cyan-400/30"
@@ -289,7 +315,7 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
         )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {subjects?.map((subject: Subject) => (
+          {sortedSubjects?.map((subject: Subject) => (
             <Link key={subject.id} href={`/${subject.text}/`}
               onClick={() => saveToBreadcrumb(subject.text, subject.name)}
               >
@@ -298,7 +324,7 @@ export default function Subjects({ showBackToHome = true }: { showBackToHome?: b
                 className="w-full h-16 text-sm font-medium bg-slate-800/60 border-cyan-400/30 text-cyan-100 hover:bg-cyan-400/10 hover:border-cyan-400/50 transition-all duration-300 whitespace-normal text-center p-3"
                 data-testid={`subject-${subject.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`}
               >
-                {subject.name}
+                {subject.name.toUpperCase()}
               </Button>
             </Link>
           ))}
