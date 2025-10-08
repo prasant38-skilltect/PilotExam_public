@@ -16,6 +16,8 @@ export default function Subscribe() {
   const link = useLocation();
   const [, setLocation] = useLocation();
   const auth = useAuth();
+  const queryClient = useQueryClient();
+  
   const { isAuthenticated, user, isLoading: authLoading } = auth;
   const [paymentProcessLoading, setPaymentProcessLoading] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
@@ -42,11 +44,20 @@ export default function Subscribe() {
       const payload = { ...data };
       return await apiRequest('POST', '/api/payment/success', payload);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Payment Successful. Thank you for subscribing!",
         // description: `Selected ${data.name} for $${data.price}. Payment processing will be available once Stripe is configured.`,
       });
+      await queryClient.invalidateQueries({ queryKey: ["/api/subscriptions"] });
+       // Check if there's a redirect path stored
+      const redirectPath = localStorage.getItem("redirectAfterLogin");
+      if (redirectPath) {
+        localStorage.removeItem("redirectAfterLogin");
+        setLocation(redirectPath);
+      } else {
+        setLocation("/");
+      }
     }, 
     onError: () => {
       toast({

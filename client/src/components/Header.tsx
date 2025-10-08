@@ -44,6 +44,9 @@ export function Header() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.removeQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.removeQueries({ queryKey: ["/api/subscriptions"] });
+
       setLocation("/");
     },
     onError: (error) => {

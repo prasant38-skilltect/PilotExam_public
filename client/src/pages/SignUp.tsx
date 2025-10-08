@@ -43,15 +43,7 @@ export default function SignUp() {
     onSuccess: async (user) => {
       // Invalidate and refetch user data
       await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-
-      // Check if there's a redirect path stored
-      const redirectPath = localStorage.getItem("redirectAfterLogin");
-      if (redirectPath) {
-        localStorage.removeItem("redirectAfterLogin");
-        setLocation(redirectPath);
-      } else {
-        setLocation("/");
-      }
+      setLocation("/subscriptions");
     },
     onError: (error: any) => {
       setError(error.message || "Sign up failed");
@@ -275,7 +267,7 @@ export default function SignUp() {
 
               {/* Paid Subscription Toggle */}
 <div className="space-y-2 mt-3">
-  <label className="flex items-center cursor-pointer space-x-2">
+  {/* <label className="flex items-center cursor-pointer space-x-2">
     <input
       type="checkbox"
       checked={showPlanOptions}
@@ -290,7 +282,7 @@ export default function SignUp() {
       />
       <span className="text-black font-semibold">Paid Subscription</span>
     </span>
-  </label>
+  </label> */}
 
   {/* Plan Duration Options */}
   {showPlanOptions && (

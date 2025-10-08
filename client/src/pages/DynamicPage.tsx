@@ -163,10 +163,14 @@ export default function DynamicPage() {
 
   // Check if this is a quiz and user needs authentication
   useEffect(() => {
-    if (!isLoading && !authLoading && subjects?.type === "quiz" && !isAuthenticated) {
+    if (!isLoading && !authLoading && subjects?.type === "quiz") {
       // Store current path to redirect back after login
       localStorage.setItem('redirectAfterLogin', link[0]);
-      setLocation('/sign-in');
+      if(!isAuthenticated) {
+        setLocation('/sign-in');
+      } else if(subcriptions.length === 0) {
+        setLocation('/subscriptions');
+      }
     }
   }, [subjects, isAuthenticated, authLoading, isLoading, link, setLocation]);
 
