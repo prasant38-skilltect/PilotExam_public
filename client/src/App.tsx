@@ -46,15 +46,15 @@ function Router() {
   const [, setLocation] = useLocation();
 
   // Handle post-authentication redirect
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      const redirectPath = localStorage.getItem("redirectAfterLogin");
-      if (redirectPath && redirectPath !== "/") {
-        localStorage.removeItem("redirectAfterLogin");
-        setLocation(redirectPath);
-      }
-    }
-  }, [isAuthenticated, isLoading, setLocation]);
+  // useEffect(() => {
+  //   if (!isLoading && isAuthenticated) {
+  //     const redirectPath = localStorage.getItem("redirectAfterLogin");
+  //     if (redirectPath && redirectPath !== "/") {
+  //       localStorage.removeItem("redirectAfterLogin");
+  //       setLocation(redirectPath);
+  //     }
+  //   }
+  // }, [isAuthenticated, isLoading, setLocation]);
 
   return (
     <div className="min-h-screen flex flex-col">

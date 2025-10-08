@@ -28,7 +28,7 @@ export default function DynamicPage() {
     queryKey: [`/api${link[0]}`],
   });
 
-  const {data: subcriptions = []} = useQuery<any>({
+  const {data: subcriptions = [], isLoading: subIsLoading} = useQuery<any>({
     queryKey: ['/api/subscriptions'],
   });
   // Topic management state
@@ -163,7 +163,7 @@ export default function DynamicPage() {
 
   // Check if this is a quiz and user needs authentication
   useEffect(() => {
-    if (!isLoading && !authLoading && subjects?.type === "quiz") {
+    if (!isLoading && !authLoading && !subIsLoading && subjects?.type === "quiz") {
       // Store current path to redirect back after login
       localStorage.setItem('redirectAfterLogin', link[0]);
       if(!isAuthenticated) {
@@ -172,7 +172,7 @@ export default function DynamicPage() {
         setLocation('/subscriptions');
       }
     }
-  }, [subjects, isAuthenticated, authLoading, isLoading, link, setLocation]);
+  }, [subjects, isAuthenticated, authLoading, isLoading, link, setLocation, subcriptions]);
 
   useEffect(() => {
     if (subjects?.type === "topic" && subjects?.data) {
@@ -234,7 +234,7 @@ export default function DynamicPage() {
     );
   }
 
-  if(!isAdmin && subjects?.type === "quiz" && isAuthenticated && subcriptions.length === 0) {
+  if(!isAdmin && !subIsLoading && subjects?.type === "quiz" && isAuthenticated && subcriptions.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800">
         <div className="max-w-4xl mx-auto px-4 py-20">
