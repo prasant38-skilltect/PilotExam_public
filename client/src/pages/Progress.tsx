@@ -124,34 +124,51 @@ export default function ProgressPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+              <CardTitle className="text-sm font-medium">Average Progress</CardTitle>
               <Target className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {testSessions.length > 0 
-                  ? Math.round(testSessions.reduce((sum: number, session: any) => sum + (session.score || 0), 0) / testSessions.length)
-                  : 0}%
+                {testSessions.length > 0
+                  ? Math.round(
+                      testSessions.reduce(
+                        (sum: number, session: any) =>
+                          sum + (session.total_attempted_questions && session.totalQuestions
+                            ? (session.total_attempted_questions / session.totalQuestions) * 100
+                            : 0),
+                        0
+                      ) / testSessions.length
+                    )
+                  : 0
+                }%
               </div>
               <p className="text-xs text-muted-foreground">
-                Across all tests
+                Progress across all tests
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Best Score</CardTitle>
+              <CardTitle className="text-sm font-medium">Best Progress</CardTitle>
               <Trophy className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {testSessions.length > 0 
-                  ? Math.max(...testSessions.map((session: any) => session.score || 0))
-                  : 0}%
+                {testSessions.length > 0
+                  ? Math.max(
+                      ...testSessions.map(
+                        (session: any) =>
+                          session.total_attempted_questions && session.totalQuestions
+                            ? Math.round((session.total_attempted_questions / session.totalQuestions) * 100)
+                            : 0
+                      )
+                    )
+                  : 0
+                }%
               </div>
               <p className="text-xs text-muted-foreground">
-                Personal best
+                Personal best progress
               </p>
             </CardContent>
           </Card>
@@ -208,37 +225,54 @@ export default function ProgressPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Progress 
-                        value={session.score || 0} 
-                        className="w-24" 
+                      <Progress
+                        value={
+                          session.total_attempted_questions && session.totalQuestions
+                            ? Math.round((session.total_attempted_questions / session.totalQuestions) * 100)
+                            : 0
+                        }
+                        className="w-24"
+                        title={`Attempted ${session.total_attempted_questions || 0} out of ${session.totalQuestions || 0} questions`}
                       />
                       <Badge 
-                        variant={session.score >= 80 ? "default" : session.score >= 60 ? "secondary" : "destructive"}
+                        variant={
+                          session.isCompleted
+                            ? "default"
+                            : session.total_attempted_questions && session.totalQuestions
+                              ? Math.round((session.total_attempted_questions / session.totalQuestions) * 100) >= 80
+                                ? "default"
+                                : Math.round((session.total_attempted_questions / session.totalQuestions) * 100) >= 60
+                                ? "secondary"
+                                : "destructive"
+                              : "secondary"
+                        }
                       >
-                        {session.score}%
-                      </Badge>
-                      <Badge 
-                        variant={session.isCompleted ? "default" : "secondary"}
-                      >
-                        {session.isCompleted ? "Completed" : "In Progress"}
+                        {session.isCompleted
+                          ? "Complete"
+                          : session.total_attempted_questions && session.totalQuestions
+                            ? Math.round((session.total_attempted_questions / session.totalQuestions) * 100) + "%"
+                            : "0%"
+                        }
                       </Badge>
                       
                       {/* Action Buttons */}
                       <div className="flex gap-2 ml-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              // Navigate to resume test with session ID
-                              const sectionPath = session.sectionName.toLowerCase().replace(/\s+/g, '-');
-                              setLocation(`/${sectionPath}?resumeSession=${session.id}`);
-                            }}
-                            className="flex items-center gap-1"
-                            data-testid={`button-resume-${session.id}`}
-                          >
-                            <Play className="h-3 w-3" />
-                            Resume
-                          </Button>
+                          {
+                            !session.isCompleted && <Button
+                                                      size="sm"
+                                                      variant="outline"
+                                                      onClick={() => {
+                                                        // Navigate to resume test with session ID
+                                                        const sectionPath = session.sectionName.toLowerCase().replace(/\s+/g, '-');
+                                                        setLocation(`/${sectionPath}?resumeSession=${session.id}`);
+                                                      }}
+                                                      className="flex items-center gap-1"
+                                                      data-testid={`button-resume-${session.id}`}
+                                                    >
+                                                      <Play className="h-3 w-3" />
+                                                      Resume
+                                                    </Button>
+                          }
                           <Button
                             size="sm"
                             variant="outline"

@@ -173,6 +173,10 @@ export interface IStorage {
   searchQuestions(searchText: string): Promise<any[]>;
 }
 
+interface TestSessionWithAttempts extends TestSession {
+    total_attempted_questions: number;
+}
+
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
@@ -815,12 +819,46 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async getUserTestSessions(userId: string): Promise<TestSession[]> {
-    return await db
-      .select()
-      .from(testSessions)
-      .where(eq(testSessions.userId, userId))
-      .orderBy(desc(testSessions.startTime));
+  async getUserTestSessions(userId: string): Promise<TestSessionWithAttempts[]> {
+      return await db
+          .select({
+              // Select all columns from the testSessions table
+              id: testSessions.id,
+              userId: testSessions.userId,
+              sectionName: testSessions.sectionName,
+              startTime: testSessions.startTime,
+              endTime: testSessions.endTime,
+              isCompleted: testSessions.isCompleted,
+              score: testSessions.score,
+              totalQuestions: testSessions.totalQuestions,
+              correctAnswers: testSessions.correctAnswers,
+              timeSpent: testSessions.timeSpent,
+              
+              // NEW PROPERTY: Calculate the count of user answers for this session
+              total_attempted_questions: count(userAnswers.sessionId).as('total_attempted_questions')
+          })
+          .from(testSessions)
+          // LEFT JOIN is used so sessions with zero answers still appear in the results.
+          // It joins testSessions on userAnswers where the sessionId matches the testSessions.id.
+          .leftJoin(userAnswers, eq(testSessions.id, userAnswers.sessionId))
+          .where(eq(testSessions.userId, userId))
+          // GROUP BY is necessary because we are using the COUNT aggregate function.
+          // We group by all the columns we selected from testSessions.
+          // Using sql.placeholder() is often cleaner or needed if the number of columns is large, 
+          // but for clarity, we'll group by the IDs here.
+          .groupBy(
+              testSessions.id,
+              testSessions.userId,
+              testSessions.sectionName,
+              testSessions.startTime,
+              testSessions.endTime,
+              testSessions.isCompleted,
+              testSessions.score,
+              testSessions.totalQuestions,
+              testSessions.correctAnswers,
+              testSessions.timeSpent,
+          )
+          .orderBy(desc(testSessions.startTime)) as TestSessionWithAttempts[]; // Cast the result
   }
 
   // User answer operations
@@ -1716,6 +1754,31 @@ export class DatabaseStorage implements IStorage {
       .update(subscriptionPlan)
       .set({ isActive: false, updatedAt: new Date() })
       .where(eq(subscriptionPlan.id, id));
+  }
+
+  // Assuming you have imported your table schema and utility functions:
+  // import { testSessions } from "./schema"; // Your Drizzle schema table
+  // import { db } from "./db"; // Your Drizzle database connection
+  // import { eq, sql } from "drizzle-orm"; // Drizzle functions
+
+  async updateCorrectAnswersCount(sessionId: number): Promise<void> {
+      // We use a transaction primarily for consistency, though the single UPDATE query 
+      // using the SQL `+ 1` operation is already atomic in PostgreSQL.
+      await db.transaction(async (tx) => {
+          
+          // This query directly updates the 'correctAnswers' column by adding 1 
+          // to its current value. This is the most efficient and safest way 
+          // to handle counters in a database.
+          await tx
+              .update(testSessions)
+              // Use sql property to perform an arithmetic operation directly in the database
+              .set({ 
+                  correctAnswers: sql`${testSessions.correctAnswers} + 1` 
+              })
+              .where(eq(testSessions.id, sessionId));
+
+          // Note: We don't need .returning() here since we only need to perform the update.
+      });
   }
 }
 
