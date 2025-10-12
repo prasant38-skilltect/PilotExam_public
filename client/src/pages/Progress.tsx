@@ -27,6 +27,12 @@ export default function ProgressPage() {
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
   const [showSessionDetails, setShowSessionDetails] = useState(false);
 
+  // Filter and pagination state
+  const [filterSection, setFilterSection] = useState<string>("");
+  const [filterCompleted, setFilterCompleted] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
   // Fetch user test sessions
   const { data: testSessions = [], isLoading: loadingSessions } = useQuery({
     queryKey: ['/api/user/test-sessions'],
@@ -38,6 +44,25 @@ export default function ProgressPage() {
     queryKey: ['/api/user/progress'],
     enabled: isAuthenticated,
   });
+
+  // Get unique section names for filter dropdown
+  const sectionNames = Array.from(new Set(testSessions.map((s: any) => s.sectionName))).filter(Boolean);
+
+  // Filter logic
+  const filteredSessions = testSessions.filter((session: any) => {
+    const sectionMatch = filterSection ? session.sectionName === filterSection : true;
+    const completedMatch =
+      filterCompleted === "all"
+        ? true
+        : filterCompleted === "completed"
+        ? session.isCompleted
+        : !session.isCompleted;
+    return sectionMatch && completedMatch;
+  });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredSessions.length / pageSize);
+  const paginatedSessions = filteredSessions.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -189,6 +214,45 @@ export default function ProgressPage() {
           </Card>
         </div>
 
+        {/* Filter Section */}
+        <Card className="mb-4">
+          <CardContent>
+            <div className="flex flex-wrap gap-4 items-center pt-6">
+              <div>
+                <label className="mr-2 font-medium">Section:</label>
+                <select
+                  value={filterSection}
+                  onChange={e => {
+                    setFilterSection(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="border rounded px-2 py-1"
+                >
+                  <option value="">All</option>
+                  {sectionNames.map(name => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mr-2 font-medium">Status:</label>
+                <select
+                  value={filterCompleted}
+                  onChange={e => {
+                    setFilterCompleted(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="border rounded px-2 py-1"
+                >
+                  <option value="all">All</option>
+                  <option value="completed">Completed</option>
+                  <option value="incomplete">Incomplete</option>
+                </select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Recent Test Sessions */}
         <Card className="mb-8">
           <CardHeader>
@@ -206,7 +270,7 @@ export default function ProgressPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {testSessions.slice(0, 10).map((session: any) => (
+                {paginatedSessions.map((session: any) => (
                   <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     <div className="flex-1">
                       <h3 className="font-medium">{session.sectionName}</h3>
@@ -290,6 +354,28 @@ export default function ProgressPage() {
                     </div>
                   </div>
                 ))}
+                {/* Pagination Controls */}
+                <div className="flex justify-center items-center gap-2 mt-6">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                  >
+                    Previous
+                  </Button>
+                  <span className="px-2">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
