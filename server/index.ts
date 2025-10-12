@@ -9,7 +9,27 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 const __dirname = path.resolve(); // if using ES modules, compute like before
-console.log("path", path.join(__dirname, "public/uploads"));
+
+// --- Secure upload access ---
+app.use("/uploads", (req, res, next) => {
+  const referer = req.get("Referer");
+
+  // Allow access if coming from your own domain or localhost
+  if (
+    referer &&
+    (referer.startsWith("http://127.0.0.1:5000") ||
+     referer.startsWith("http://localhost:5000") ||
+     referer.startsWith("https://eatpl.org") ||
+     referer.startsWith("https://eatpl.in") ||
+     referer.startsWith("https://eatpl.io"))
+  ) {
+    return next();
+  }
+
+  // Block all other requests
+  res.status(403).send("Access denied");
+});
+
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
 // Add request logging
