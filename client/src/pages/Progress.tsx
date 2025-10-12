@@ -225,7 +225,6 @@ export default function ProgressPage() {
                       
                       {/* Action Buttons */}
                       <div className="flex gap-2 ml-2">
-                        {!session.isCompleted ? (
                           <Button
                             size="sm"
                             variant="outline"
@@ -240,7 +239,6 @@ export default function ProgressPage() {
                             <Play className="h-3 w-3" />
                             Resume
                           </Button>
-                        ) : (
                           <Button
                             size="sm"
                             variant="outline"
@@ -254,7 +252,6 @@ export default function ProgressPage() {
                             <Eye className="h-3 w-3" />
                             View Details
                           </Button>
-                        )}
                       </div>
                     </div>
                   </div>

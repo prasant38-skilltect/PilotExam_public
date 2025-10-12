@@ -853,9 +853,10 @@ export default function GenericSectionTest({
   const calculateScore = () => {
     if (!questions) return { correct: 0, total: 0, percentage: 0 };
 
-    const correct = questions.filter(
-      (q: any) => selectedAnswers[q.id] === q.correct_answer,
-    ).length;
+    const correct = questions.filter((q: any) => {
+      const correctOption = q.options.find((opt: any) => opt.isCorrect);
+      return selectedAnswers[q.id] === correctOption?.key;
+    }).length;
 
     return {
       correct,
@@ -972,7 +973,9 @@ export default function GenericSectionTest({
           <div className="space-y-6">
             {sortedQuestions.map((question: any, index) => {
               const userAnswer = selectedAnswers[question.id];
-              const isCorrect = userAnswer === question.correct_answer;
+              const correctOption = question.options.find((opt: any) => opt.isCorrect);
+              const isCorrect = userAnswer === correctOption?.key;
+              // const isCorrect = userAnswer === question.correct_answer;
 
               return (
                 <Card

@@ -1368,14 +1368,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // User answer routes
   app.post('/api/user-answers', isAuthenticated, async (req: any, res) => {
-    try {
-      const answerData = req.body;
-      const savedAnswer = await storage.saveUserAnswer(answerData);
-      res.json(savedAnswer);
-    } catch (error) {
-      console.error("Error saving user answer:", error);
-      res.status(500).json({ message: "Failed to save answer" });
-    }
+      try {
+          console.log("Received user answer data:", req.body);
+          const { isCorrect, sessionId, ...answerData } = req.body; // Destructure the required fields
+          
+          // 1. Save the user's answer
+          const savedAnswer = await storage.saveUserAnswer({ isCorrect, sessionId, ...answerData });
+        
+          // 2. Conditionally update the correct_answers count
+          if (isCorrect) {
+              // Ensure you have the session ID to know which record to update
+              if (sessionId) {
+                  // Call a new storage function to increment the count
+                  await storage.updateCorrectAnswersCount(sessionId);
+                  console.log(`Updated correct answers count for session: ${sessionId}`);
+              } else {
+                  console.warn("isCorrect is true, but test_session_id is missing.");
+                  // Optionally: Log an error or handle this case as appropriate
+              }
+          }
+
+          res.json(savedAnswer);
+      } catch (error) {
+          console.error("Error saving user answer or updating session count:", error);
+          // You might want to handle rollback logic here if saving the answer succeeds but updating the count fails,
+          // but for simplicity, we'll keep the current error handling.
+          res.status(500).json({ message: "Failed to save answer and/or update session count" });
+      }
   });
 
   // User progress routes
