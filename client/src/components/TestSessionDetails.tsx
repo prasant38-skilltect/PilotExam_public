@@ -126,7 +126,7 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
                     {correctAnswers} correct out of {questionsWithAnswers.length}
                   </div>
                 </div>
-                <ScrollArea className="flex-1">
+                <ScrollArea className="flex-1 min-h-0 max-h-[60vh]">
                   <div className="p-2 space-y-1">
                     {questionsWithAnswers.map((question, index) => (
                       <Button
@@ -168,133 +168,136 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
               </div>
 
               {/* Main Question Display */}
-              <div className="lg:col-span-2 flex flex-col h-full">
-                {currentQuestion && (
-                  <>
-                    {/* Question Header */}
-                    <div className="p-4 border-b bg-white dark:bg-gray-800 shrink-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                            Question {currentQuestionIndex + 1} of {questionsWithAnswers.length}
-                          </span>
-                          {currentQuestion.isCorrect ? (
-                            <Badge variant="default" className="bg-green-100 text-green-800">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Correct
-                            </Badge>
-                          ) : currentQuestion.userAnswer ? (
-                            <Badge variant="destructive">
-                              <XCircle className="h-3 w-3 mr-1" />
-                              Incorrect
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary">
-                              <Clock className="h-3 w-3 mr-1" />
-                              Not Answered
-                            </Badge>
-                          )}
-                        </div>
-                        {currentQuestion.timeSpent && (
-                          <div className="text-sm text-gray-600 flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {formatDuration(currentQuestion.timeSpent)}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Question Content */}
-                    <div className="flex-1 overflow-auto p-4">
-                      <div className="space-y-6">
-                        {/* Question Text */}
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-lg flex items-center gap-2">
-                              <BookOpen className="h-5 w-5" />
-                              Question
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-gray-800 dark:text-gray-200 leading-relaxed">
-                              {currentQuestion.text}
-                            </p>
-                          </CardContent>
-                        </Card>
-
-                        {/* Answer Options */}
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-lg flex items-center gap-2">
-                              <Target className="h-5 w-5" />
-                              Answer Options
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-3">
-                              {[
-                                { key: 'A', text: currentQuestion.option_a },
-                                { key: 'B', text: currentQuestion.option_b },
-                                { key: 'C', text: currentQuestion.option_c },
-                                { key: 'D', text: currentQuestion.option_d }
-                              ].filter(option => option.text).map((option) => {
-                                const isUserAnswer = currentQuestion.userAnswer === option.key;
-                                const isCorrectAnswer = currentQuestion.correct_answer === option.key;
-                                
-                                return (
-                                  <div
-                                    key={option.key}
-                                    className={`p-3 rounded-lg border-2 ${
-                                      isCorrectAnswer 
-                                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
-                                        : isUserAnswer && !isCorrectAnswer
-                                        ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                                        : 'border-gray-200 dark:border-gray-700'
-                                    }`}
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <span className="font-semibold text-sm bg-white dark:bg-gray-800 px-2 py-1 rounded border">
-                                        {option.key}
-                                      </span>
-                                      <span className="flex-1">{option.text}</span>
-                                      <div className="flex gap-1">
-                                        {isCorrectAnswer && (
-                                          <CheckCircle className="h-5 w-5 text-green-600" />
-                                        )}
-                                        {isUserAnswer && !isCorrectAnswer && (
-                                          <XCircle className="h-5 w-5 text-red-600" />
-                                        )}
-                                        {isUserAnswer && (
-                                          <Badge variant="outline" className="text-xs">
-                                            Your Answer
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
+                <div className="lg:col-span-2 flex flex-col h-full">
+                  <ScrollArea className="flex-1 min-h-0 max-h-[70vh]">
+                    {currentQuestion && (
+                      <>
+                        {/* Question Header */}
+                        <div className="p-4 border-b bg-white dark:bg-gray-800 shrink-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                                Question {currentQuestionIndex + 1} of {questionsWithAnswers.length}
+                              </span>
+                              {currentQuestion.isCorrect ? (
+                                <Badge variant="default" className="bg-green-100 text-green-800">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Correct
+                                </Badge>
+                              ) : currentQuestion.userAnswer ? (
+                                <Badge variant="destructive">
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                  Incorrect
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  Not Answered
+                                </Badge>
+                              )}
                             </div>
-                          </CardContent>
-                        </Card>
+                            {currentQuestion.timeSpent && (
+                              <div className="text-sm text-gray-600 flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {formatDuration(currentQuestion.timeSpent)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
 
-                        {/* Explanation */}
-                        {currentQuestion.explanation && (
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="text-lg">Explanation</CardTitle>
-                            </CardHeader>
-                            <CardContent className="max-h-64 overflow-y-auto">
-                              <div 
-                                className="prose prose-sm max-w-none dark:prose-invert"
-                                dangerouslySetInnerHTML={{ __html: currentQuestion.explanation }}
-                              />
-                            </CardContent>
-                          </Card>
-                        )}
-                      </div>
-                    </div>
+                        {/* Question Content */}
+                        <div className="flex-1 overflow-auto p-4">
+                          <div className="space-y-6">
+                            {/* Question Text */}
+                            <Card>
+                              <CardHeader>
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                  <BookOpen className="h-5 w-5" />
+                                  Question
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <p className="text-gray-800 dark:text-gray-200 leading-relaxed">
+                                  {currentQuestion.text}
+                                </p>
+                              </CardContent>
+                            </Card>
 
+                            {/* Answer Options */}
+                            <Card>
+                              <CardHeader>
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                  <Target className="h-5 w-5" />
+                                  Answer Options
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="space-y-3">
+                                  {[
+                                    { key: 'A', text: currentQuestion.option_a },
+                                    { key: 'B', text: currentQuestion.option_b },
+                                    { key: 'C', text: currentQuestion.option_c },
+                                    { key: 'D', text: currentQuestion.option_d }
+                                  ].filter(option => option.text).map((option) => {
+                                    const isUserAnswer = currentQuestion.userAnswer === option.key;
+                                    const isCorrectAnswer = currentQuestion.correct_answer === option.key;
+                                    
+                                    return (
+                                      <div
+                                        key={option.key}
+                                        className={`p-3 rounded-lg border-2 ${
+                                          isCorrectAnswer 
+                                            ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
+                                            : isUserAnswer && !isCorrectAnswer
+                                            ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                                            : 'border-gray-200 dark:border-gray-700'
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          <span className="font-semibold text-sm bg-white dark:bg-gray-800 px-2 py-1 rounded border">
+                                            {option.key}
+                                          </span>
+                                          <span className="flex-1">{option.text}</span>
+                                          <div className="flex gap-1">
+                                            {isCorrectAnswer && (
+                                              <CheckCircle className="h-5 w-5 text-green-600" />
+                                            )}
+                                            {isUserAnswer && !isCorrectAnswer && (
+                                              <XCircle className="h-5 w-5 text-red-600" />
+                                            )}
+                                            {isUserAnswer && (
+                                              <Badge variant="outline" className="text-xs">
+                                                Your Answer
+                                              </Badge>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </CardContent>
+                            </Card>
+
+                            {/* Explanation */}
+                            {currentQuestion.explanation && (
+                              <Card>
+                                <CardHeader>
+                                  <CardTitle className="text-lg">Explanation</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <div 
+                                    className="prose prose-sm max-w-none dark:prose-invert"
+                                    dangerouslySetInnerHTML={{ __html: currentQuestion.explanation }}
+                                  />
+                                </CardContent>
+                              </Card>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </ScrollArea>
                     {/* Navigation Footer */}
                     <div className="p-4 border-t bg-gray-50 dark:bg-gray-900 shrink-0">
                       <div className="flex justify-between items-center">
@@ -323,9 +326,7 @@ export function TestSessionDetails({ sessionId, open, onOpenChange }: TestSessio
                         </Button>
                       </div>
                     </div>
-                  </>
-                )}
-              </div>
+                </div>
             </div>
           </div>
         </div>
