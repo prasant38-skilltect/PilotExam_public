@@ -94,11 +94,6 @@ export default function SignUp() {
 
       <Card className="w-full max-w-md bg-white/95 backdrop-blur-sm border-0 shadow-2xl relative z-10 my-2">
         <CardHeader className="text-center pb-2">
-          <div className="flex justify-center mb-2">
-            <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full">
-              <Plane className="h-6 w-6 text-white" />
-            </div>
-          </div>
           <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Join Eatpl.in
           </CardTitle>
